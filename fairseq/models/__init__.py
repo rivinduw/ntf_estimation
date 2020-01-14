@@ -19,6 +19,8 @@ from .fairseq_model import (
     FairseqMultiModel,
 )
 
+# from .ntf_module import NTF_Module
+
 from .composite_encoder import CompositeEncoder
 from .distributed_fairseq_model import DistributedFairseqModel
 

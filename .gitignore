@@ -116,6 +116,7 @@ ENV/
 
 # data
 data-bin/
+data/
 
 # reranking
 /examples/reranking/rerank_data
@@ -130,3 +131,7 @@ data-bin/
 
 # Experimental Folder
 experimental/*
+
+#Google drive OSX wierd stuff
+Icon[\r]
+Icon?

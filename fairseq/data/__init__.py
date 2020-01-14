@@ -47,6 +47,8 @@ from .transform_eos_dataset import TransformEosDataset
 from .transform_eos_lang_pair_dataset import TransformEosLangPairDataset
 from .truncate_dataset import TruncateDataset
 
+from .traffic_dataset import TrafficDataset
+
 from .iterators import (
     CountingIterator,
     EpochBatchIterator,
