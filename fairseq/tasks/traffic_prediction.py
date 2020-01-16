@@ -8,7 +8,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-import wandb
+try:
+    import wandb
+    # wandb.init("traffic_calibration")
+except Exception as e:
+    print(e)
 
 # python train.py data --task traffic_prediction --arch lstm_traffic --criterion mse_loss --batch-size 16
 # C:\Users\rwe180\Documents\python-scripts\pytorch\pyNTF\ 
@@ -47,10 +51,13 @@ class TrafficPredictionTask(FairseqTask):
     def load_dataset(self, split, **kwargs):
         """Load a given dataset split (e.g., train, valid, test)."""
 
-        self.seq_len = 10
+        self.output_seq_len = 10
         self.input_seq_len=1440
+        self.num_segments = 12
+        self.variables_per_segment = 4
+        self.total_input_variables = self.num_segments*self.variables_per_segment
         data_file = os.path.join(self.args.data, '{}.csv'.format('valid_data_109'))#split))
-        self.datasets[split] = TrafficDataset(data_file,seq_len=self.seq_len, train_size=48000,split=split,input_seq_len=1440)
+        self.datasets[split] = TrafficDataset(data_file,output_seq_len=self.output_seq_len,split=split,input_seq_len=1440)
         #if split=='train':
         self.max_vals = self.datasets[split].get_max_vals()
 
@@ -59,8 +66,17 @@ class TrafficPredictionTask(FairseqTask):
     def get_max_vals(self):
         return self.max_vals
     
-    def get_seq_len(self):
-        return self.seq_len
+    def get_num_segments(self):
+        return self.num_segments
+    
+    def get_variables_per_segment(self):
+        return self.variables_per_segment
+    
+    def get_total_input_variables(self):
+        return self.total_input_variables
+
+    def get_output_seq_len(self):
+        return self.output_seq_len
 
     def get_input_seq_len(self):
         return self.input_seq_len 
@@ -69,7 +85,7 @@ class TrafficPredictionTask(FairseqTask):
         """Return the max input length allowed by the task."""
         # The source should be less than *args.max_positions* and the "target"
         # has max length 1.
-        return (1e5,1)#(self.args.max_positions*self.seq_len, 1)
+        return (1e20,1)#(self.args.max_positions*self.seq_len, 1)
 
     # @property
     # def source_dictionary(self):
@@ -97,9 +113,9 @@ class TrafficPredictionTask(FairseqTask):
                     # plt.pause(0.1)
                     print(net_output[0].size())
                     
-                    preds = net_output[0].view(-1,self.seq_len,90).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
-                    src = sample['net_input']['src_tokens'].view(-1,self.seq_len,90).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
-                    target = sample['target'].view(-1,self.seq_len,90).detach().cpu().numpy()
+                    preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
+                    src = sample['net_input']['src_tokens'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
+                    target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
                     for i in range(2):
                         for seg in range(0,10):
                             ax = pd.DataFrame(preds[i,:,seg*1]).plot()
@@ -148,7 +164,7 @@ class TrafficPredictionTask(FairseqTask):
         if ignore_grad:
             loss *= 0
         optimizer.backward(loss)
-        wandb.log({'train_loss':loss})
+        # wandb.log({'train_loss':loss})
         return loss, sample_size, logging_output
 
     # We could override this method if we wanted more control over how batches

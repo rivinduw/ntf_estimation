@@ -15,6 +15,7 @@ import torch
 from fairseq import checkpoint_utils, options, tasks, utils
 from fairseq.data import encoders
 
+import wandb
 
 Batch = namedtuple('Batch', 'ids src_tokens src_lengths')
 Translation = namedtuple('Translation', 'src_str hypos pos_scores alignments')
@@ -56,6 +57,9 @@ def make_batches(lines, args, task, max_positions, encode_fn):
 
 
 def main(args):
+
+    wandb.init(job_type='interactive', config=args)
+
     utils.import_user_module(args)
 
     if args.buffer_size < 1:
@@ -180,6 +184,7 @@ def main(args):
                         id,
                         alignment_str
                     ))
+        wandb.log({'input-output': wandb.Table(['Key', 'Value'], table_rows)})
 
         # update running id counter
         start_id += len(inputs)

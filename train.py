@@ -19,8 +19,17 @@ from fairseq.data import iterators
 from fairseq.trainer import Trainer
 from fairseq.meters import AverageMeter, StopwatchMeter
 
+# try:
+import wandb
+    #wandb.init("traffic_calibration")
+# except Exception as e:
+#     print(e)
+
 
 def main(args, init_distributed=False):
+
+    wandb.init(job_type='train', config=args)
+
     utils.import_user_module(args)
 
     assert args.max_tokens is not None or args.max_sentences is not None, \
@@ -156,6 +165,22 @@ def train(args, trainer, task, epoch_itr):
 
         # log mid-epoch stats
         stats = get_training_stats(trainer)
+
+        wandb_stats = {}
+        from numbers import Number
+        from fairseq.meters import AverageMeter, StopwatchMeter, TimeMeter
+        for k in stats.keys():
+            stat = stats[k]
+            if isinstance(stat, Number):
+                wandb_stats[k] = stat
+            elif isinstance(stat, AverageMeter):
+                wandb_stats[k] = stat.avg
+            elif isinstance(stat, TimeMeter):
+                wandb_stats[k] = stat.avg
+            elif isinstance(stat, StopwatchMeter):
+                wandb_stats[k] = stat.sum
+        wandb.log(wandb_stats)
+
         for k, v in log_output.items():
             if k in ['loss', 'nll_loss', 'ntokens', 'nsentences', 'sample_size']:
                 continue  # these are already logged above

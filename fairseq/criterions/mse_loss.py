@@ -11,13 +11,17 @@ from fairseq import utils
 
 from . import FairseqCriterion, register_criterion
 
-import wandb
+try:
+    import wandb
+except Exception as e:
+    print(e)
 
 @register_criterion('mse_loss')
 class MSECriterion(FairseqCriterion):
 
     def __init__(self, args, task):
         super().__init__(args, task)
+        # wandb.init(job_type='mse_loss', config=args)
 
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.
@@ -94,16 +98,16 @@ class MSECriterion(FairseqCriterion):
             reduction='mean'
             )#)
         loss = 10. * loss  #/ num_valid
-        wandb.log(
-            {'normal_loss':loss,
-            'boundry_loss':boundry_loss,
-            'segment_loss':segment_loss,
-            'segment_time_loss':segment_time_loss,
-            'mape_loss': mape_loss,
-            'accuracy': accuracy,
-            #'smooth_loss':smooth_loss
-            }
-            )
+        # wandb.log(
+        #     {'normal_loss':loss,
+        #     'boundry_loss':boundry_loss,
+        #     'segment_loss':segment_loss,
+        #     'segment_time_loss':segment_time_loss,
+        #     'mape_loss': mape_loss,
+        #     'accuracy': accuracy,
+        #     #'smooth_loss':smooth_loss
+        #     }
+        #     )
 
         total_loss = loss + segment_lambda*segment_loss  + boundry_lambda*boundry_loss # + segment_time_lambda*segment_time_loss + segment_lambda*smooth_loss
         # loss = F.nll_loss(

@@ -135,3 +135,6 @@ experimental/*
 #Google drive OSX wierd stuff
 Icon[\r]
 Icon?
+
+#wandb
+wandb/

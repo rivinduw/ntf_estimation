@@ -5,6 +5,12 @@ import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
 
+try:
+    import wandb
+    # wandb.init("traffic_calibration")
+except Exception as e:
+    print(e)
+
 class NTF_Module(nn.Module):
     def __init__(self, num_segments=18,\
                  t_var=None, tau=None, nu=None, delta=None, kappa=None,\

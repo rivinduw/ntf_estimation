@@ -18,8 +18,13 @@ from multiprocessing import Pool
 import os
 import shutil
 
+import wandb
+
 
 def main(args):
+
+    wandb.init(job_type='preprocess', config=args)
+    
     utils.import_user_module(args)
 
     print(args)

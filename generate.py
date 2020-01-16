@@ -13,6 +13,10 @@ import torch
 from fairseq import bleu, checkpoint_utils, options, progress_bar, tasks, utils
 from fairseq.meters import StopwatchMeter, TimeMeter
 
+import pandas
+import wandb
+
+LIMIT_SAMPLES = None
 
 def main(args):
     assert args.path is not None, '--path required for generation!'
@@ -26,6 +30,9 @@ def main(args):
         output_file = open(os.path.join(args.results_path, "generate-results.txt"), 'w', buffering=1)
     else:
         output_file = None
+
+    wandb.init(job_type='generate', config=args)
+    wandb.config['limit_samples'] = LIMIT_SAMPLES
 
     utils.import_user_module(args)
 
@@ -191,6 +198,8 @@ def main(args):
             wps_meter.update(num_generated_tokens)
             t.log({'wps': round(wps_meter.avg)})
             num_sentences += sample['nsentences']
+
+    wandb.summary['result'] = pandas.DataFrame(dataframe_rows, columns=['Source', 'Target', 'Hypothesis', 'Score'])
 
     print('| Translated {} sentences ({} tokens) in {:.1f}s ({:.2f} sentences/s, {:.2f} tokens/s)'.format(
         num_sentences, gen_timer.n, gen_timer.sum, num_sentences / gen_timer.sum, 1. / gen_timer.avg), file=output_file)
