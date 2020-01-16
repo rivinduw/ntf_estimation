@@ -144,7 +144,7 @@ class NTF_Module(nn.Module):
         future_flows = future_densities * future_velocities * self.lambda_var + self.epsq
 
         try:
-            if self.print_count%self.print_every==0:
+            if self.print_count%self.print_every == 0:
                 wandb.log({"future_velocities": wandb.Histogram(future_velocities.cpu().detach().numpy())})
                 wandb.log({"future_densities": wandb.Histogram(future_densities.cpu().detach().numpy())})
                 wandb.log({"future_occupancies": wandb.Histogram(future_occupancies.cpu().detach().numpy())})
