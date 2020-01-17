@@ -477,7 +477,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             # v0 = torch.clamp(v0, min=5.0)
             # t_var = torch.clamp(t_var, min=0.001)
             v0 = v0 + self.vmin
-            t_var = 1*0.00028 + t_var
+            t_var = torch.Tensor([10*0.00028]*bsz)# + t_var
             tau = 1./3600. + tau
             delta = 1.0 + delta
             kappa = 1.0 + kappa
