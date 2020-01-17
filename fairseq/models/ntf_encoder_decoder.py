@@ -473,14 +473,14 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             
             #                                                          v0,  q0,    ,rhoNp1, T, tau, nu, delta, kappa
             v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
-            
+            from fairseq import pdb; pdb.set_trace()
             # v0 = torch.clamp(v0, min=5.0)
             # t_var = torch.clamp(t_var, min=0.001)
             v0 = v0 + self.vmin
-            t_var =  1*0.00028 + t_var
+            t_var = 1*0.00028 + t_var
             tau = 1./3600. + tau
             delta = 1.0 + delta
-            kappa = 1.0+ kappa
+            kappa = 1.0 + kappa
             nu = 1.0 + nu
 
             # delta = 1.7 + delta
