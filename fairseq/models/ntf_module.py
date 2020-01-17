@@ -17,10 +17,15 @@ class NTF_Module(nn.Module):
                  cap_delta=None, lambda_var=None,\
                  v0=None, q0=None, rhoNp1=None, vf=None, a_var=None, rhocr=None,\
                  g_var=None, future_r=None, future_s=None, epsq=None, epsv=None, \
-                 device = "cuda:0", print_every = 100
+                 device=None, print_every=100
                 ):
         super(NTF_Module, self).__init__()
         
+        if device==None:
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = device
+
         if v0 is not None: self.v0 = v0
         if q0 is not None: self.q0 = q0
         if rhoNp1 is not None: self.rhoNp1 = rhoNp1
@@ -41,7 +46,6 @@ class NTF_Module(nn.Module):
         if lambda_var is not None: self.lambda_var = lambda_var
 
         self.num_segments = num_segments
-        self.device = device
         
         self.inputs_per_segment = 4
 
@@ -154,13 +158,13 @@ class NTF_Module(nn.Module):
         except Exception as e:
             print(e)
 
-        future_velocities = torch.clamp(future_velocities, min=5, max=120)
+        future_velocities = torch.clamp(future_velocities, min=10, max=120)
         #future_densities = torch.clamp(future_densities, min=0, max=1000)
         future_occupancies = torch.clamp(future_occupancies, min=0, max=100)
         future_flows = torch.clamp(future_flows, min=1, max=10000)
         future_r = torch.clamp(future_r, min=0, max=10000)
         future_s = torch.clamp(future_s, min=0, max=10000)
 
-        one_stack =  torch.stack((future_flows,future_occupancies,future_r,future_s),dim=2)
+        one_stack = torch.stack((future_flows, future_occupancies, future_r, future_s), dim=2)
 
-        return one_stack.view(-1,self.num_segments*self.inputs_per_segment)
+        return one_stack.view(-1, self.num_segments*self.inputs_per_segment)

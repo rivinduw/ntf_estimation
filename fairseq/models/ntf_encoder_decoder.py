@@ -329,6 +329,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.num_segment_specific_params = 8+2
         #  = 3+3
 
+        self.vmin = 10
+        self.shortest_segment_length = 0.278
+        self.num_ntf_steps = 3
+
         # self.num_model_params = 8+2#num_model_params
         self.total_model_params = self.num_segment_specific_params*self.num_segments
 
@@ -463,28 +467,28 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             
 
             common_params, segment_params = torch.split(ntf_input, [self.num_common_params,self.num_segment_specific_params*self.num_segments],dim=1)
-            assert self.num_common_params==8
+            #assert self.num_common_params == 8
             #10./3600.,17./3600.,23.,1.7,13.
             common_params = torch.cat([torch.sigmoid(common_params[:,:1]),torch.sigmoid(common_params[:,1:4]),torch.sigmoid(common_params[:,4:])],dim=1)
             
             #                                                          v0,  q0,    ,rhoNp1, T, tau, nu, delta, kappa
-            v0, q0,rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0,10000.0, 100.0, 0.01, 0.01, 50.0, 5.0,20.0 ]).to(self.device)*common_params,dim=1)
+            v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
             
             # v0 = torch.clamp(v0, min=5.0)
             # t_var = torch.clamp(t_var, min=0.001)
-            v0 = v0+5.0
-            t_var =  10*0.00028 + 0.0*t_var
-            tau = 17./3600 + 0.0*tau
-            # delta = torch.clamp(delta, min=1.0)
-            # kappa = torch.clamp(kappa, min=5.0)
-            # nu = torch.clamp(nu, min=10.0)
-            delta = 1.7 + 0.0*delta
-            
-            kappa = 13.0+ 0.0*kappa# + 1.0
-            nu = 23.0 + 0.0*nu #+ 1.0
+            v0 = v0 + self.vmin
+            t_var =  1*0.00028 + t_var
+            tau = 1./3600. + tau
+            delta = 1.0 + elta
+            kappa = 1.0+ kappa
+            nu = 1.0 + nu
+
+            # delta = 1.7 + elta
+            # kappa = 13.0+ 0.0*kappa# + 1.0
+            # nu = 23.0 + 0.0*nu #+ 1.0
 
             segment_params = segment_params.view((-1,self.num_segment_specific_params,self.num_segments))
-            assert self.num_segment_specific_params==10
+            #assert self.num_segment_specific_params==10
             segment_params = torch.cat([torch.sigmoid(segment_params[:,:8,:]),F.relu(segment_params[:,8:10,:]),torch.tanh(segment_params[:,10:,:])],dim=1)
             # import pdb; pdb.set_trace()
                                                         #  self.Delta, self.lambda_var, vf, a, rhocr, g, omegar, omegas, epsq, epsv 
@@ -492,11 +496,18 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             # cap_delta = torch.clamp(cap_delta, min=0.278)
             # vf = torch.clamp(vf, min=5.0)
             # lambda_var = torch.clamp(lambda_var, min=3.0)
-            rhocr = 33.5 + 0.0*rhocr
-            cap_delta = cap_delta + 0.278
-            vf = 110. + 0.0*vf #+5.0
-            lambda_var = 3.0 + 0.0*lambda_var#+1.0
-            a_var = 1.8 + 0.0*a_var# + 0.5
+            
+            rhocr = 1.0 + rhocr
+            cap_delta = cap_delta + self.shortest_segment_length
+            vf = self.vmin + vf
+            lambda_var = 1.0 + lambda_var
+            a_var = 1.0 + a_var
+            
+            # rhocr = 33.5 + 0.0*rhocr
+            # cap_delta = cap_delta + 0.278
+            # vf = 110. + 0.0*vf #+5.0
+            # lambda_var = 3.0 + 0.0*lambda_var#+1.0
+            # a_var = 1.8 + 0.0*a_var# + 0.5
             
             # print(pd.DataFrame(segment_params))
             # segment_params = segment_params.permute(0, 2, 1)
@@ -505,8 +516,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #x_unscaled = input_in*self.max_vals 
             x_input =  input_in*self.max_vals
             model_steps = []
-            num_steps = 3
-            for _ in range(num_steps):#x_input,segment_params,boundry_params)
+            
+            for _ in range(self.num_ntf_steps):#x_input,segment_params,boundry_params)
                 output1 = self.ntf_module(
                     x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
                     g_var=g_var, future_r=future_r, future_s=future_s, epsq=epsq, epsv=epsv,t_var=t_var,\
