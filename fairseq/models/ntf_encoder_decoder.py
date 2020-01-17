@@ -479,11 +479,11 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             v0 = v0 + self.vmin
             t_var =  1*0.00028 + t_var
             tau = 1./3600. + tau
-            delta = 1.0 + elta
+            delta = 1.0 + delta
             kappa = 1.0+ kappa
             nu = 1.0 + nu
 
-            # delta = 1.7 + elta
+            # delta = 1.7 + delta
             # kappa = 13.0+ 0.0*kappa# + 1.0
             # nu = 23.0 + 0.0*nu #+ 1.0
 
