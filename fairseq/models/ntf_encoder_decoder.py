@@ -505,6 +505,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             vf = self.vmin + vf
             lambda_var = 1.0 + lambda_var
             a_var = 1.0 + a_var
+            g_var = 1.0 + g_var
+
             
             # rhocr = 33.5 + 0.0*rhocr
             # cap_delta = cap_delta + 0.278

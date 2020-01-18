@@ -16,13 +16,18 @@ try:
 except Exception as e:
     print(e)
 
-@register_criterion('mse_loss')
+@register_criterion('traffic_loss')
 class MSECriterion(FairseqCriterion):
 
     def __init__(self, args, task):
         super().__init__(args, task)
         # wandb.init(job_type='mse_loss', config=args)
-        self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
+        # self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
+        self.loss_fn = torch.nn.L1Loss()
+
+        self.common_lambda = 1.0
+        self.segment_lambda = 1.0
+        self.segment_time_lambda = 1.0#0.01
 
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.
@@ -45,14 +50,14 @@ class MSECriterion(FairseqCriterion):
 
     def compute_loss(self, model, net_output, sample, reduce=True):
         # import fairseq.pdb as pdb; pdb.set_trace()
-        lprobs, boundry, segment = model.get_normalized_probs(net_output, log_probs=False)
+        lprobs, common_params, segment = model.get_normalized_probs(net_output, log_probs=False)
         lprobs = lprobs.float()
         
         #bsz, ts, var
         # torch.Size([32, 10, 8])
         # v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)      
-        boundry_loss = self.mse_loss(boundry[:,1:,:],boundry[:,:-1,:])
-        boundry_lambda = 1.0
+        common_loss = self.loss_fn(common_params[:,1:,:], common_params[:,:-1,:])
+        
 
         # boundry_mean = torch.mean(boundry,dim=1,keepdim=True) #[1,360,3]
         # boundry_loss = torch.mean((boundry-boundry_mean)**2,dim=1) #KL divergence later
@@ -61,8 +66,8 @@ class MSECriterion(FairseqCriterion):
         #bsz, t, var, segments
         # torch.Size([32, 10, 10, 12])
         #cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[200.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[10.0],[10.0]]).to(self.device),dim=1)  
-        segment_loss = self.mse_loss(segment[:,:,:6,1:],segment[:,:,:6,:-1])
-        segment_lambda = 1.0
+        segment_loss = self.loss_fn(segment[:,:,:6,1:],segment[:,:,:6,:-1])
+        
         
         # segment_mean = torch.mean(segment,dim=2,keepdim=True) #[1,360,18,8]
         # segment_loss = torch.mean((segment-segment_mean)**2,dim=2)
@@ -70,9 +75,8 @@ class MSECriterion(FairseqCriterion):
 
         #import fairseq.pdb as pdb; pdb.set_trace()
 
-        segment_time_loss = self.mse_loss(segment[:,1:,:8,:],segment[:,:-1,:8,:])
-        segment_time_lambda = 1.0#0.01
-
+        segment_time_loss = self.loss_fn(segment[:,1:,:8,:],segment[:,:-1,:8,:])
+        
         # segment_time_mean = torch.mean(segment,dim=1,keepdim=True) #[1,360,18,8]
         # segment_time_loss = torch.mean((segment-segment_time_mean)**2,dim=1)
         # segment_time_loss = torch.mean(segment_time_loss)
@@ -98,13 +102,13 @@ class MSECriterion(FairseqCriterion):
         accuracy = accuracy.clamp(0,1)
         
         # print("mask sum",target_mask.float().sum(),target.sum())
-        mse_target_loss = self.mse_loss(outputs, y)
+        mse_target_loss = self.loss_fn(outputs, y)
         
-        total_loss = mse_target_loss + boundry_lambda*boundry_loss + segment_time_lambda*segment_time_loss + segment_lambda*segment_loss
+        total_loss = mse_target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
         
         wandb.log(
             {'normal_loss':total_loss,
-            'boundry_loss':boundry_loss,
+            'common_loss':common_loss,
             'segment_loss':segment_loss,
             'segment_time_loss':segment_time_loss,
             'mape_loss': mape_loss,

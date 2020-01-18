@@ -59,8 +59,10 @@ class TrafficDataset(FairseqDataset):
         
         valid_size = len(self.all_data) - self.train_size
 
-        #vol_multiple=1.
-        #self.all_data.iloc[:,::self.variables_per_segment] = self.all_data.iloc[:,::self.variables_per_segment] * vol_multiple
+        vol_multiple=120.
+        self.all_data.iloc[:,::self.variables_per_segment] = self.all_data.iloc[:,::self.variables_per_segment] * vol_multiple
+        self.all_data.iloc[:,2::self.variables_per_segment] = self.all_data.iloc[:,2::self.variables_per_segment] * vol_multiple
+        self.all_data.iloc[:,3::self.variables_per_segment] = self.all_data.iloc[:,3::self.variables_per_segment] * vol_multiple
 
         if split == 'train':
             self.all_data = self.all_data.iloc[:self.train_size, :]
