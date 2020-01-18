@@ -21,7 +21,7 @@ class NTF_Module(nn.Module):
                 ):
         super(NTF_Module, self).__init__()
         
-        if device==None:
+        if device == None:
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         else:
             self.device = device

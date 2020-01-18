@@ -52,7 +52,7 @@ class TrafficPredictionTask(FairseqTask):
         """Load a given dataset split (e.g., train, valid, test)."""
 
         self.output_seq_len = 10
-        self.input_seq_len=1440
+        self.input_seq_len = 1440
         self.num_segments = 12
         self.variables_per_segment = 4
         self.total_input_variables = self.num_segments*self.variables_per_segment
