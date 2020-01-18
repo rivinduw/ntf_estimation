@@ -27,7 +27,7 @@ class MSECriterion(FairseqCriterion):
         self.loss_fn = torch.nn.MSELoss()
 
         self.common_lambda = 1.0
-        self.segment_lambda = 0.1
+        self.segment_lambda = 0.01
         self.segment_time_lambda = 1.0
 
     def forward(self, model, sample, reduce=True):
@@ -97,7 +97,7 @@ class MSECriterion(FairseqCriterion):
         outputs = lprobs[target_mask]
         num_valid = target_mask.float().sum()
 
-        wmape = 100. * torch.div(torch.div(torch.sum(torch.sub(outputs,y)),torch.sum(y)),num_valid)
+        wmape = 100. * torch.div( torch.div(torch.sum(torch.abs(torch.sub(outputs,y))),torch.sum(torch.abs(y))),num_valid)
         mape_loss = torch.mean(torch.abs(torch.div(torch.sub(outputs,y),(y + 1e-6))))
         # mape_loss = mape_loss / num_valid
         accuracy = 1. - mape_loss

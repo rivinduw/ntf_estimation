@@ -57,7 +57,7 @@ class TrafficPredictionTask(FairseqTask):
         self.variables_per_segment = 4
         self.total_input_variables = self.num_segments*self.variables_per_segment
         data_file = os.path.join(self.args.data, '{}.csv'.format('valid_data_109'))#split))
-        self.datasets[split] = TrafficDataset(data_file,output_seq_len=self.output_seq_len,split=split,input_seq_len=1440)
+        self.datasets[split] = TrafficDataset(data_file, output_seq_len=self.output_seq_len, split=split, input_seq_len=self.input_seq_len)
         #if split=='train':
         self.max_vals = self.datasets[split].get_max_vals()
 
