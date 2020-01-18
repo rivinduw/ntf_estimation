@@ -22,7 +22,7 @@ class MSECriterion(FairseqCriterion):
     def __init__(self, args, task):
         super().__init__(args, task)
         # wandb.init(job_type='mse_loss', config=args)
-        self.mse_loss = torch.nn.mse_loss()#F.mse_loss(reduction='mean')
+        self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
 
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.

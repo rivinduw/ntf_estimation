@@ -127,19 +127,19 @@ class NTF_Module(nn.Module):
         if cap_delta is not None: self.cap_delta = cap_delta
         if lambda_var is not None: self.lambda_var = lambda_var
             
-        x = x.view(-1,self.num_segments,self.inputs_per_segment)
+        x = x.view(-1, self.num_segments, self.inputs_per_segment)
 
-        self.current_densities = x[:,:,self.rho_index] * self.g_var
-        self.current_flows = x[:,:,self.q_index]
-        self.current_onramp = x[:,:,self.r_index]
-        self.current_offramp = x[:,:,self.s_index]
+        self.current_densities = x[:, : , self.rho_index] * self.g_var
+        self.current_flows = x[:, :, self.q_index]
+        self.current_onramp = x[:, :, self.r_index]
+        self.current_offramp = x[:, :, self.s_index]
         
         self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
         self.current_velocities = torch.clamp(self.current_velocities, min=5, max=120)
         
-        self.prev_velocities = torch.cat([self.v0,self.current_velocities[:,:-1]],dim=1)
-        self.next_densities = torch.cat([self.current_densities[:,1:],self.rhoNp1],dim=1)
-        self.prev_flows = torch.cat([self.q0,self.current_flows[:,:-1]],dim=1)
+        self.prev_velocities = torch.cat([self.v0, self.current_velocities[:, :-1]], dim=1)
+        self.next_densities = torch.cat([self.current_densities[:, 1:],self.rhoNp1], dim=1)
+        self.prev_flows = torch.cat([self.q0, self.current_flows[:, :-1]], dim=1)
         
         future_velocities = self.future_v()
         future_densities = self.future_rho()
