@@ -42,7 +42,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         num_segments = task.get_num_segments()
         num_var_per_segment = task.get_variables_per_segment()
         total_input_variables = task.get_total_input_variables()
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         encoder = TrafficNTFEncoder(seq_len = input_seq_len,device=device)#.to(device)
         decoder = TrafficNTFDecoder(max_vals=max_vals, seq_len = output_seq_len, encoder_output_units=total_input_variables,device=device)#.to(device)
@@ -251,7 +251,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
     def __init__(
         self, hidden_size=128, #input_size=90, output_size=90,
         num_segments=12, num_var_per_segment=4, seq_len=360,
-        num_layers=2, dropout_in=0.1, dropout_out=0.1, attention=True,
+        num_layers=1, dropout_in=0.1, dropout_out=0.1, attention=True,
         encoder_output_units=None, pretrained_embed=None, device=None,
         share_input_output_embed=False, adaptive_softmax_cutoff=None, max_vals = None
     ):
@@ -271,7 +271,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # attention=False
         # self.need_attn = False#True 
 
-        self.max_vals = torch.Tensor(max_vals)#.to(self.device)
+        self.max_vals = torch.Tensor(max_vals).to(self.device)
 
         #attention=False
         self.num_segments = num_segments
@@ -320,7 +320,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         
         self.num_segments = num_segments#12#
         #self.input_dim = self.num_segments * 5
-        self.max_vals = torch.Tensor([10000., 100., 1000., 1000] * self.num_segments)#.to(self.device) 
+        self.max_vals = torch.Tensor([10000., 100., 1000., 1000] * self.num_segments).to(self.device) 
         
         self.num_common_params = 3+5 #num_boundry
         
@@ -475,7 +475,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             common_params = torch.cat([torch.sigmoid(common_params[:, :1]), torch.sigmoid(common_params[:, 1:4]), torch.sigmoid(common_params[:, 4:])], dim=1)
             
             #                                                          v0,  q0,    ,rhoNp1, T, tau, nu, delta, kappa
-            v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0])*common_params, dim=1)#.to(self.device)
+            v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)#.to(self.device)
             #from fairseq import pdb; pdb.set_trace()
             # v0 = torch.clamp(v0, min=5.0)
             # t_var = torch.clamp(t_var, min=0.001)
@@ -495,7 +495,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             segment_params = torch.cat([torch.sigmoid(segment_params[:,:8,:]),F.relu(segment_params[:,8:10,:]),torch.tanh(segment_params[:,10:,:])],dim=1)
             # import pdb; pdb.set_trace()
                                                         #  self.Delta, self.lambda_var, vf, a, rhocr, g, omegar, omegas, epsq, epsv 
-            cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[200.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[1000.0],[10.0]]),dim=1)#.to(self.device)
+            cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[200.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[1000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
             # cap_delta = torch.clamp(cap_delta, min=0.278)
             # vf = torch.clamp(vf, min=5.0)
             # lambda_var = torch.clamp(lambda_var, min=3.0)

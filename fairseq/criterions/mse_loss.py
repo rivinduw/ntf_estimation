@@ -61,7 +61,7 @@ class MSECriterion(FairseqCriterion):
         #bsz, t, var, segments
         # torch.Size([32, 10, 10, 12])
         #cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[200.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[10.0],[10.0]]).to(self.device),dim=1)  
-        segment_loss = 0#self.mse_loss(segment[:,:,:6,1:],segment[:,:,:6,:-1])
+        segment_loss = self.mse_loss(segment[:,:,:6,1:],segment[:,:,:6,:-1])
         segment_lambda = 1.0
         
         # segment_mean = torch.mean(segment,dim=2,keepdim=True) #[1,360,18,8]
@@ -100,7 +100,7 @@ class MSECriterion(FairseqCriterion):
         # print("mask sum",target_mask.float().sum(),target.sum())
         mse_target_loss = self.mse_loss(outputs, y)
         
-        total_loss = mse_target_loss + boundry_lambda*boundry_loss + segment_time_lambda*segment_time_loss #+ segment_lambda*segment_loss
+        total_loss = mse_target_loss + boundry_lambda*boundry_loss + segment_time_lambda*segment_time_loss + segment_lambda*segment_loss
         
         wandb.log(
             {'normal_loss':total_loss,
