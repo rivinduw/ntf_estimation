@@ -330,6 +330,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #  = 3+3
 
         self.vmin = 10
+        self.vmax = 110
         self.shortest_segment_length = 0.278
         self.num_ntf_steps = 3
 
@@ -475,11 +476,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             common_params = torch.cat([torch.sigmoid(common_params[:, :1]), torch.sigmoid(common_params[:, 1:4]), torch.sigmoid(common_params[:, 4:])], dim=1)
             
             #                                                          v0,  q0,    ,rhoNp1, T, tau, nu, delta, kappa
-            v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)#.to(self.device)
+            v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([110.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)#.to(self.device)
             #from fairseq import pdb; pdb.set_trace()
             # v0 = torch.clamp(v0, min=5.0)
             # t_var = torch.clamp(t_var, min=0.001)
             v0 = v0 + self.vmin
+            #v0 = torch.clamp(v0, max=120.0)
             t_var = torch.Tensor([10*0.00028]*bsz)# + t_var
             tau = 1./3600. + tau
             delta = 1.0 + delta
@@ -495,7 +497,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             segment_params = torch.cat([torch.sigmoid(segment_params[:,:8,:]),F.relu(segment_params[:,8:10,:]),torch.tanh(segment_params[:,10:,:])],dim=1)
             # import pdb; pdb.set_trace()
                                                         #  self.Delta, self.lambda_var, vf, a, rhocr, g, omegar, omegas, epsq, epsv 
-            cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[200.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[1000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
+            cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[11.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[1000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
             # cap_delta = torch.clamp(cap_delta, min=0.278)
             # vf = torch.clamp(vf, min=5.0)
             # lambda_var = torch.clamp(lambda_var, min=3.0)

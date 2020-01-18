@@ -23,11 +23,12 @@ class MSECriterion(FairseqCriterion):
         super().__init__(args, task)
         # wandb.init(job_type='mse_loss', config=args)
         # self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
-        self.loss_fn = torch.nn.L1Loss()
+        # self.loss_fn = torch.nn.L1Loss()
+        self.loss_fn = torch.nn.MSELoss()
 
         self.common_lambda = 1.0
-        self.segment_lambda = 1.0
-        self.segment_time_lambda = 1.0#0.01
+        self.segment_lambda = 0.1
+        self.segment_time_lambda = 1.0
 
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.
@@ -92,30 +93,32 @@ class MSECriterion(FairseqCriterion):
 
         target_mask = target > 1e-6
 
-        y = target[target_mask]#*target_mask.float()
-        outputs = lprobs[target_mask]#*target_mask.float()
-        #num_valid = target_mask.float().sum()
+        y = target[target_mask]
+        outputs = lprobs[target_mask]
+        num_valid = target_mask.float().sum()
 
+        wmape = 100. * torch.div(torch.div(torch.sum(torch.sub(outputs,y)),torch.sum(y)),num_valid)
         mape_loss = torch.mean(torch.abs(torch.div(torch.sub(outputs,y),(y + 1e-6))))
         # mape_loss = mape_loss / num_valid
         accuracy = 1. - mape_loss
         accuracy = accuracy.clamp(0,1)
         
         # print("mask sum",target_mask.float().sum(),target.sum())
-        mse_target_loss = self.loss_fn(outputs, y)
+        target_loss = self.loss_fn(outputs, y)
         
-        total_loss = mse_target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
+        total_loss = target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
         
         wandb.log(
-            {'normal_loss':total_loss,
-            'common_loss':common_loss,
-            'segment_loss':segment_loss,
-            'segment_time_loss':segment_time_loss,
-            'mape_loss': mape_loss,
-            'mse_target_loss': mse_target_loss,
-            'accuracy': accuracy,
-            #'smooth_loss':smooth_loss
-            }
+                {'normal_loss':total_loss,
+                'common_loss':common_loss,
+                'segment_loss':segment_loss,
+                'segment_time_loss':segment_time_loss,
+                'mape_loss': mape_loss,
+                'target_loss': target_loss,
+                'accuracy': accuracy,
+                'wmape': wmape,
+                'w-accuracy': 100. - wmape,
+                }
             )
 
         # loss = F.nll_loss(
