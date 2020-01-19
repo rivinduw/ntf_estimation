@@ -108,18 +108,21 @@ class MSECriterion(FairseqCriterion):
         
         total_loss = target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
         
-        wandb.log(
-                {'normal_loss':total_loss,
-                'common_loss':common_loss,
-                'segment_loss':segment_loss,
-                'segment_time_loss':segment_time_loss,
-                'mape_loss': mape_loss,
-                'target_loss': target_loss,
-                'accuracy': accuracy,
-                'wmape': wmape,
-                'w-accuracy': 100. - wmape,
-                }
-            )
+        try:
+            wandb.log(
+                    {'normal_loss':total_loss,
+                    'common_loss':common_loss,
+                    'segment_loss':segment_loss,
+                    'segment_time_loss':segment_time_loss,
+                    'mape_loss': mape_loss,
+                    'target_loss': target_loss,
+                    'accuracy': accuracy,
+                    'wmape': wmape,
+                    'w-accuracy': 100. - wmape,
+                    }
+                )
+        except Exception as e:
+            print(e)
 
         # loss = F.nll_loss(
         #     lprobs,
