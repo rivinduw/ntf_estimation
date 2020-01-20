@@ -497,7 +497,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             segment_params = torch.cat([torch.sigmoid(segment_params[:,:8,:]),F.relu(segment_params[:,8:10,:]),torch.tanh(segment_params[:,10:,:])],dim=1)
             # import pdb; pdb.set_trace()
                                                                                                                             #  self.Delta, self.lambda_var, vf, a, rhocr, g, omegar, omegas, epsq, epsv 
-            cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[110.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[1000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
+            cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, offramp_prop, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[110.0],[5.0],[100.0],[10.0],[1000.0],[1.0],[1000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
             # cap_delta = torch.clamp(cap_delta, min=0.278)
             # vf = torch.clamp(vf, min=5.0)
             # lambda_var = torch.clamp(lambda_var, min=3.0)
@@ -527,7 +527,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             for _ in range(self.num_ntf_steps):#x_input,segment_params,boundry_params)
                 output1 = self.ntf_module(
                     x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
-                    g_var=g_var, future_r=future_r, future_s=future_s, epsq=epsq, epsv=epsv,t_var=t_var,\
+                    g_var=g_var, future_r=future_r, offramp_prop=offramp_prop, epsq=epsq, epsv=epsv,t_var=t_var,\
                     tau=tau, nu=nu, delta=delta, kappa=kappa, cap_delta=cap_delta,\
                     lambda_var=lambda_var)
                 model_steps.append(output1)
