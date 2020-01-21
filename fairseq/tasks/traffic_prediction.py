@@ -104,35 +104,35 @@ class TrafficPredictionTask(FairseqTask):
             loss, sample_size, logging_output = criterion(model, sample)
             try:
                 wandb.log({'valid_loss':loss})
-                if self.valid_step_num%100 == 0:
-                    net_output = model(**sample['net_input'])
-                    print("****")
-                    # plt.ion()
-                    # plt.pause(0.1)
-                    # plt.close('all')
-                    # plt.pause(0.1)
-                    print(net_output[0].size())
+                # if self.valid_step_num%100 == 0:
+                #     net_output = model(**sample['net_input'])
+                #     print("****")
+                #     # plt.ion()
+                #     # plt.pause(0.1)
+                #     # plt.close('all')
+                #     # plt.pause(0.1)
+                #     print(net_output[0].size())
                     
-                    preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
-                    src = sample['net_input']['src_tokens'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
-                    target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
-                    for i in range(2):
-                        for seg in range(0,10):
-                            ax = pd.DataFrame(preds[i,:,seg*1]).plot()
-                            pd.DataFrame(target[i,:,seg*1]).plot(ax=ax)
-                            plt.title(str(i)+"***"+str(seg))
-                            plt.pause(0.1)
-                            plt.show(block=False)
-                            plt.pause(3.0)
-                            plt.pause(0.1)
-                            try:
-                                wandb.log({"chart"+str(i)+"_"+str(seg): plt})
-                            except Exception as e:
-                                print(e)
-                        plt.pause(2.0)
-                        plt.close('all')
-                    plt.pause(5.0)
-                    plt.close('all')
+                #     preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
+                #     src = sample['net_input']['src_tokens'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
+                #     target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
+                #     for i in range(2):
+                #         for seg in range(0,10):
+                #             ax = pd.DataFrame(preds[i,:,seg*1]).plot()
+                #             pd.DataFrame(target[i,:,seg*1]).plot(ax=ax)
+                #             plt.title(str(i)+"***"+str(seg))
+                #             plt.pause(0.1)
+                #             plt.show(block=False)
+                #             plt.pause(3.0)
+                #             plt.pause(0.1)
+                #             try:
+                #                 wandb.log({"chart"+str(i)+"_"+str(seg): plt})
+                #             except Exception as e:
+                #                 print(e)
+                #         plt.pause(2.0)
+                #         plt.close('all')
+                #     plt.pause(5.0)
+                #     plt.close('all')
                     # wandb.save('checkpoints/checkpoint_best.pt')
                     # wandb.save('checkpoints/checkpoint_last.pt')
             except Exception as e:
