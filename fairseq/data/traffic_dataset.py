@@ -24,7 +24,7 @@ class TrafficDataset(FairseqDataset):
     def __init__(self, csv_file, output_seq_len=360,
                 scale_input = True, scale_output = True, input_seq_len=1440,
                 num_segments = 12, variables_per_segment = 4,
-                max_vals = [10000,100,1000,1000],
+                max_vals = [10000,100,3000,3000],
                 last_train_datetime = "2018-08-01 00:00:00",
                 shuffle=True, input_feeding=True, 
                 max_sample_size=None, min_sample_size=None,split='train'
