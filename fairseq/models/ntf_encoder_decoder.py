@@ -40,12 +40,17 @@ class NTFModel(FairseqEncoderDecoderModel):
         output_seq_len = task.get_output_seq_len()
         input_seq_len = task.get_input_seq_len()
         num_segments = task.get_num_segments()
+
+        segment_lengths = task.get_segment_lengths()
+        num_lanes = task.get_num_lanes()
+
         num_var_per_segment = task.get_variables_per_segment()
         total_input_variables = task.get_total_input_variables()
         device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         encoder = TrafficNTFEncoder(seq_len = input_seq_len,device=device)#.to(device)
-        decoder = TrafficNTFDecoder(max_vals=max_vals, seq_len = output_seq_len, encoder_output_units=total_input_variables,device=device)#.to(device)
+        decoder = TrafficNTFDecoder(max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, \
+            seq_len = output_seq_len, encoder_output_units=total_input_variables,device=device)#.to(device)
         return cls(encoder, decoder)
     
     # def forward(self, src_tokens,  prev_output_tokens, **kwargs):#src_lengths,
@@ -250,7 +255,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
     """Traffic NTF decoder."""
     def __init__(
         self, hidden_size=128, #input_size=90, output_size=90,
-        num_segments=12, num_var_per_segment=4, seq_len=360,
+        num_segments=12, segment_lengths=None, num_lanes=None,
+        num_var_per_segment=4, seq_len=360,
         num_layers=1, dropout_in=0.1, dropout_out=0.1, attention=True,
         encoder_output_units=None, pretrained_embed=None, device=None,
         share_input_output_embed=False, adaptive_softmax_cutoff=None, max_vals = None
@@ -320,11 +326,16 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         
         self.num_segments = num_segments#12#
         #self.input_dim = self.num_segments * 5
-        self.max_vals = torch.Tensor([10000., 100., 1000., 1000] * self.num_segments).to(self.device) 
+        #self.max_vals = #torch.Tensor([10000., 100., 1000., 1000] * self.num_segments).to(self.device) 
         
         self.num_common_params = 3+5 #num_boundry
         
 
+        if segment_lengths!=None:
+            self.segment_lengths = torch.Tensor(segment_lengths)
+        
+        if num_lanes!=None:
+            self.num_lanes = torch.Tensor(num_lanes)
 
         self.num_segment_specific_params = 8+2
         #  = 3+3
