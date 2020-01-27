@@ -67,7 +67,7 @@ class MSECriterion(FairseqCriterion):
         #bsz, t, var, segments
         # torch.Size([32, 10, 10, 12])
         #cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[200.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[10.0],[10.0]]).to(self.device),dim=1)  
-        segment_loss = self.loss_fn(segment[:,:,:6,1:],segment[:,:,:6,:-1])
+        segment_loss = self.loss_fn(segment[:,:,:3,1:],segment[:,:,:3,:-1])
         
         
         # segment_mean = torch.mean(segment,dim=2,keepdim=True) #[1,360,18,8]
@@ -76,7 +76,7 @@ class MSECriterion(FairseqCriterion):
 
         #import fairseq.pdb as pdb; pdb.set_trace()
 
-        segment_time_loss = self.loss_fn(segment[:,1:,:8,:],segment[:,:-1,:8,:])
+        segment_time_loss = self.loss_fn(segment[:,1:,:6,:],segment[:,:-1,:6,:])
         
         # segment_time_mean = torch.mean(segment,dim=1,keepdim=True) #[1,360,18,8]
         # segment_time_loss = torch.mean((segment-segment_time_mean)**2,dim=1)

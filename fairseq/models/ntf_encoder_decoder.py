@@ -40,7 +40,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         output_seq_len = task.get_output_seq_len()
         input_seq_len = task.get_input_seq_len()
         num_segments = task.get_num_segments()
-
+        big_t = 10.0/3600. #hours
         segment_lengths = task.get_segment_lengths()
         num_lanes = task.get_num_lanes()
 
@@ -50,7 +50,7 @@ class NTFModel(FairseqEncoderDecoderModel):
 
         encoder = TrafficNTFEncoder(seq_len = input_seq_len,device=device)#.to(device)
         decoder = TrafficNTFDecoder(max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, \
-            seq_len = output_seq_len, encoder_output_units=total_input_variables,device=device)#.to(device)
+            seq_len = output_seq_len, encoder_output_units=total_input_variables,t_var=big_t,device=device)#.to(device)
         return cls(encoder, decoder)
     
     # def forward(self, src_tokens,  prev_output_tokens, **kwargs):#src_lengths,
@@ -255,7 +255,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
     """Traffic NTF decoder."""
     def __init__(
         self, hidden_size=128, #input_size=90, output_size=90,
-        num_segments=12, segment_lengths=None, num_lanes=None,
+        num_segments=12, segment_lengths=None, num_lanes=None, t_var=None,
         num_var_per_segment=4, seq_len=360,
         num_layers=1, dropout_in=0.1, dropout_out=0.1, attention=True,
         encoder_output_units=None, pretrained_embed=None, device=None,
@@ -329,16 +329,29 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #self.max_vals = #torch.Tensor([10000., 100., 1000., 1000] * self.num_segments).to(self.device) 
         
         self.num_common_params = 3+5 #num_boundry
+        self.num_segment_specific_params = 8+2
+        #  = 3+3
         
 
         if segment_lengths!=None:
             self.segment_lengths = torch.Tensor(segment_lengths)
+            self.num_segment_specific_params -= 1
+        else:
+            self.segment_lengths = None
         
         if num_lanes!=None:
             self.num_lanes = torch.Tensor(num_lanes)
+            self.num_segment_specific_params = 8
+        else:
+            self.num_lanes = None
+        
+        if t_var!=None:
+            self.t_var = torch.Tensor([[t_var]])#torch.Tensor(t_var)
+            self.num_common_params = 7
+        else:
+            self.t_var = None
 
-        self.num_segment_specific_params = 8+2
-        #  = 3+3
+        
 
         self.vmin = 10
         self.vmax = 110
@@ -352,7 +365,13 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.ntf_projection = nn.Linear(hidden_size, self.ntf_proj)
         # self.output_layer = nn.Linear(lin_layer_sizes[-1],
         #                           self.ntf_proj)
-        self.ntf_module = NTF_Module(num_segments=self.num_segments, device=self.device)
+
+        if segment_lengths!=None and t_var!=None:
+            print(self.segment_lengths,self.num_lanes)
+            self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.num_lanes, lambda_var=self.segment_lengths, t_var=self.t_var, device=self.device)
+        else:
+            print("no num lanes segment lengths")
+            self.ntf_module = NTF_Module(num_segments=self.num_segments, device=self.device)
 
         ##OLD###
         # self.segment_fixed = torch.Tensor([[582.0/1000.,3.],[318.0/1000.,4.],[703.0/1000.,4.],[ 387.0/1000.,4.],[ 300.0/1000.,5.],[ 348.0/1000.,5.],[ 375.0/1000.,4.],[ 300.0/1000.,4.],[ 257.0/1000.,4.],[ 500.0/1000.,4.],[ 484.0/1000.,4.],[ 400.0/1000.,3.],[ 420.0/1000.,3.],[ 589.0/1000.,3.],[ 427./1000.,3.],[ 400.0/1000.,2.],[ 515.0/1000.,2.0],[ 495.0/1000.,3.0]]).to(self.device)#torch.Tensor(self.num_segments, 2)
@@ -479,75 +498,102 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
             #NTF
             #ntf_input = x#self.out(output[0])
-            
-
             common_params, segment_params = torch.split(ntf_input, [self.num_common_params, self.num_segment_specific_params*self.num_segments], dim=1)
             #assert self.num_common_params == 8
             #10./3600.,17./3600.,23.,1.7,13.
             common_params = torch.cat([torch.sigmoid(common_params[:, :1]), torch.sigmoid(common_params[:, 1:4]), torch.sigmoid(common_params[:, 4:])], dim=1)
             
-            #                                                          v0,  q0,    ,rhoNp1, T, tau, nu, delta, kappa
-            v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([110.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)#.to(self.device)
-            #from fairseq import pdb; pdb.set_trace()
-            # v0 = torch.clamp(v0, min=5.0)
-            # t_var = torch.clamp(t_var, min=0.001)
+            # if True:#self.segment_lengths!=None and self.t_var!=None:
+            v0, q0, rhoNp1, tau, nu, delta, kappa = torch.unbind(torch.Tensor([self.vmax, 10000.0, 100.0, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
             v0 = v0 + self.vmin
-            #v0 = torch.clamp(v0, max=120.0)
-            t_var = torch.Tensor([10*0.00028]*bsz)# + t_var
             tau = 1./3600. + tau
             delta = 1.0 + delta
             kappa = 1.0 + kappa
             nu = 1.0 + nu
-
-            # delta = 1.7 + delta
-            # kappa = 13.0+ 0.0*kappa# + 1.0
-            # nu = 23.0 + 0.0*nu #+ 1.0
-
-            segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
-            #assert self.num_segment_specific_params==10
-            segment_params = torch.cat([torch.sigmoid(segment_params[:,:8,:]),F.relu(segment_params[:,8:10,:]),torch.tanh(segment_params[:,10:,:])],dim=1)
-            # import pdb; pdb.set_trace()
-                                                                                                                            #  self.Delta, self.lambda_var, vf, a, rhocr, g, omegar, omegas, epsq, epsv 
-            cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, offramp_prop, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[110.0],[5.0],[100.0],[10.0],[1000.0],[1.0],[1000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
-            # cap_delta = torch.clamp(cap_delta, min=0.278)
-            # vf = torch.clamp(vf, min=5.0)
-            # lambda_var = torch.clamp(lambda_var, min=3.0)
             
+            segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
+            segment_params = torch.cat([torch.sigmoid(segment_params[:,:8,:]),F.relu(segment_params[:,8:10,:]),torch.tanh(segment_params[:,10:,:])],dim=1)
+                                                                                                                                #  vf, a, rhocr, g, omegar, omegas, epsq, epsv 
+            vf, a_var, rhocr, g_var, future_r, offramp_prop, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[self.vmax],[5.0],[100.0],[10.0],[5000.0],[1.0],[10000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
             rhocr = 1.0 + rhocr
-            cap_delta = cap_delta + self.shortest_segment_length
             vf = self.vmin + vf
-            lambda_var = 1.0 + lambda_var
             a_var = 1.0 + a_var
             g_var = 1.0 + g_var
 
-            
-            # rhocr = 33.5 + 0.0*rhocr
-            # cap_delta = cap_delta + 0.278
-            # vf = 110. + 0.0*vf #+5.0
-            # lambda_var = 3.0 + 0.0*lambda_var#+1.0
-            # a_var = 1.8 + 0.0*a_var# + 0.5
-            
-            # print(pd.DataFrame(segment_params))
-            # segment_params = segment_params.permute(0, 2, 1)
-
-            #x = input_data*self.max_vals
-            #x_unscaled = input_in*self.max_vals 
             x_input = input_in*self.max_vals
             model_steps = []
             
-            for _ in range(self.num_ntf_steps):#x_input,segment_params,boundry_params)
+            for _ in range(self.num_ntf_steps):
                 output1 = self.ntf_module(
                     x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
-                    g_var=g_var, future_r=future_r, offramp_prop=offramp_prop, epsq=epsq, epsv=epsv,t_var=t_var,\
-                    tau=tau, nu=nu, delta=delta, kappa=kappa, cap_delta=cap_delta,\
-                    lambda_var=lambda_var)
+                    g_var=g_var, future_r=future_r, offramp_prop=offramp_prop, epsq=epsq, epsv=epsv,\
+                    tau=tau, nu=nu, delta=delta, kappa=kappa)
                 model_steps.append(output1)
                 x_input = output1
+            # else:
+            #     #                                                          v0,  q0,    ,rhoNp1, T, tau, nu, delta, kappa
+            #     v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([110.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)#.to(self.device)
+            #     #from fairseq import pdb; pdb.set_trace()
+            #     # v0 = torch.clamp(v0, min=5.0)
+            #     # t_var = torch.clamp(t_var, min=0.001)
+            #     v0 = v0 + self.vmin
+            #     #v0 = torch.clamp(v0, max=120.0)
+            #     t_var = torch.Tensor([10*0.00028]*bsz)# + t_var
+            #     tau = 1./3600. + tau
+            #     delta = 1.0 + delta
+            #     kappa = 1.0 + kappa
+            #     nu = 1.0 + nu
+
+            #     # delta = 1.7 + delta
+            #     # kappa = 13.0+ 0.0*kappa# + 1.0
+            #     # nu = 23.0 + 0.0*nu #+ 1.0
+
+            #     segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
+            #     #assert self.num_segment_specific_params==10
+            #     segment_params = torch.cat([torch.sigmoid(segment_params[:,:8,:]),F.relu(segment_params[:,8:10,:]),torch.tanh(segment_params[:,10:,:])],dim=1)
+            #     # import pdb; pdb.set_trace()
+            #                                                                                                                     #  self.Delta, self.lambda_var, vf, a, rhocr, g, omegar, omegas, epsq, epsv 
+            #     cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, offramp_prop, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[110.0],[5.0],[100.0],[10.0],[1000.0],[1.0],[1000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
+            #     # cap_delta = torch.clamp(cap_delta, min=0.278)
+            #     # vf = torch.clamp(vf, min=5.0)
+            #     # lambda_var = torch.clamp(lambda_var, min=3.0)
+                
+            #     rhocr = 1.0 + rhocr
+            #     cap_delta = cap_delta + self.shortest_segment_length
+            #     vf = self.vmin + vf
+            #     lambda_var = 1.0 + lambda_var
+            #     a_var = 1.0 + a_var
+            #     g_var = 1.0 + g_var
+
+                
+            #     # rhocr = 33.5 + 0.0*rhocr
+            #     # cap_delta = cap_delta + 0.278
+            #     # vf = 110. + 0.0*vf #+5.0
+            #     # lambda_var = 3.0 + 0.0*lambda_var#+1.0
+            #     # a_var = 1.8 + 0.0*a_var# + 0.5
+                
+            #     # print(pd.DataFrame(segment_params))
+            #     # segment_params = segment_params.permute(0, 2, 1)
+
+            #     #x = input_data*self.max_vals
+            #     #x_unscaled = input_in*self.max_vals 
+            #     x_input = input_in*self.max_vals
+            #     model_steps = []
+                
+            #     for _ in range(self.num_ntf_steps):#x_input,segment_params,boundry_params)
+            #         output1 = self.ntf_module(
+            #             x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
+            #             g_var=g_var, future_r=future_r, offramp_prop=offramp_prop, epsq=epsq, epsv=epsv,t_var=t_var,\
+            #             tau=tau, nu=nu, delta=delta, kappa=kappa, cap_delta=cap_delta,\
+            #             lambda_var=lambda_var)
+            #         model_steps.append(output1)
+            #         x_input = output1
 
             output = torch.stack(model_steps,dim=0).mean(dim=0)
             #output = output.view(-1)
             output = output/(self.max_vals+1e-6)
-            output = torch.clamp(output, min=0, max=1)
+            
+            #output = torch.clamp(output, min=0, max=1)
             #x_output = output
             ##
             common_params_list.append(common_params)

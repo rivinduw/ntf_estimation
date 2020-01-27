@@ -40,11 +40,18 @@ class TrafficPredictionTask(FairseqTask):
         # with open(args.segment_lengths_file) as f:
         #     segment_lengths = f.read().splitlines()
         # print('| segment_lengths_file had {} segments'.format(len(segment_lengths)))
-        metadata = pd.read_csv('../dataset_metadata/estimation_sites.csv')
+        return TrafficPredictionTask(args)
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.valid_step_num = 0
+        # self.segment_lengths = segment_lengths
+        metadata = pd.read_csv('data/estimation_sites.csv')
         self.segment_lengths = list(metadata.loc[metadata['type']=='q','distance']/1000.)
         self.num_lanes = list(metadata.loc[metadata['type']=='q','num_lanes'])
-        self.num_segments = len(self.num_lanes)#12
-
+        self.num_segments = 12#len(self.num_lanes)#12
+        self.num_lanes = self.num_lanes[2:self.num_segments+2]
+        self.segment_lengths = self.segment_lengths[2:self.num_segments+2]
 
         self.output_seq_len = 10
         self.input_seq_len = 1440
@@ -52,19 +59,11 @@ class TrafficPredictionTask(FairseqTask):
         self.variables_per_segment = 4
         self.total_input_variables = self.num_segments*self.variables_per_segment
 
-
-        return TrafficPredictionTask(args)
-
-    def __init__(self, args):
-        super().__init__(args)
-        self.valid_step_num = 0
-        # self.segment_lengths = segment_lengths
-
     def load_dataset(self, split, **kwargs):
         """Load a given dataset split (e.g., train, valid, test)."""
 
         
-        data_file = os.path.join(self.args.data, '{}.csv'.format('valid_data_109'))#split))
+        data_file = self.args.data#os.path.join(self.args.data, '{}.csv'.format('valid_data_109'))#split))
         self.datasets[split] = TrafficDataset(data_file, output_seq_len=self.output_seq_len, split=split, input_seq_len=self.input_seq_len)
         #if split=='train':
         self.max_vals = self.datasets[split].get_max_vals()
