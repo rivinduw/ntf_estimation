@@ -24,7 +24,7 @@ class TrafficDataset(FairseqDataset):
     def __init__(self, csv_file, output_seq_len=360,
                 scale_input = True, scale_output = True, input_seq_len=1440,
                 num_segments = 12, variables_per_segment = 4,
-                max_vals = [10000,100,3000,3000],
+                max_vals = [10000,100,5000,5000],
                 last_train_datetime = "2018-08-01 00:00:00",
                 shuffle=True, input_feeding=True, 
                 max_sample_size=None, min_sample_size=None,split='train'
@@ -52,7 +52,7 @@ class TrafficDataset(FairseqDataset):
         if total_input_variables!=self.all_data.shape[1]:
             print("total_input_variables:",total_input_variables)
             print("self.all_data.shape[1]:",self.all_data.shape[1],"trimming cols")
-        self.all_data = self.all_data.iloc[:,:total_input_variables]
+        self.all_data = self.all_data.iloc[:,2*4:total_input_variables+2*4]
 
         last_train_idx = self.all_data.index.get_loc(self.last_train_datetime, method='nearest')
         self.train_size = last_train_idx#int(len(self.all_data)*2//3)#100000#360*16
@@ -75,11 +75,11 @@ class TrafficDataset(FairseqDataset):
             print("t??##Length of Test Dataset: ",len(self.all_data))
 
         broken_detector_id = 4*4
-        simulate_detector_breakdown = True
+        simulate_detector_breakdown = False
         if simulate_detector_breakdown == True and split!='train':
             self.all_data.iloc[:, broken_detector_id] = -1e-6
         
-        simulate_no_detector = True
+        simulate_no_detector = False
         if simulate_no_detector == True:
             self.all_data.iloc[:, broken_detector_id] = -1e-6
 
