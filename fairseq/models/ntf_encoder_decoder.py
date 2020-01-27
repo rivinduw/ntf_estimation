@@ -48,7 +48,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         total_input_variables = task.get_total_input_variables()
         device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        encoder = TrafficNTFEncoder(seq_len = input_seq_len,device=device)#.to(device)
+        encoder = TrafficNTFEncoder(seq_len = input_seq_len,num_layers=2,device=device)#.to(device)
         decoder = TrafficNTFDecoder(max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, \
             seq_len = output_seq_len, encoder_output_units=total_input_variables,t_var=big_t,device=device)#.to(device)
         return cls(encoder, decoder)
@@ -90,7 +90,7 @@ class NTFModel(FairseqEncoderDecoderModel):
 class TrafficNTFEncoder(FairseqEncoder):
     """NTF encoder."""
     def __init__(
-        self, hidden_size=512, num_layers=1, #input_size=90,
+        self, hidden_size=512, num_layers=2, #input_size=90,
         seq_len=360, num_segments=12, num_var_per_segment=4, device=None,
         dropout_in=0.1, dropout_out=0.1, bidirectional=False, padding_value=0):
         super().__init__(dictionary=None)
@@ -108,13 +108,17 @@ class TrafficNTFEncoder(FairseqEncoder):
         self.input_size = num_segments * num_var_per_segment
         self.output_units = self.input_size
 
+        # self.input_fc = Linear(self.input_size,self.hidden_size)
+
         self.lstm = LSTM(
             input_size=self.input_size,
-            hidden_size=self.output_units,
+            hidden_size=self.input_size,
             num_layers=num_layers,
             dropout=self.dropout_out if num_layers > 1 else 0.,
             bidirectional=bidirectional,
         )
+
+        # self.additional_fc = Linear(self.hidden_size, self.input_size)
 
         self.padding_value = padding_value
 
@@ -140,6 +144,8 @@ class TrafficNTFEncoder(FairseqEncoder):
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
 
+        # x = self.input_fc(x)
+
         x_mask = x < 1e-6 #BUG
         # print("x_mask",x_mask.size())
 
@@ -157,7 +163,7 @@ class TrafficNTFEncoder(FairseqEncoder):
         lstm_outs, (final_hiddens, final_cells) = self.lstm(x, (h0, c0))
 
         # print("lstm_outs",lstm_outs.size())
-        x = lstm_outs
+        x = lstm_outs # self.additional_fc(lstm_outs)
 
         # unpack outputs and apply dropout
         # x, _ = nn.utils.rnn.pad_packed_sequence(packed_outs, padding_value=self.padding_value)
@@ -177,7 +183,7 @@ class TrafficNTFEncoder(FairseqEncoder):
 
         encoder_padding_mask = x_mask#.sum(dim=2)<1 #BUG: need multidim mask
 
-        # print("x",x.size())
+        # print("x",x.size())t
         # print("final_hiddens",final_hiddens.size())
         # print("final_cells",final_cells.size())
 
@@ -254,7 +260,7 @@ class AttentionLayer(nn.Module):
 class TrafficNTFDecoder(FairseqIncrementalDecoder):
     """Traffic NTF decoder."""
     def __init__(
-        self, hidden_size=128, #input_size=90, output_size=90,
+        self, hidden_size=512, #input_size=90, output_size=90,
         num_segments=12, segment_lengths=None, num_lanes=None, t_var=None,
         num_var_per_segment=4, seq_len=360,
         num_layers=1, dropout_in=0.1, dropout_out=0.1, attention=True,
@@ -315,8 +321,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         else:
             self.attention = None
         
-        if hidden_size != self.output_size:
-            self.additional_fc = Linear(hidden_size, self.output_size)
+        # if hidden_size != self.output_size:
+        #     self.additional_fc = Linear(hidden_size, self.output_size)
         # if adaptive_softmax_cutoff is not None:
         #     # setting adaptive_softmax dropout to dropout_out for now but can be redefined
         #     self.adaptive_softmax = AdaptiveSoftmax(num_embeddings, hidden_size, adaptive_softmax_cutoff,
