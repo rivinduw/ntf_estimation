@@ -25,7 +25,7 @@ class TrafficDataset(FairseqDataset):
                 scale_input = True, scale_output = True, input_seq_len=1440,
                 num_segments = 12, variables_per_segment = 4,
                 max_vals = [10000,100,5000,5000],
-                last_train_datetime = "2018-08-01 00:00:00",
+                last_train_datetime = "2018-03-01 00:00:00",
                 shuffle=True, input_feeding=True, 
                 max_sample_size=None, min_sample_size=None,split='train'
                 ):
@@ -68,12 +68,15 @@ class TrafficDataset(FairseqDataset):
         if split == 'train':
             self.all_data = self.all_data.iloc[:self.train_size, :]
             print("t##Length of Train Dataset: ", len(self.all_data))
+            self.shuffle = shuffle
         elif split == 'valid':
             self.all_data =self.all_data.iloc[self.train_size:self.train_size+valid_size, :]
             print("v##Length of Valid Dataset: ", len(self.all_data))
+            self.shuffle = False
         else:
             self.all_data = self.all_data.iloc[self.train_size+valid_size:, :]
             print("t??##Length of Test Dataset: ",len(self.all_data))
+            self.shuffle = False
 
         broken_detector_id = 4*7
         simulate_detector_breakdown = True
@@ -88,7 +91,7 @@ class TrafficDataset(FairseqDataset):
         self.max_sample_size = max_sample_size if max_sample_size is not None else sys.maxsize
         self.min_sample_size = min_sample_size if min_sample_size is not None else self.max_sample_size
 
-        self.shuffle = shuffle
+        # self.shuffle = shuffle
     
     def get_max_vals(self):
         return self.max_vals

@@ -117,19 +117,22 @@ class TrafficPredictionTask(FairseqTask):
             loss, sample_size, logging_output = criterion(model, sample)
             try:
                 wandb.log({'valid_loss':loss})
-                # if self.valid_step_num%100 == 0:
-                #     net_output = model(**sample['net_input'])
-                #     print("****")
+                if self.valid_step_num%100 == 0:
+                    net_output = model(**sample['net_input'])
+                    print("****")
                 #     # plt.ion()
                 #     # plt.pause(0.1)
                 #     # plt.close('all')
                 #     # plt.pause(0.1)
                 #     print(net_output[0].size())
                     
-                #     preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
-                #     src = sample['net_input']['src_tokens'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
-                #     target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
-                #     for i in range(2):
+                    preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
+                    src = sample['net_input']['src_tokens'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
+                    target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
+                    for i in range(2):
+                        pd.DataFrame(preds[i,:,:]).to_csv('preds_'+str(i)+'_.csv')
+                        pd.DataFrame(src[i,:,:]).to_csv('src_'+str(i)+'_.csv')
+                        pd.DataFrame(target[i,:,:]).to_csv('target_'+str(i)+'_.csv')
                 #         for seg in range(0,10):
                 #             ax = pd.DataFrame(preds[i,:,seg*1]).plot()
                 #             pd.DataFrame(target[i,:,seg*1]).plot(ax=ax)
