@@ -101,7 +101,7 @@ class TrafficDataset(FairseqDataset):
         #from fairseq import pdb; pdb.set_trace()
 
         #rand = torch.randint(0, self.output_seq_len, (1,))[0].item()#0#torch.randint(0, self.output_seq_len, (1,))[0].item()
-        idx = index * 4 #* self.output_seq_len + rand#(index+rand) #* self.output_seq_len
+        idx = index * 1 #* self.output_seq_len + rand#(index+rand) #* self.output_seq_len
 
         input_len = self.input_seq_len
         label_len = self.output_seq_len
@@ -131,7 +131,7 @@ class TrafficDataset(FairseqDataset):
         return F.interpolate(x.view(1, 1, -1), scale_factor=factor).squeeze()
 
     def __len__(self):
-        return (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)//4#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
+        return (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)//1#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
 
 
     def collater(self, samples):
