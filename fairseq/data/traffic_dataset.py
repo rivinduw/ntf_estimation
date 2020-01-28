@@ -52,7 +52,8 @@ class TrafficDataset(FairseqDataset):
         if total_input_variables!=self.all_data.shape[1]:
             print("total_input_variables:",total_input_variables)
             print("self.all_data.shape[1]:",self.all_data.shape[1],"trimming cols")
-        self.all_data = self.all_data.iloc[:,2*4:total_input_variables+2*4]
+        # self.all_data = self.all_data.iloc[:,2*4:total_input_variables+2*4]
+        self.all_data = self.all_data.iloc[:,:total_input_variables]
 
         last_train_idx = self.all_data.index.get_loc(self.last_train_datetime, method='nearest')
         self.train_size = last_train_idx#int(len(self.all_data)*2//3)#100000#360*16
@@ -74,12 +75,12 @@ class TrafficDataset(FairseqDataset):
             self.all_data = self.all_data.iloc[self.train_size+valid_size:, :]
             print("t??##Length of Test Dataset: ",len(self.all_data))
 
-        broken_detector_id = 4*4
-        simulate_detector_breakdown = False
+        broken_detector_id = 4*7
+        simulate_detector_breakdown = True
         if simulate_detector_breakdown == True and split!='train':
             self.all_data.iloc[:, broken_detector_id] = -1e-6
         
-        simulate_no_detector = False
+        simulate_no_detector = True
         if simulate_no_detector == True:
             self.all_data.iloc[:, broken_detector_id] = -1e-6
 
@@ -97,7 +98,7 @@ class TrafficDataset(FairseqDataset):
         #from fairseq import pdb; pdb.set_trace()
 
         #rand = torch.randint(0, self.output_seq_len, (1,))[0].item()#0#torch.randint(0, self.output_seq_len, (1,))[0].item()
-        idx = index#* self.output_seq_len + rand#(index+rand) #* self.output_seq_len
+        idx = index * 4 #* self.output_seq_len + rand#(index+rand) #* self.output_seq_len
 
         input_len = self.input_seq_len
         label_len = self.output_seq_len
@@ -127,7 +128,7 @@ class TrafficDataset(FairseqDataset):
         return F.interpolate(x.view(1, 1, -1), scale_factor=factor).squeeze()
 
     def __len__(self):
-        return len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
+        return (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)//4#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
 
 
     def collater(self, samples):

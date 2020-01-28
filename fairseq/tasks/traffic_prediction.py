@@ -46,12 +46,12 @@ class TrafficPredictionTask(FairseqTask):
         super().__init__(args)
         self.valid_step_num = 0
         # self.segment_lengths = segment_lengths
-        metadata = pd.read_csv('data/estimation_sites.csv')
+        metadata = pd.read_csv('data/estimation_sites2.csv')
         self.segment_lengths = list(metadata.loc[metadata['type']=='q','distance']/1000.)
         self.num_lanes = list(metadata.loc[metadata['type']=='q','num_lanes'])
-        self.num_segments = 12#len(self.num_lanes)#12
-        self.num_lanes = self.num_lanes[2:self.num_segments+2]
-        self.segment_lengths = self.segment_lengths[2:self.num_segments+2]
+        self.num_segments = 30#len(self.num_lanes)#12
+        self.num_lanes = self.num_lanes[:self.num_segments]
+        self.segment_lengths = self.segment_lengths[:self.num_segments]
 
         self.output_seq_len = 10
         self.input_seq_len = 1440
