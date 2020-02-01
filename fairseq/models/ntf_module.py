@@ -15,6 +15,7 @@ class NTF_Module(nn.Module):
     def __init__(self, num_segments=18,\
                  t_var=None, tau=None, nu=None, delta=None, kappa=None,\
                  cap_delta=None, lambda_var=None,\
+                 active_onramps=None, active_offramps=None, \
                  v0=None, q0=None, rhoNp1=None, vf=None, a_var=None, rhocr=None,\
                  g_var=None, future_r=None, offramp_prop=None, epsq=None, epsv=None, \
                  device=None, print_every=100
@@ -44,8 +45,19 @@ class NTF_Module(nn.Module):
         if kappa is not None: self.kappa = kappa
         if cap_delta is not None: self.cap_delta = cap_delta
         if lambda_var is not None: self.lambda_var = lambda_var
-
+        
         self.num_segments = num_segments
+
+        if active_onramps!=None:
+            self.active_onramps = torch.Tensor(active_onramps)
+        else:
+            self.active_onramps = torch.ones(self.num_segments)
+        
+        if active_offramps!=None:
+            self.active_offramps = torch.Tensor(active_offramps)
+        else:
+            self.active_offramps = torch.ones(self.num_segments)
+
         self.vmin = 10
         self.vmax = 120
 
@@ -78,6 +90,8 @@ class NTF_Module(nn.Module):
                 wandb.log({"current_velocities": wandb.Histogram(self.current_velocities.cpu().detach().numpy())})
                 wandb.log({"current_densities": wandb.Histogram(self.current_densities.cpu().detach().numpy())})
                 wandb.log({"current_flows": wandb.Histogram(self.current_flows.cpu().detach().numpy())})
+                wandb.log({"current_onramp": wandb.Histogram(self.current_onramp.cpu().detach().numpy())})
+                wandb.log({"current_offramp": wandb.Histogram(self.current_offramp.cpu().detach().numpy())})
                 wandb.log({"stat_speed": wandb.Histogram(self.stat_speed.cpu().detach().numpy())})
                 wandb.log({"v0": wandb.Histogram(self.v0.cpu().detach().numpy())})
                 wandb.log({"q0": wandb.Histogram(self.q0.cpu().detach().numpy())})
@@ -132,13 +146,10 @@ class NTF_Module(nn.Module):
             
         x = x.view(-1, self.num_segments, self.inputs_per_segment)
 
-        self.current_densities = x[:, :, self.rho_index] * self.g_var
+        self.current_densities = (x[:, :, self.rho_index] * self.g_var)/self.lambda_var
         self.current_flows = x[:, :, self.q_index] + self.epsq #########
         self.current_onramp = x[:, :, self.r_index]
         self.current_offramp = x[:, :, self.s_index]
-
-        active_onramps = self.current_onramp > 0
-        active_offramps = self.current_offramp > 0
         
         self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
         self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
@@ -156,8 +167,8 @@ class NTF_Module(nn.Module):
 
         future_flows = future_densities * future_velocities * self.lambda_var - self.epsq
 
-        future_s = active_offramps.float() * (self.offramp_prop*self.current_flows)
-        future_r = active_onramps.float() * future_r
+        future_s = self.active_offramps * (self.offramp_prop*self.current_flows) #active_offramps.float() * 
+        future_r = self.active_onramps.float() * future_r
 
         try:
             if self.print_count%self.print_every==0:

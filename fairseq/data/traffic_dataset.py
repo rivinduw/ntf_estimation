@@ -82,7 +82,7 @@ class TrafficDataset(FairseqDataset):
             print("t??##Length of Test Dataset: ",len(self.all_data))
             self.shuffle = False
 
-        broken_detector_id = 4*7
+        broken_detector_id = self.variables_per_segment*7
         simulate_detector_breakdown = True
         if simulate_detector_breakdown == True and split!='train':
             self.all_data.iloc[:, broken_detector_id] = -1e-6
@@ -104,8 +104,9 @@ class TrafficDataset(FairseqDataset):
 
         #from fairseq import pdb; pdb.set_trace()
 
-        #rand = torch.randint(0, self.output_seq_len, (1,))[0].item()#0#torch.randint(0, self.output_seq_len, (1,))[0].item()
-        idx = index * self.output_seq_len #* self.output_seq_len + rand#(index+rand) #* self.output_seq_len
+        # rand = torch.randint(0, self.output_seq_len, (1,))[0].item()#0#torch.randint(0, self.output_seq_len, (1,))[0].item()
+        rand = np.random.randint(self.output_seq_len, size=1)[0]
+        idx = (index+rand) * (self.output_seq_len-1) #* self.output_seq_len + rand#(index+rand) #* self.output_seq_len
 
         input_len = self.input_seq_len
         label_len = self.output_seq_len

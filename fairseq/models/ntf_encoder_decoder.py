@@ -43,6 +43,9 @@ class NTFModel(FairseqEncoderDecoderModel):
         big_t = 10.0/3600. #hours
         segment_lengths = task.get_segment_lengths()
         num_lanes = task.get_num_lanes()
+        
+        active_onramps = task.get_active_onramps()
+        active_offramps = task.get_active_offramps()
 
         num_var_per_segment = task.get_variables_per_segment()
         total_input_variables = task.get_total_input_variables()
@@ -50,7 +53,9 @@ class NTFModel(FairseqEncoderDecoderModel):
 
         encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_layers=2, num_segments=num_segments, device=device)#.to(device)
         decoder = TrafficNTFDecoder(max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
-            seq_len = output_seq_len, encoder_output_units=total_input_variables, t_var=big_t, device=device)#.to(device)
+            seq_len = output_seq_len, encoder_output_units=total_input_variables, t_var=big_t, \
+            active_onramps=active_onramps, active_offramps=active_offramps, \
+            device=device)#.to(device)
         return cls(encoder, decoder)
     
     # def forward(self, src_tokens,  prev_output_tokens, **kwargs):#src_lengths,
@@ -263,6 +268,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self, hidden_size=512, #input_size=90, output_size=90,
         num_segments=12, segment_lengths=None, num_lanes=None, t_var=None,
         num_var_per_segment=4, seq_len=360,
+        active_onramps=None, active_offramps=None,
         num_layers=1, dropout_in=0.1, dropout_out=0.1, attention=True,
         encoder_output_units=None, pretrained_embed=None, device=None,
         share_input_output_embed=False, adaptive_softmax_cutoff=None, max_vals = None
@@ -337,7 +343,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.num_common_params = 3+5 #num_boundry
         self.num_segment_specific_params = 8+2
         #  = 3+3
-        
+
 
         if segment_lengths!=None:
             self.segment_lengths = torch.Tensor(segment_lengths)
@@ -357,7 +363,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         else:
             self.t_var = None
 
-        
+        self.active_onramps = active_onramps
+        self.active_offramps = active_offramps
 
         self.vmin = 10
         self.vmax = 110
@@ -374,10 +381,15 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         if segment_lengths!=None and t_var!=None:
             print(self.segment_lengths,self.num_lanes)
-            self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, lambda_var=self.num_lanes, t_var=self.t_var, device=self.device)
+            self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, \
+                lambda_var=self.num_lanes, t_var=self.t_var, \
+                active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
+                device=self.device)
         else:
             print("no num lanes segment lengths")
-            self.ntf_module = NTF_Module(num_segments=self.num_segments, device=self.device)
+            self.ntf_module = NTF_Module(num_segments=self.num_segments, \
+                active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
+                device=self.device)
 
         ##OLD###
         # self.segment_fixed = torch.Tensor([[582.0/1000.,3.],[318.0/1000.,4.],[703.0/1000.,4.],[ 387.0/1000.,4.],[ 300.0/1000.,5.],[ 348.0/1000.,5.],[ 375.0/1000.,4.],[ 300.0/1000.,4.],[ 257.0/1000.,4.],[ 500.0/1000.,4.],[ 484.0/1000.,4.],[ 400.0/1000.,3.],[ 420.0/1000.,3.],[ 589.0/1000.,3.],[ 427./1000.,3.],[ 400.0/1000.,2.],[ 515.0/1000.,2.0],[ 495.0/1000.,3.0]]).to(self.device)#torch.Tensor(self.num_segments, 2)
