@@ -25,7 +25,7 @@ class TrafficDataset(FairseqDataset):
                 scale_input = True, scale_output = True, input_seq_len=1440,
                 num_segments = 12, variables_per_segment = 4,
                 max_vals = [10000,100,5000,5000],
-                last_train_datetime = "2018-03-01 00:00:00",
+                last_train_datetime = "2018-07-01 00:00:00",
                 shuffle=True, input_feeding=True, 
                 max_sample_size=None, min_sample_size=None,split='train'
                 ):
@@ -57,8 +57,12 @@ class TrafficDataset(FairseqDataset):
 
         last_train_idx = self.all_data.index.get_loc(self.last_train_datetime, method='nearest')
         self.train_size = last_train_idx#int(len(self.all_data)*2//3)#100000#360*16
+
+        last_valid_datetime = "2019-01-01 00:00:00"
+        last_valid_idx = self.all_data.index.get_loc(last_valid_datetime, method='nearest')
+        self.train_size = last_valid_idx - last_train_idx
         
-        valid_size = len(self.all_data) - self.train_size
+        # valid_size = len(self.all_data) - self.train_size
 
         # vol_multiple = 120.
         # self.all_data.iloc[:,::self.variables_per_segment] = self.all_data.iloc[:,::self.variables_per_segment] * vol_multiple
