@@ -94,7 +94,7 @@ class TrafficDataset(FairseqDataset):
         # self.shuffle = shuffle
     
     def get_max_vals(self):
-        return self.max_vals
+        return torch.Tensor(self.max_vals)
     
     def __getitem__(self, index):
 
