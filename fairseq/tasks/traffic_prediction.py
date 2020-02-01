@@ -140,7 +140,7 @@ class TrafficPredictionTask(FairseqTask):
                             pd.DataFrame(10000*src[0,:,i*4]).plot(ax=ax)
                             plt.show()
                             plt.pause(0.1)
-                            wandb.log({"chart"+str(i)+"_"+str(seg): ax})
+                            wandb.log({"chart"+str(i): ax})
                             plt.close('all')
                         except Exception as e:
                             print(e)

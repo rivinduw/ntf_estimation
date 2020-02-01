@@ -137,8 +137,8 @@ class NTF_Module(nn.Module):
         self.current_onramp = x[:, :, self.r_index]
         self.current_offramp = x[:, :, self.s_index]
 
-        active_onramps = self.current_onramp < 1e-6
-        active_offramps = self.current_offramp < 1e-6
+        active_onramps = self.current_onramp > 0
+        active_offramps = self.current_offramp > 0
         
         self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
         self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
