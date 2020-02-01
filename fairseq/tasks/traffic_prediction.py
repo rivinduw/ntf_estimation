@@ -53,7 +53,7 @@ class TrafficPredictionTask(FairseqTask):
         self.num_lanes = self.num_lanes[:self.num_segments]
         self.segment_lengths = self.segment_lengths[:self.num_segments]
 
-        self.output_seq_len = 360
+        self.output_seq_len = 120
         self.input_seq_len = 1440
         
         self.variables_per_segment = 4
@@ -130,10 +130,20 @@ class TrafficPredictionTask(FairseqTask):
                     preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
                     src = sample['net_input']['src_tokens'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
                     target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
-                    for i in range(2):
-                        pd.DataFrame(self.max_vals * preds[i,:,:]).to_csv('preds_'+str(i)+'_.csv')
-                        pd.DataFrame(self.max_vals * src[i,:,:]).to_csv('src_'+str(i)+'_.csv')
-                        pd.DataFrame(self.max_vals * target[i,:,:]).to_csv('target_'+str(i)+'_.csv')
+                    for i in range(4):
+                        pd.DataFrame(preds[i,:,:]).to_csv('preds_'+str(i)+'_.csv')
+                        pd.DataFrame(src[i,:,:]).to_csv('src_'+str(i)+'_.csv')
+                        pd.DataFrame(target[i,:,:]).to_csv('target_'+str(i)+'_.csv')
+                        try:
+                            ax = pd.DataFrame(10000*target[0,:,i*4]).plot()
+                            pd.DataFrame(10000*preds[0,:,i*4]).plot(ax=ax)
+                            pd.DataFrame(10000*src[0,:,i*4]).plot(ax=ax)
+                            plt.show()
+                            plt.pause(0.1)
+                        except Exception as e:
+                            print(e)
+                            
+                        
                 #         for seg in range(0,10):
                 #             ax = pd.DataFrame(preds[i,:,seg*1]).plot()
                 #             pd.DataFrame(target[i,:,seg*1]).plot(ax=ax)

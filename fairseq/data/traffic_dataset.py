@@ -60,7 +60,7 @@ class TrafficDataset(FairseqDataset):
 
         last_valid_datetime = "2019-01-01 00:00:00"
         last_valid_idx = self.all_data.index.get_loc(last_valid_datetime, method='nearest')
-        self.train_size = last_valid_idx - last_train_idx
+        valid_size = last_valid_idx - last_train_idx
         
         # valid_size = len(self.all_data) - self.train_size
 
