@@ -49,7 +49,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_layers=2, num_segments=num_segments, device=device)#.to(device)
-        decoder = TrafficNTFDecoder(max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, \
+        decoder = TrafficNTFDecoder(max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
             seq_len = output_seq_len, encoder_output_units=total_input_variables, t_var=big_t, device=device)#.to(device)
         return cls(encoder, decoder)
     
@@ -443,7 +443,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             if self.encoder_hidden_proj is not None:
                 prev_hiddens = [self.encoder_hidden_proj(x) for x in prev_hiddens]
                 prev_cells = [self.encoder_cell_proj(x) for x in prev_cells]
-            input_feed = x.new_ones(bsz, self.input_size) * encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
+            #input_feed = x.new_ones(bsz, self.input_size) * encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
+            input_feed = encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
+            
             input_feed = nn.functional.relu(input_feed)
 
         attn_scores = x.new_zeros(srclen, seqlen, bsz)#x.new_zeros(segment_units, seqlen, bsz)  #x.new_zeros(srclen, seqlen, bsz)
