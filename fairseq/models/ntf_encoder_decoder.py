@@ -48,9 +48,9 @@ class NTFModel(FairseqEncoderDecoderModel):
         total_input_variables = task.get_total_input_variables()
         device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        encoder = TrafficNTFEncoder(seq_len = input_seq_len,num_layers=2,device=device)#.to(device)
+        encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_layers=2, num_segments=num_segments, device=device)#.to(device)
         decoder = TrafficNTFDecoder(max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, \
-            seq_len = output_seq_len, encoder_output_units=total_input_variables,t_var=big_t,device=device)#.to(device)
+            seq_len = output_seq_len, encoder_output_units=total_input_variables, t_var=big_t, device=device)#.to(device)
         return cls(encoder, decoder)
     
     # def forward(self, src_tokens,  prev_output_tokens, **kwargs):#src_lengths,
@@ -133,7 +133,7 @@ class TrafficNTFEncoder(FairseqEncoder):
         bsz, ts, n_seg_var = input_x.size()
         
         one_timestep_size = self.num_segments*self.num_var_per_segment
-
+        #print(input_x.size())
         assert one_timestep_size == n_seg_var
 
         x = input_x.view(-1,self.seq_len,one_timestep_size).float()

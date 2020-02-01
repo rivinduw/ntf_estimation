@@ -27,8 +27,10 @@ class MSECriterion(FairseqCriterion):
         # self.loss_fn = torch.nn.MSELoss()
 
         self.common_lambda = 1.0
-        self.segment_lambda = 0.01
+        self.segment_lambda = 1.0
         self.segment_time_lambda = 1.0
+
+        self.max_vals = task.get_max_vals()
 
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.
@@ -52,7 +54,7 @@ class MSECriterion(FairseqCriterion):
     def compute_loss(self, model, net_output, sample, reduce=True):
         # import fairseq.pdb as pdb; pdb.set_trace()
         lprobs, common_params, segment = model.get_normalized_probs(net_output, log_probs=False)
-        lprobs = lprobs.float()
+        lprobs = self.max_vals*lprobs.float()
         
         #bsz, ts, var
         # torch.Size([32, 10, 8])
@@ -86,7 +88,7 @@ class MSECriterion(FairseqCriterion):
 
         #from fairseq import pdb; pdb.set_trace();
         #lprobs = lprobs.float().view(-1)#, lprobs.size(-1))
-        target = model.get_targets(sample, net_output).float()#.view(-1)#,360,85).float()
+        target = self.max_vals * model.get_targets(sample, net_output).float()#.view(-1)#,360,85).float()
         #from fairseq import pdb; pdb.set_trace();
         #target = target.transpose(0, 1)
         #target = target#.view(-1)
@@ -98,7 +100,7 @@ class MSECriterion(FairseqCriterion):
         num_valid = target_mask.float().sum()
 
         wmape = 100. * torch.div( torch.div(torch.sum(torch.abs(torch.sub(outputs,y))),torch.sum(torch.abs(y))),num_valid)
-        mape_loss = torch.mean(torch.abs(torch.div(torch.sub(outputs,y),(y + 1e-6))))
+        mape_loss = torch.mean((torch.abs(torch.div(torch.sub(outputs,y),(y + 1e-6)))).clamp(0,1))
         # mape_loss = mape_loss / num_valid
         accuracy = 1. - mape_loss
         accuracy = accuracy.clamp(0,1)
