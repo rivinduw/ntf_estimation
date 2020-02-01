@@ -374,7 +374,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         if segment_lengths!=None and t_var!=None:
             print(self.segment_lengths,self.num_lanes)
-            self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.num_lanes, lambda_var=self.segment_lengths, t_var=self.t_var, device=self.device)
+            self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, lambda_var=self.num_lanes, t_var=self.t_var, device=self.device)
         else:
             print("no num lanes segment lengths")
             self.ntf_module = NTF_Module(num_segments=self.num_segments, device=self.device)
