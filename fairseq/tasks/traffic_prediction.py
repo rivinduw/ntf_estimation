@@ -55,7 +55,9 @@ class TrafficPredictionTask(FairseqTask):
 
         self.active_onramps = [x>0 for x in list(metadata.loc[metadata['type']=='r','num_lanes'])]
         self.active_offramps = [x>0 for x in list(metadata.loc[metadata['type']=='s','num_lanes'])]
-
+        self.active_onramps = self.active_onramps[:self.num_segments]
+        self.active_offramps = self.active_offramps[:self.num_segments]
+        
         self.output_seq_len = 120
         self.input_seq_len = 1440
         
@@ -75,10 +77,10 @@ class TrafficPredictionTask(FairseqTask):
         print('| {} {} {} examples'.format(self.args.data, split, len(self.datasets[split])))
     
     def get_active_onramps(self):
-        return torch.Tensor(self.active_onramps)
+        return self.active_onramps
     
     def get_active_offramps(self):
-        return torch.Tensor(self.active_offramps)
+        return self.active_offramps
     
     def get_segment_lengths(self):
         return self.segment_lengths

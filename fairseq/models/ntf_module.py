@@ -146,7 +146,7 @@ class NTF_Module(nn.Module):
             
         x = x.view(-1, self.num_segments, self.inputs_per_segment)
 
-        self.current_densities = (x[:, :, self.rho_index] / (((100.*self.g_var/1000.))*self.lambda_var+self.TINY)
+        self.current_densities = (x[:, :, self.rho_index] / (((100.*self.g_var/1000.))*self.lambda_var+self.TINY))
         self.current_flows = x[:, :, self.q_index] + self.epsq #########
         self.current_onramp = x[:, :, self.r_index]
         self.current_offramp = x[:, :, self.s_index]
