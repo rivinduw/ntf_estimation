@@ -106,7 +106,7 @@ class TrafficDataset(FairseqDataset):
 
         # rand = torch.randint(0, self.output_seq_len, (1,))[0].item()#0#torch.randint(0, self.output_seq_len, (1,))[0].item()
         rand = np.random.randint(self.output_seq_len, size=1)[0]
-        idx = (index+rand) * (self.output_seq_len-1) #* self.output_seq_len + rand#(index+rand) #* self.output_seq_len
+        idx = (index * (self.output_seq_len-1)) + rand #* self.output_seq_len + rand#(index+rand) #* self.output_seq_len
 
         input_len = self.input_seq_len
         label_len = self.output_seq_len
