@@ -82,14 +82,15 @@ class TrafficDataset(FairseqDataset):
             print("t??##Length of Test Dataset: ",len(self.all_data))
             self.shuffle = False
 
-        broken_detector_id = self.variables_per_segment*7
+        broken_detector_id = self.variables_per_segment*10
         simulate_detector_breakdown = True
         if simulate_detector_breakdown == True and split!='train':
-            self.all_data.iloc[:, broken_detector_id] = -1e-6
+            self.all_data.iloc[:, broken_detector_id:broken_detector_id+self.variables_per_segment] = -1e-6
         
+        no_detector_id = self.variables_per_segment*7
         simulate_no_detector = True
         if simulate_no_detector == True:
-            self.all_data.iloc[:, broken_detector_id] = -1e-6
+            self.all_data.iloc[:, no_detector_id:no_detector_id+self.variables_per_segment] = -1e-6
 
 
         self.max_sample_size = max_sample_size if max_sample_size is not None else sys.maxsize

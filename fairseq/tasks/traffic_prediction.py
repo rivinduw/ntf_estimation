@@ -64,6 +64,8 @@ class TrafficPredictionTask(FairseqTask):
         self.variables_per_segment = 4
         self.total_input_variables = self.num_segments*self.variables_per_segment
 
+        self.max_vals = [10000,100,5000,5000]
+
     def load_dataset(self, split, **kwargs):
         """Load a given dataset split (e.g., train, valid, test)."""
 
