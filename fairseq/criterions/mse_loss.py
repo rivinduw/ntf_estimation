@@ -54,7 +54,7 @@ class MSECriterion(FairseqCriterion):
     def compute_loss(self, model, net_output, sample, reduce=True):
         # import fairseq.pdb as pdb; pdb.set_trace()
         lprobs, common_params, segment = model.get_normalized_probs(net_output, log_probs=False)
-        lprobs = self.max_vals*lprobs.float()
+        lprobs = lprobs.float() #self.max_vals*
         
         #bsz, ts, var
         # torch.Size([32, 10, 8])
@@ -88,12 +88,12 @@ class MSECriterion(FairseqCriterion):
 
         #from fairseq import pdb; pdb.set_trace();
         #lprobs = lprobs.float().view(-1)#, lprobs.size(-1))
-        target = self.max_vals * model.get_targets(sample, net_output).float()#.view(-1)#,360,85).float()
+        target =  model.get_targets(sample, net_output).float()#.view(-1)#,360,85).float()
         #from fairseq import pdb; pdb.set_trace();
         #target = target.transpose(0, 1)
         #target = target#.view(-1)
 
-        target_mask = target > 1e-6
+        target_mask = (self.max_vals * target) > 1e-6
 
         y = target[target_mask]
         outputs = lprobs[target_mask]
