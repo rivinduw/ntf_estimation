@@ -43,6 +43,8 @@ class NTFModel(FairseqEncoderDecoderModel):
         big_t = 10.0/3600. #hours
         segment_lengths = task.get_segment_lengths()
         num_lanes = task.get_num_lanes()
+
+        num_encoder_layers = 1
         
         active_onramps = task.get_active_onramps()
         active_offramps = task.get_active_offramps()
@@ -51,7 +53,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         total_input_variables = task.get_total_input_variables()
         device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_layers=2, num_segments=num_segments, device=device)#.to(device)
+        encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_layers=num_encoder_layers, num_segments=num_segments, device=device)#.to(device)
         decoder = TrafficNTFDecoder(max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
             seq_len = output_seq_len, encoder_output_units=total_input_variables, t_var=big_t, \
             active_onramps=active_onramps, active_offramps=active_offramps, \
