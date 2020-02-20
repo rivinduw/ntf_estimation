@@ -95,7 +95,7 @@ class NTFModel(FairseqEncoderDecoderModel):
 class TrafficNTFEncoder(FairseqEncoder):
     """NTF encoder."""
     def __init__(
-        self, hidden_size=512, num_layers=2, #input_size=90,
+        self, num_layers=2, #input_size=90,hidden_size=512
         seq_len=360, num_segments=12, num_var_per_segment=4, device=None,
         dropout_in=0.1, dropout_out=0.1, bidirectional=False, padding_value=0):
         super().__init__(dictionary=None)
@@ -104,7 +104,7 @@ class TrafficNTFEncoder(FairseqEncoder):
         self.dropout_in = dropout_in
         self.dropout_out = dropout_out
         self.bidirectional = bidirectional
-        self.hidden_size = hidden_size
+        #self.hidden_size = hidden_size
 
         self.seq_len = seq_len
         self.num_segments = num_segments

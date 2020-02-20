@@ -26,9 +26,9 @@ class MSECriterion(FairseqCriterion):
         # self.loss_fn = torch.nn.L1Loss()
         self.loss_fn = torch.nn.MSELoss()
 
-        self.common_lambda = 1.0
-        self.segment_lambda = 1.0
-        self.segment_time_lambda = 1.0
+        self.common_lambda = 0.01
+        self.segment_lambda = 0.01
+        self.segment_time_lambda = 0.01
 
         self.max_vals = task.get_max_vals()
 
