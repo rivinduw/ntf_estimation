@@ -169,7 +169,9 @@ class NTF_Module(nn.Module):
 
         future_flows = future_densities * future_velocities * self.lambda_var - self.epsq
 
-        future_s = self.active_offramps * (self.offramp_prop*self.current_flows) #active_offramps.float() * 
+        #old future_s = self.active_offramps * (self.offramp_prop*self.current_flows) #active_offramps.float() * 
+        future_s = self.active_offramps * (self.offramp_prop*self.prev_flows) #active_offramps.float() * 
+        
         future_r = self.active_onramps.float() * future_r
 
         try:
