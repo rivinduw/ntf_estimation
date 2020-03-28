@@ -58,7 +58,7 @@ class TrafficPredictionTask(FairseqTask):
         self.active_onramps = self.active_onramps[:self.num_segments]
         self.active_offramps = self.active_offramps[:self.num_segments]
         
-        self.output_seq_len = 30
+        self.output_seq_len = 10
         self.input_seq_len = 120
         
         self.variables_per_segment = 4
@@ -69,7 +69,6 @@ class TrafficPredictionTask(FairseqTask):
     def load_dataset(self, split, **kwargs):
         """Load a given dataset split (e.g., train, valid, test)."""
 
-        
         data_file = self.args.data#os.path.join(self.args.data, '{}.csv'.format('valid_data_109'))#split))
         self.datasets[split] = TrafficDataset(data_file, output_seq_len=self.output_seq_len, split=split, \
                         input_seq_len=self.input_seq_len, num_segments=self.num_segments)
