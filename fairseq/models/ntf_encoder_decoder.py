@@ -53,10 +53,11 @@ class NTFModel(FairseqEncoderDecoderModel):
         total_input_variables = task.get_total_input_variables()
         device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         decoder_hidden_size = total_input_variables
+        use_attention = False
         encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_layers=num_encoder_layers, num_segments=num_segments, device=device)#.to(device)
         decoder = TrafficNTFDecoder(hidden_size=decoder_hidden_size, max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
             seq_len = output_seq_len, encoder_output_units=total_input_variables, t_var=big_t, \
-            active_onramps=active_onramps, active_offramps=active_offramps, \
+            active_onramps=active_onramps, active_offramps=active_offramps, attention=use_attention, \
             device=device)#.to(device)
         return cls(encoder, decoder)
     
@@ -471,7 +472,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #print(x.shape)
             # from fairseq import pdb; pdb.set_trace()
             # input feeding: concatenate context vector from previous time step
-            input_d = x[j, :]#F.dropout(x[j, :], p=0.5, training=self.training)
+            input_d = F.dropout(x[j, :], p=0.5, training=self.training)
             input_mask = input_d > 1e-6#0.#-1e-6
             input_in = (x[j, :]*input_mask.float()) + ( (1-input_mask.float())*input_feed)
             #input = torch.clamp(input, min=-1.0, max=1.0)
@@ -495,10 +496,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #     input = x[j, :, :]#torch.cat((x[j, :, :], input_feed), dim=1)
             # else:
             #     input = input_feed
-            #input = input_in
+            input = input_in
             for i, rnn in enumerate(self.layers):
                 # recurrent cell
-                hidden, cell = rnn(input_in, (prev_hiddens[i], prev_cells[i]))
+                hidden, cell = rnn(input, (prev_hiddens[i], prev_cells[i]))
 
                 # hidden state becomes the input to the next layer
                 #input = F.dropout(hidden, p=self.dropout_out, training=self.training)
@@ -509,8 +510,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
             # apply attention using the last layer's hidden state
             if self.attention is not None:
-                #out, attn_scores[:, j, :] = self.attention(hidden, encoder_outs, encoder_padding_mask)
-                out, attn_scores[:, j, :] = self.attention(cell, encoder_outs, encoder_padding_mask)
+                out, attn_scores[:, j, :] = self.attention(hidden, encoder_outs, encoder_padding_mask)
+                # out, attn_scores[:, j, :] = self.attention(cell, encoder_outs, encoder_padding_mask)
             else:
                 out = hidden
             
