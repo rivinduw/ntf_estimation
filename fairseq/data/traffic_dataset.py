@@ -85,12 +85,20 @@ class TrafficDataset(FairseqDataset):
         broken_detector_id = self.variables_per_segment*10
         simulate_detector_breakdown = True
         if simulate_detector_breakdown == True and split!='train':
-            self.all_data.iloc[:, broken_detector_id:broken_detector_id+self.variables_per_segment] = -1e-6
+            self.all_data.iloc[:, broken_detector_id:broken_detector_id+self.variables_per_segment-2] = -1e-6
         
-        no_detector_id = self.variables_per_segment*16
+        no_detector_id = self.variables_per_segment*29
         simulate_no_detector = True
         if simulate_no_detector == True:
-            self.all_data.iloc[:, no_detector_id:no_detector_id+self.variables_per_segment] = -1e-6
+            self.all_data.iloc[:, no_detector_id:no_detector_id+self.variables_per_segment-2] = -1e-6
+        
+        
+        simulate_no_detector = True
+        no_detector_id_from = self.variables_per_segment*16
+        no_detector_id_to = self.variables_per_segment*(23+1)
+        if simulate_no_detector == True:
+            self.all_data.iloc[:, no_detector_id_from:no_detector_id_to+1:self.variables_per_segment] = -1e-6
+            self.all_data.iloc[:, no_detector_id_from+1:no_detector_id_to+1:self.variables_per_segment] = -1e-6
 
         self.all_data[self.all_data>1e5] = np.nan
         self.all_data.iloc[:,::4] = self.all_data.iloc[:,::4].fillna(method='pad')
