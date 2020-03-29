@@ -107,8 +107,11 @@ class MSECriterion(FairseqCriterion):
         accuracy = 1. - mape_loss
         accuracy = accuracy.clamp(0,1)
         
-        print("mask sum",target_mask.float().sum(),target.sum())
-        target_loss = self.loss_fn(outputs.view(-1), y.view(-1))
+        # print("mask sum",target_mask.float().sum(),target.sum())
+        if num_valid==0
+            target_loss = self.loss_fn(outputs.view(-1), y.view(-1))
+        else:
+            target_loss = 0.0
         
         total_loss = target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
         
