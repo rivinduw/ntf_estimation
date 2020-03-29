@@ -27,7 +27,7 @@ class MSECriterion(FairseqCriterion):
         #self.loss_fn = torch.nn.MSELoss()
 
         self.common_lambda = 1.0
-        self.segment_lambda = 0.0
+        self.segment_lambda = 1.0
         self.segment_time_lambda = 1.0
 
         self.max_vals = task.get_max_vals()
@@ -95,9 +95,9 @@ class MSECriterion(FairseqCriterion):
 
         target_mask = (self.max_vals * target) > 1e-6
 
-        y = self.max_vals * target
+        y = target * self.max_vals
         y = y[target_mask]
-        outputs = self.max_vals * lprobs
+        outputs = lprobs * self.max_vals
         outputs = outputs[target_mask]
         num_valid = target_mask.float().sum()
 
