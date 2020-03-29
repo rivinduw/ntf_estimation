@@ -23,12 +23,12 @@ class MSECriterion(FairseqCriterion):
         super().__init__(args, task)
         # wandb.init(job_type='mse_loss', config=args)
         # self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
-        # self.loss_fn = torch.nn.L1Loss()
-        self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = torch.nn.L1Loss()
+        #self.loss_fn = torch.nn.MSELoss()
 
-        self.common_lambda = 0.01
-        self.segment_lambda = 0.01
-        self.segment_time_lambda = 0.01
+        self.common_lambda = 1.0
+        self.segment_lambda = 0.0
+        self.segment_time_lambda = 1.0
 
         self.max_vals = task.get_max_vals()
 
@@ -95,8 +95,10 @@ class MSECriterion(FairseqCriterion):
 
         target_mask = (self.max_vals * target) > 1e-6
 
-        y = target[target_mask]
-        outputs = lprobs[target_mask]
+        y = self.max_vals * target
+        y = y[target_mask]
+        outputs = self.max_vals * lprobs
+        outputs = outputs[target_mask]
         num_valid = target_mask.float().sum()
 
         wmape = 100. * torch.div( torch.div(torch.sum(torch.abs(torch.sub(outputs,y))),torch.sum(torch.abs(y))),num_valid)
@@ -105,8 +107,8 @@ class MSECriterion(FairseqCriterion):
         accuracy = 1. - mape_loss
         accuracy = accuracy.clamp(0,1)
         
-        # print("mask sum",target_mask.float().sum(),target.sum())
-        target_loss = self.loss_fn(outputs, y)
+        print("mask sum",target_mask.float().sum(),target.sum())
+        target_loss = self.loss_fn(outputs.view(-1), y.view(-1))
         
         total_loss = target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
         
