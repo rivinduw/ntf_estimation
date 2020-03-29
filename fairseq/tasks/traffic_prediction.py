@@ -49,7 +49,7 @@ class TrafficPredictionTask(FairseqTask):
         metadata = pd.read_csv('data/estimation_sites2.csv')
         self.segment_lengths = list(metadata.loc[metadata['type']=='q','distance']/1000.)
         self.num_lanes = list(metadata.loc[metadata['type']=='q','num_lanes'])
-        self.num_segments = 30#len(self.num_lanes)#12
+        self.num_segments = 20#len(self.num_lanes)#12
         self.num_lanes = self.num_lanes[:self.num_segments]
         self.segment_lengths = self.segment_lengths[:self.num_segments]
 

@@ -87,7 +87,7 @@ class TrafficDataset(FairseqDataset):
             self.mainlines_to_include_in_input = np.array(mainlines_to_include_in_input)
         
         if mainlines_to_include_in_output==None:
-            mainlines_to_include_in_output = [0.0]*self.num_segments
+            mainlines_to_include_in_output = [1.0]*self.num_segments
             mainlines_to_include_in_output[0] = 1.0
             mainlines_to_include_in_output[-1] = 1.0
             self.mainlines_to_include_in_output = np.array(mainlines_to_include_in_output)
