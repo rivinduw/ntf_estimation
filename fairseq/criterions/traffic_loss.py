@@ -6,6 +6,7 @@
 import math
 import torch.nn.functional as F
 import torch
+import numpy as np
 
 from fairseq import utils
 
@@ -110,13 +111,16 @@ class MSECriterion(FairseqCriterion):
         # print("mask sum",target_mask.float().sum(),target.sum())
         if num_valid>=1:
             target_loss = self.loss_fn(outputs, y)
+            try:
+                if target_loss.item() == np.nan:
+                    print(outputs,y)
+                    print(accuracy)
+                    hh = lprobs * self.max_vals
+                    print(hh[::4])
+            except:
+                print(hh[0,0,::4])
         else:
             target_loss = 0.0
-        if target_loss.item() == np.nan:
-            print(outputs,y)
-            print(accuracy)
-            hh = lprobs * self.max_vals
-            print(hh[::4])
         
         total_loss = target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
         

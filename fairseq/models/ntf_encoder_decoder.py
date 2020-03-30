@@ -379,6 +379,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.ntf_proj = self.num_segment_specific_params*self.num_segments+self.num_common_params
         self.ntf_projection = nn.Linear(hidden_size, self.ntf_proj)
+
+        ##NEW BU
+        self.input_feed_projection = nn.Linear(self.input_size, self.input_size)
         # self.output_layer = nn.Linear(lin_layer_sizes[-1],
         #                           self.ntf_proj)
 
@@ -429,7 +432,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 prev_hiddens = [self.encoder_hidden_proj(x) for x in prev_hiddens]
                 prev_cells = [self.encoder_cell_proj(x) for x in prev_cells]
             #input_feed = x.new_ones(bsz, self.input_size) * encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
-            input_feed = encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
+            input_feed = encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
+            input_feed = self.input_feed_projection(input_feed)
             input_feed = nn.functional.relu(input_feed)
 
         attn_scores = x.new_zeros(srclen, seqlen, bsz)#x.new_zeros(segment_units, seqlen, bsz)  #x.new_zeros(srclen, seqlen, bsz)
