@@ -504,8 +504,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 model_steps.append(output1)
                 x_input = output1
 
-            output = torch.stack(model_steps,dim=0).mean(dim=0)
-            output = output/(self.max_vals+1e-6)
+            #output = torch.stack(model_steps,dim=0).mean(dim=0)
+            #output = output/(self.max_vals+1e-6)
+            output = output1/(self.max_vals+1e-6)
 
             common_params_list.append(common_params)
             segment_params_list.append(segment_params)
