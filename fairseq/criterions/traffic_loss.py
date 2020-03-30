@@ -108,10 +108,15 @@ class MSECriterion(FairseqCriterion):
         accuracy = accuracy.clamp(0,1)
         
         # print("mask sum",target_mask.float().sum(),target.sum())
-        if num_valid>1e-6:
-            target_loss = self.loss_fn(outputs.view(-1), y.view(-1))
+        if num_valid>=1:
+            target_loss = self.loss_fn(outputs, y)
         else:
             target_loss = 0.0
+        if target_loss.item() == np.nan:
+            print(outputs,y)
+            print(accuracy)
+            hh = lprobs * self.max_vals
+            print(hh[::4])
         
         total_loss = target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
         
