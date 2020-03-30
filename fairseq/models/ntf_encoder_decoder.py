@@ -432,7 +432,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 prev_hiddens = [self.encoder_hidden_proj(x) for x in prev_hiddens]
                 prev_cells = [self.encoder_cell_proj(x) for x in prev_cells]
             #input_feed = x.new_ones(bsz, self.input_size) * encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
-            input_feed = encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
+            input_feed = prev_cells#encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
             input_feed = self.input_feed_projection(input_feed)
             input_feed = nn.functional.relu(input_feed)
 

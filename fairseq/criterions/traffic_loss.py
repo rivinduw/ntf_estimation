@@ -111,14 +111,6 @@ class MSECriterion(FairseqCriterion):
         # print("mask sum",target_mask.float().sum(),target.sum())
         if num_valid>=1:
             target_loss = self.loss_fn(outputs, y)
-            try:
-                if target_loss.item() == np.nan:
-                    print(outputs,y)
-                    print(accuracy)
-                    hh = lprobs * self.max_vals
-                    print(hh[::4])
-            except:
-                print(hh[0,0,::4])
         else:
             target_loss = 0.0
         
