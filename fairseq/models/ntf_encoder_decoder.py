@@ -114,19 +114,20 @@ class TrafficNTFEncoder(FairseqEncoder):
         self.num_var_per_segment = num_var_per_segment
 
         self.input_size = num_segments * num_var_per_segment
+        self.hidden_size = self.input_size * 2
         self.output_units = self.input_size
 
         # self.input_fc = Linear(self.input_size,self.hidden_size)
 
         self.lstm = LSTM(
             input_size=self.input_size,
-            hidden_size=self.input_size,
+            hidden_size=self.hidden_size,
             num_layers=num_layers,
             dropout=self.dropout_out if num_layers > 1 else 0.,
             bidirectional=bidirectional,
         )
 
-        # self.additional_fc = Linear(self.hidden_size, self.input_size)
+        self.additional_fc = Linear(self.hidden_size, self.input_size)
 
         self.padding_value = padding_value
 
@@ -171,7 +172,8 @@ class TrafficNTFEncoder(FairseqEncoder):
         lstm_outs, (final_hiddens, final_cells) = self.lstm(x, (h0, c0))
 
         # print("lstm_outs",lstm_outs.size())
-        x = lstm_outs # self.additional_fc(lstm_outs)
+        x = self.additional_fc(lstm_outs)
+        # x = lstm_outs # self.additional_fc(lstm_outs)
 
         # unpack outputs and apply dropout
         # x, _ = nn.utils.rnn.pad_packed_sequence(packed_outs, padding_value=self.padding_value)
@@ -432,9 +434,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 prev_hiddens = [self.encoder_hidden_proj(x) for x in prev_hiddens]
                 prev_cells = [self.encoder_cell_proj(x) for x in prev_cells]
         #input_feed = x.new_ones(bsz, self.input_size) * encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
-        input_feed = prev_cells[0]#encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
+        input_feed = prev_hiddens[0][:,:self.input_size]#encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
+        #print(prev_hiddens[0].size())
         input_feed = self.input_feed_projection(input_feed)
-        input_feed = nn.functional.relu(input_feed)
+        input_feed = torch.sigmoid(input_feed)
 
         attn_scores = x.new_zeros(srclen, seqlen, bsz)#x.new_zeros(segment_units, seqlen, bsz)  #x.new_zeros(srclen, seqlen, bsz)
         outs = []
@@ -468,12 +471,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
             # apply attention using the last layer's hidden state
             if self.attention is not None:
-                # out, attn_scores[:, j, :] = self.attention(hidden, encoder_outs, encoder_padding_mask)
-                out, attn_scores[:, j, :] = self.attention(cell, encoder_outs, encoder_padding_mask)
+                out, attn_scores[:, j, :] = self.attention(hidden, encoder_outs, encoder_padding_mask)
+                # out, attn_scores[:, j, :] = self.attention(cell, encoder_outs, encoder_padding_mask)
             else:
                 out = hidden
 
-            ntf_input = self.ntf_projection(out)
+            ntf_input = self.ntf_projection(out[self.input_size:])
 
             #NTF
             common_params, segment_params = torch.split(ntf_input, [self.num_common_params, self.num_segment_specific_params*self.num_segments], dim=1)
