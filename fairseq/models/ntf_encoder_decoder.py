@@ -394,31 +394,11 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
                 device=self.device)
 
-        ##OLD###
-        # self.segment_fixed = torch.Tensor([[582.0/1000.,3.],[318.0/1000.,4.],[703.0/1000.,4.],[ 387.0/1000.,4.],[ 300.0/1000.,5.],[ 348.0/1000.,5.],[ 375.0/1000.,4.],[ 300.0/1000.,4.],[ 257.0/1000.,4.],[ 500.0/1000.,4.],[ 484.0/1000.,4.],[ 400.0/1000.,3.],[ 420.0/1000.,3.],[ 589.0/1000.,3.],[ 427./1000.,3.],[ 400.0/1000.,2.],[ 515.0/1000.,2.0],[ 495.0/1000.,3.0]]).to(self.device)#torch.Tensor(self.num_segments, 2)
-        # #self.segment_fixed = torch.Tensor([[0.57237,3.],[0.92267,3.],[0.4238,3.],[0.8092,3.],[1.183,3.],[1.5899,3.],[0.2161,3.],[0.88367,3.],[0.59879,3.],[0.91263,3.],[0.672,3.],[1.7492,3.],[0.28183,3.],[0.85799,3.],[1.0847,3.],[1.1839,3.],[0.56727,3.],[0.5147,3.]]).to(self.device)
-        # self.model_fixed = torch.Tensor([[10./3600.,17./3600.,23.,1.7,13.]]).to(self.device)
-
-        # num_boundry = 3
-        # num_model_params=8
-        # self.ntf_vars = num_model_params*self.num_segments+num_boundry
-        # self.ntf_projection = nn.Linear(self.output_size, self.ntf_vars)
-
-        # self.ntf_module = NTF_Module(num_segments=self.num_segments,\
-        #                              segment_fixed = self.segment_fixed,\
-        #                              model_fixed = self.model_fixed
-        #                             )
-
         self.print_count = 0
-        ##END OLD
-
         #self.fc_out = Linear(self.output_size, self.output_size, dropout=dropout_out)
 
 
     def forward(self, prev_output_tokens, encoder_out, incremental_state=None):
-    #def forward(self, prev_output_tokens, encoder_out, incremental_state=None):
-        #print(prev_output_tokens.size(), encoder_out.size())
-        #from fairseq import pdb; pdb.set_trace()
         encoder_padding_mask = encoder_out['encoder_padding_mask']
         encoder_out = encoder_out['encoder_out']
 
@@ -426,24 +406,14 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #print(prev_output_tokens.size())
             # prev_output_tokens = prev_output_tokens[:, -1:]
             prev_output_tokens = prev_output_tokens[:, -1:,:]
-            
-        # bsz, one_input_size = prev_output_tokens.size()
-        # self.seq_len = 360
-        # seqlen = self.seq_len
         
         bsz, seqlen, segment_units = prev_output_tokens.size()
 
         # get outputs from encoder
         encoder_outs, encoder_hiddens, encoder_cells = encoder_out[:3]
         srclen = encoder_outs.size(0)
-
-        # embed tokens
-        # x = self.embed_tokens(prev_output_tokens)
         
         x = prev_output_tokens.view(-1,self.seq_len,self.input_size).float()
-        #print(x.size())
-        # x = F.dropout(x, p=self.dropout_in, training=self.training)
-
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
 
@@ -460,7 +430,6 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 prev_cells = [self.encoder_cell_proj(x) for x in prev_cells]
             #input_feed = x.new_ones(bsz, self.input_size) * encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
             input_feed = encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
-            
             input_feed = nn.functional.relu(input_feed)
 
         attn_scores = x.new_zeros(srclen, seqlen, bsz)#x.new_zeros(segment_units, seqlen, bsz)  #x.new_zeros(srclen, seqlen, bsz)
@@ -478,24 +447,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #input = torch.clamp(input, min=-1.0, max=1.0)
             #import pdb; pdb.set_trace()
             self.print_count += 1
-            # if self.print_count%1000==0:#random.random() > 0.9999:
-            #     #from fairseq import pdb; pdb.set_trace()
-            #     means = (input_in*(self.max_vals+1e-6)).view(-1,18,5).mean(dim=1).cpu().detach().numpy()
-            #     print("\n\ninput means\t",means)
-            #     wandb.log({"input0": wandb.Histogram(means[:,0])})
-            #     wandb.log({"input1": wandb.Histogram(means[:,1])})
-            #     wandb.log({"input2": wandb.Histogram(means[:,2])})
-            #     wandb.log({"input3": wandb.Histogram(means[:,3])})
-            #     #wandb.log({"input4": wandb.Histogram(means[4])})
-            #     mean_x = x[j, :, :].view(-1,18,5).mean(dim=1)
-            #     print("x[j, :, :] means\t",mean_x.cpu().detach().numpy())
-            #     mean_feed = input_feed.view(-1,18,5).mean(dim=1)
-            #     print("input_feed means\t",mean_feed.cpu().detach().numpy())
-            
-            # if random.random()>0.0:
-            #     input = x[j, :, :]#torch.cat((x[j, :, :], input_feed), dim=1)
-            # else:
-            #     input = input_feed
+            if self.print_count%1000==0:#random.random() > 0.9999:
+                print(x[j, :].mean(),input_feed.mean(),input_feed,encoder_outs.size())
+
             input = input_in
             for i, rnn in enumerate(self.layers):
                 # recurrent cell
@@ -514,20 +468,14 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 out, attn_scores[:, j, :] = self.attention(cell, encoder_outs, encoder_padding_mask)
             else:
                 out = hidden
-            
-            #out = self.additional_fc(out)
-            
-            # from fairseq import pdb; pdb.set_trace()
+
             ntf_input = self.ntf_projection(out)
 
             #NTF
-            #ntf_input = x#self.out(output[0])
             common_params, segment_params = torch.split(ntf_input, [self.num_common_params, self.num_segment_specific_params*self.num_segments], dim=1)
-            #assert self.num_common_params == 8
             #10./3600.,17./3600.,23.,1.7,13.
             common_params = torch.cat([torch.sigmoid(common_params[:, :1]), torch.sigmoid(common_params[:, 1:4]), torch.sigmoid(common_params[:, 4:])], dim=1).to(self.device)
             
-            # if True:#self.segment_lengths!=None and self.t_var!=None:
             v0, q0, rhoNp1, tau, nu, delta, kappa = torch.unbind(torch.Tensor([self.vmax, 10000.0, 100.0, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
             v0 = v0 + self.vmin
             tau = 1./3600. + tau
@@ -555,117 +503,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                     tau=tau, nu=nu, delta=delta, kappa=kappa)
                 model_steps.append(output1)
                 x_input = output1
-            # else:
-            #     #                                                          v0,  q0,    ,rhoNp1, T, tau, nu, delta, kappa
-            #     v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([110.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)#.to(self.device)
-            #     #from fairseq import pdb; pdb.set_trace()
-            #     # v0 = torch.clamp(v0, min=5.0)
-            #     # t_var = torch.clamp(t_var, min=0.001)
-            #     v0 = v0 + self.vmin
-            #     #v0 = torch.clamp(v0, max=120.0)
-            #     t_var = torch.Tensor([10*0.00028]*bsz)# + t_var
-            #     tau = 1./3600. + tau
-            #     delta = 1.0 + delta
-            #     kappa = 1.0 + kappa
-            #     nu = 1.0 + nu
-
-            #     # delta = 1.7 + delta
-            #     # kappa = 13.0+ 0.0*kappa# + 1.0
-            #     # nu = 23.0 + 0.0*nu #+ 1.0
-
-            #     segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
-            #     #assert self.num_segment_specific_params==10
-            #     segment_params = torch.cat([torch.sigmoid(segment_params[:,:8,:]),F.relu(segment_params[:,8:10,:]),torch.tanh(segment_params[:,10:,:])],dim=1)
-            #     # import pdb; pdb.set_trace()
-            #                                                                                                                     #  self.Delta, self.lambda_var, vf, a, rhocr, g, omegar, omegas, epsq, epsv 
-            #     cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, offramp_prop, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[110.0],[5.0],[100.0],[10.0],[1000.0],[1.0],[1000.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
-            #     # cap_delta = torch.clamp(cap_delta, min=0.278)
-            #     # vf = torch.clamp(vf, min=5.0)
-            #     # lambda_var = torch.clamp(lambda_var, min=3.0)
-                
-            #     rhocr = 1.0 + rhocr
-            #     cap_delta = cap_delta + self.shortest_segment_length
-            #     vf = self.vmin + vf
-            #     lambda_var = 1.0 + lambda_var
-            #     a_var = 1.0 + a_var
-            #     g_var = 1.0 + g_var
-
-                
-            #     # rhocr = 33.5 + 0.0*rhocr
-            #     # cap_delta = cap_delta + 0.278
-            #     # vf = 110. + 0.0*vf #+5.0
-            #     # lambda_var = 3.0 + 0.0*lambda_var#+1.0
-            #     # a_var = 1.8 + 0.0*a_var# + 0.5
-                
-            #     # print(pd.DataFrame(segment_params))
-            #     # segment_params = segment_params.permute(0, 2, 1)
-
-            #     #x = input_data*self.max_vals
-            #     #x_unscaled = input_in*self.max_vals 
-            #     x_input = input_in*self.max_vals
-            #     model_steps = []
-                
-            #     for _ in range(self.num_ntf_steps):#x_input,segment_params,boundry_params)
-            #         output1 = self.ntf_module(
-            #             x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
-            #             g_var=g_var, future_r=future_r, offramp_prop=offramp_prop, epsq=epsq, epsv=epsv,t_var=t_var,\
-            #             tau=tau, nu=nu, delta=delta, kappa=kappa, cap_delta=cap_delta,\
-            #             lambda_var=lambda_var)
-            #         model_steps.append(output1)
-            #         x_input = output1
 
             output = torch.stack(model_steps,dim=0).mean(dim=0)
-            #output = output.view(-1)
             output = output/(self.max_vals+1e-6)
-            
-            #output = torch.clamp(output, min=0, max=1)
-            #x_output = output
-            ##
+
             common_params_list.append(common_params)
             segment_params_list.append(segment_params)
-            #return x, segment_params,common_params
-
-            # #########OLD
-            # boundry_params, segment_params = torch.split(ntf_input, [3,8*self.num_segments],dim=1)
-            # segment_params = segment_params.view((-1,8,self.num_segments))
-            # boundry_param_list.append(boundry_params)
-            # segment_param_list.append(segment_params)
-            # # boundry_params = torch.Tensor([200.0,10000.0,200.0]).to(self.device)*torch.sigmoid(boundry_params)
-            # boundry_params = torch.Tensor([150.0,10000.0,100.0]).to(self.device)*torch.sigmoid(boundry_params)
-            
-            # segment_params = torch.cat([torch.sigmoid(segment_params[:,:4,:]),torch.tanh(segment_params[:,4:,:])],dim=1)
-            #                                                 # vf, a, rhocr, g, omegar, omegas, epsq, epsv 
-            # segment_params =  segment_params* torch.Tensor([[150.0],[2.0],[100.0],[5.0],[10.0],[10.0],[10.0],[10.0]]).to(self.device)
-            # segment_params = segment_params.permute(0, 2, 1)
-            # unscaled_input = input_in * self.max_vals
-
-            # # print("boundry_params",boundry_params[0,::5].mean().item(),boundry_params.size())
-            # # print("segment_params",segment_params[0,::5,0].mean().item(),segment_params.size())
-            # # print(unscaled_input)
-
-            # model_steps = []
-            # num_steps = 3#18
-            # for _ in range(num_steps):
-            #     out1 = self.ntf_module(unscaled_input,segment_params,boundry_params)
-            #     model_steps.append(out1)
-            #     unscaled_input = out1
-
-            # out = torch.stack(model_steps, dim=0).mean(dim=0)
-
-            # avg_sum_max_vals = self.max_vals # summing everything above but speed and occ need to be avg
-            # # avg_sum_max_vals[1::5] *= num_steps #mean occupancy
-            # # avg_sum_max_vals[2::5] *= num_steps #mean speed
-            # out  = out / (avg_sum_max_vals+1e-6) 
-
-            # # print(out.mean().item())
-
-            # # out = out / (self.max_vals+1e-6)
-            # #from fairseq import pdb; pdb.set_trace()
-
-            # #out = F.dropout(out, p=self.dropout_out, training=self.training)
-            # # input feeding
-            # input_feed = out#.view(-1,360,90)
-            # #####END OLD
 
             input_feed = output#.view(-1,360,90)
 
