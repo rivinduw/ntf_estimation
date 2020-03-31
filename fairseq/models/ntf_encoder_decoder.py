@@ -472,7 +472,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
             # apply attention using the last layer's hidden state
             if self.attention is not None:
-                out, attn_scores[:, j, :] = self.attention(hidden, encoder_outs, encoder_padding_mask)
+                out, attn_scores[:, j, :] = self.attention(hidden[:,self.input_size:], encoder_outs, encoder_padding_mask)
                 # out, attn_scores[:, j, :] = self.attention(cell, encoder_outs, encoder_padding_mask)
             else:
                 out = hidden
