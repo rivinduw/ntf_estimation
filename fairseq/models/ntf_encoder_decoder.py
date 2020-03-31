@@ -52,7 +52,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         num_var_per_segment = task.get_variables_per_segment()
         total_input_variables = task.get_total_input_variables()
         device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        decoder_hidden_size = total_input_variables
+        decoder_hidden_size = total_input_variables * 2
         use_attention = False
         encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_layers=num_encoder_layers, num_segments=num_segments, device=device)#.to(device)
         decoder = TrafficNTFDecoder(hidden_size=decoder_hidden_size, max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
@@ -127,7 +127,7 @@ class TrafficNTFEncoder(FairseqEncoder):
             bidirectional=bidirectional,
         )
 
-        self.additional_fc = Linear(self.hidden_size, self.input_size)
+        #self.additional_fc = Linear(self.hidden_size, self.input_size)
 
         self.padding_value = padding_value
 
@@ -172,8 +172,8 @@ class TrafficNTFEncoder(FairseqEncoder):
         lstm_outs, (final_hiddens, final_cells) = self.lstm(x, (h0, c0))
 
         # print("lstm_outs",lstm_outs.size())
-        x = self.additional_fc(lstm_outs)
-        # x = lstm_outs # self.additional_fc(lstm_outs)
+        #x = self.additional_fc(lstm_outs)
+        x = lstm_outs # self.additional_fc(lstm_outs)
 
         # unpack outputs and apply dropout
         # x, _ = nn.utils.rnn.pad_packed_sequence(packed_outs, padding_value=self.padding_value)
