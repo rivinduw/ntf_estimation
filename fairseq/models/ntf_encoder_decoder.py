@@ -56,7 +56,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         use_attention = False
         encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_layers=num_encoder_layers, num_segments=num_segments, device=device)#.to(device)
         decoder = TrafficNTFDecoder(hidden_size=decoder_hidden_size, max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
-            seq_len = output_seq_len, encoder_output_units=total_input_variables, t_var=big_t, \
+            seq_len = output_seq_len, encoder_output_units=decoder_hidden_size, t_var=big_t, \
             active_onramps=active_onramps, active_offramps=active_offramps, attention=use_attention, \
             device=device)#.to(device)
         return cls(encoder, decoder)
@@ -98,7 +98,7 @@ class NTFModel(FairseqEncoderDecoderModel):
 class TrafficNTFEncoder(FairseqEncoder):
     """NTF encoder."""
     def __init__(
-        self, num_layers=2, #input_size=90,hidden_size=512
+        self, num_layers=1, #input_size=90,hidden_size=512
         seq_len=360, num_segments=12, num_var_per_segment=4, device=None,
         dropout_in=0.1, dropout_out=0.1, bidirectional=False, padding_value=0):
         super().__init__(dictionary=None)
@@ -160,11 +160,11 @@ class TrafficNTFEncoder(FairseqEncoder):
 
         # apply LSTM
         if self.bidirectional:
-            #state_size = 2 * self.num_layers, bsz, self.hidden_size
-            state_size = 2 * self.num_layers, bsz, one_timestep_size
+            state_size = 2 * self.num_layers, bsz, self.hidden_size
+            # state_size = 2 * self.num_layers, bsz, one_timestep_size
         else:
-            # state_size = self.num_layers, bsz, self.hidden_size
-            state_size = self.num_layers, bsz, one_timestep_size
+            state_size = self.num_layers, bsz, self.hidden_size
+            # state_size = self.num_layers, bsz, one_timestep_size
         
         
         h0 = x.new_zeros(*state_size)
@@ -303,7 +303,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.input_size = self.num_segments * num_var_per_segment
         self.output_size = self.input_size
         self.seq_len = seq_len
-        #self.hidden_size = hidden_size #self.input_size
+        #self.hidden_size = self.input_size *2
 
         if encoder_output_units == None:
             encoder_output_units = self.input_size 
@@ -380,7 +380,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.total_model_params = self.num_segment_specific_params*self.num_segments
 
         self.ntf_proj = self.num_segment_specific_params*self.num_segments+self.num_common_params
-        self.ntf_projection = nn.Linear(hidden_size, self.ntf_proj)
+        #self.ntf_projection = nn.Linear(hidden_size, self.ntf_proj)
+        self.ntf_projection = nn.Linear(self.input_size, self.ntf_proj)
 
         ##NEW BU
         self.input_feed_projection = nn.Linear(self.input_size, self.input_size)
@@ -454,8 +455,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #input = torch.clamp(input, min=-1.0, max=1.0)
             #import pdb; pdb.set_trace()
             self.print_count += 1
-            if self.print_count%1000==0:#random.random() > 0.9999:
-                print(x[j, :].mean(),input_feed.mean(),input_feed,encoder_outs.size())
+            # if self.print_count%1000==0:#random.random() > 0.9999:
+            #     print(x[j, :].mean(),input_feed.mean(),input_feed,encoder_outs.size())
 
             input = input_in
             for i, rnn in enumerate(self.layers):
@@ -476,7 +477,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             else:
                 out = hidden
 
-            ntf_input = self.ntf_projection(out[self.input_size:])
+            ntf_input = self.ntf_projection(out[:,self.input_size:])
 
             #NTF
             common_params, segment_params = torch.split(ntf_input, [self.num_common_params, self.num_segment_specific_params*self.num_segments], dim=1)
