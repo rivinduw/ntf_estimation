@@ -55,6 +55,8 @@ class TrafficDataset(FairseqDataset):
         #get only num_segments
         total_input_variables = self.num_segments*self.variables_per_segment
         self.all_data = self.all_data.iloc[:,:total_input_variables]
+        #make the extreme values equal to not found 
+        self.all_data[self.all_data.quantile(0.99)<=self.all_data] = -1e-6
 
         if split == 'train':
             train_from_idx = self.all_data.index.get_loc(pd.to_datetime(train_from), method='nearest')
