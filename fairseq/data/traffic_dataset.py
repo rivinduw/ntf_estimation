@@ -78,13 +78,12 @@ class TrafficDataset(FairseqDataset):
             self.shuffle = False
 
 
-        
-
         if mainlines_to_include_in_input==None:
             mainlines_to_include_in_input = [1.0]*self.num_segments
-            mainlines_to_include_in_input[15] = 0.0
-            mainlines_to_include_in_input[16] = 0.0
-            mainlines_to_include_in_input[17] = 0.0
+            mainlines_to_include_in_input[1::2] = [0.0]*len(mainlines_to_include_in_input[1::2])
+            # mainlines_to_include_in_input[15] = 0.0
+            # mainlines_to_include_in_input[16] = 0.0
+            # mainlines_to_include_in_input[17] = 0.0
             mainlines_to_include_in_input[0] = 1.0
             mainlines_to_include_in_input[-1] = 1.0
             self.mainlines_to_include_in_input = np.array(mainlines_to_include_in_input)
@@ -93,11 +92,14 @@ class TrafficDataset(FairseqDataset):
         
         if mainlines_to_include_in_output==None:
             mainlines_to_include_in_output = [1.0]*self.num_segments
-            mainlines_to_include_in_output[15] = 0.0
-            mainlines_to_include_in_output[16] = 0.0
-            mainlines_to_include_in_output[17] = 0.0
+            mainlines_to_include_in_output[1::2] = [0.0]*len(mainlines_to_include_in_output[1::2])
             mainlines_to_include_in_output[0] = 1.0
             mainlines_to_include_in_output[-1] = 1.0
+            # mainlines_to_include_in_output[15] = 0.0
+            # mainlines_to_include_in_output[16] = 0.0
+            # mainlines_to_include_in_output[17] = 0.0
+            # mainlines_to_include_in_output[0] = 1.0
+            # mainlines_to_include_in_output[-1] = 1.0
             self.mainlines_to_include_in_output = np.array(mainlines_to_include_in_output)
         else:
             self.mainlines_to_include_in_output = np.array(mainlines_to_include_in_output)
@@ -147,8 +149,8 @@ class TrafficDataset(FairseqDataset):
         one_label = self.all_data.iloc[idx+input_len:idx+input_len+label_len, :].values
         if self.scale_output:
           one_label = one_label/self.max_vals
-        one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_input * one_label[:,::self.variables_per_segment]
-        one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_input * one_label[:,1::self.variables_per_segment]
+        one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
+        one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
         one_label[one_label==0] = NEG
 
         one_label = one_label.transpose(0,1)
