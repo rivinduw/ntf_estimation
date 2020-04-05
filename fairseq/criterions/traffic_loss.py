@@ -96,16 +96,16 @@ class MSECriterion(FairseqCriterion):
 
         target_mask = (self.max_vals * target) > 1e-6
 
-        volume_target = target[:,:,::4] * 10000
-        volume_outputs = lprobs[:,:,::4] *10000
-        volume_mask = (10000* volume_target) > 1e-6
-        vol_y = volume_target[volume_mask]
-        vol_outs =  volume_outputs[volume_mask]
+        # volume_target = target[:,:,::4] * 10000
+        # volume_outputs = lprobs[:,:,::4] *10000
+        # volume_mask = (10000* volume_target) > 1e-6
+        # vol_y = volume_target[volume_mask]
+        # vol_outs =  volume_outputs[volume_mask]                    'volume_loss': volume_loss,                    'volume_acc': vol_acc,
         
 
-        y = target #* self.max_vals
+        y = target * self.max_vals
         y = y[target_mask]
-        outs = lprobs #* self.max_vals
+        outs = lprobs * self.max_vals
         outputs = outs[target_mask]
         num_valid = target_mask.float().sum()
 
@@ -115,23 +115,21 @@ class MSECriterion(FairseqCriterion):
         accuracy = 1. - mape_loss
         accuracy = accuracy.clamp(0,1)
 
-        vol_acc = 1 - torch.mean((torch.abs(torch.div(torch.sub(vol_outs,vol_y),(vol_y + 1e-6)))).clamp(0,1))
+        # vol_acc = 1 - torch.mean((torch.abs(torch.div(torch.sub(vol_outs,vol_y),(vol_y + 1e-6)))).clamp(0,1))
         
         # print("mask sum",target_mask.float().sum(),target.sum())
         if num_valid>=1:
             target_loss = self.loss_fn(outputs, y)
-            volume_loss = self.loss_fn(vol_outs, vol_y)
+            # volume_loss = self.loss_fn(vol_outs, vol_y)
         else:
             target_loss = 0.0
-            volume_loss = 0.0
+            # volume_loss = 0.0
         
-        total_loss = volume_loss + target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss
+        total_loss = target_loss + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
         
         try:
             wandb.log(
                     {'normal_loss':total_loss,
-                    'volume_loss': volume_loss,
-                    'volume_acc': vol_acc,
                     'common_loss':common_loss,
                     'segment_loss':segment_loss,
                     'segment_time_loss':segment_time_loss,
