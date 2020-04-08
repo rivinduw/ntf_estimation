@@ -56,7 +56,7 @@ class TrafficDataset(FairseqDataset):
         total_input_variables = self.num_segments*self.variables_per_segment
         self.all_data = self.all_data.iloc[:,:total_input_variables]
         #make the extreme values equal to not found 
-        self.all_data[self.all_data.quantile(0.99)<=self.all_data] = -1e-6
+        #self.all_data[self.all_data.quantile(0.99)<=self.all_data] = -1e-6
 
         if split == 'train':
             train_from_idx = self.all_data.index.get_loc(pd.to_datetime(train_from), method='nearest')
@@ -80,7 +80,7 @@ class TrafficDataset(FairseqDataset):
 
         if mainlines_to_include_in_input==None:
             mainlines_to_include_in_input = [1.0]*self.num_segments
-            mainlines_to_include_in_input[1::2] = [0.0]*len(mainlines_to_include_in_input[1::2])
+            mainlines_to_include_in_input[1::2] = [1.0]*len(mainlines_to_include_in_input[1::2])
             # mainlines_to_include_in_input[15] = 0.0
             # mainlines_to_include_in_input[16] = 0.0
             # mainlines_to_include_in_input[17] = 0.0
@@ -92,7 +92,7 @@ class TrafficDataset(FairseqDataset):
         
         if mainlines_to_include_in_output==None:
             mainlines_to_include_in_output = [1.0]*self.num_segments
-            mainlines_to_include_in_output[1::2] = [0.0]*len(mainlines_to_include_in_output[1::2])
+            mainlines_to_include_in_output[1::2] = [1.0]*len(mainlines_to_include_in_output[1::2])
             mainlines_to_include_in_output[0] = 1.0
             mainlines_to_include_in_output[-1] = 1.0
             # mainlines_to_include_in_output[15] = 0.0
