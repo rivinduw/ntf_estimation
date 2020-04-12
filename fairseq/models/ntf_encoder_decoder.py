@@ -375,6 +375,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.tau = torch.Tensor([[20./3600.]])
         self.nu = torch.Tensor([[35.0]])
         self.delta = torch.Tensor([[13.0]])
+        self.kappa = torch.Tensor([[1.4]])
         self.num_common_params = 7
         self.num_segment_specific_params = 2
         ####
@@ -406,7 +407,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, \
                 lambda_var=self.num_lanes, t_var=self.t_var, \
                 active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
-                epsq=self.epsq,epsv=self.epsv, tau=self.tau, nu=self.nu, delta=self.delta,\
+                epsq=self.epsq,epsv=self.epsv, tau=self.tau, nu=self.nu, delta=self.delta,kappa=self.kappa,\
                 device=self.device)
 
         # if segment_lengths!=None and t_var!=None:
@@ -509,10 +510,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #v0, q0, rhoNp1, tau, nu, delta, kappa = torch.unbind(torch.Tensor([self.vmax, 10000.0, 100.0, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
             v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(torch.Tensor([self.vmax-self.vmin, 10000.0, 100.0, self.vmax-self.vmin, 2.0, 100.0, 10.0]).to(self.device)*common_params, dim=1)
             v0 = v0 + self.vmin
-            tau = 1./3600. + tau
-            delta = 1.0 + delta
-            kappa = 1.0 + kappa
-            nu = 1.0 + nu
+            #tau = 1./3600. + tau
+            #delta = 1.0 + delta
+            #kappa = 1.0 + kappa
+            #nu = 1.0 + nu
             
             segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
             #segment_params = torch.cat([torch.sigmoid(segment_params[:,:4,:]),torch.sigmoid(segment_params[:,4:5,:]),torch.sigmoid(segment_params[:,5:6,:]),torch.tanh(segment_params[:,6:,:])],dim=1)
