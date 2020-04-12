@@ -131,8 +131,8 @@ class TrafficDataset(FairseqDataset):
     def __getitem__(self, index):
 
         #rand = np.random.randint(self.output_seq_len, size=1)[0]
-        # idx = (index * (self.output_seq_len-1))# + rand
-        idx = index
+        idx = (index * (self.output_seq_len-1))# + rand
+        # idx = index
 
         input_len = self.input_seq_len
         label_len = self.output_seq_len
