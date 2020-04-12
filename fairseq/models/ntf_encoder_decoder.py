@@ -368,6 +368,18 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         else:
             self.t_var = None
 
+
+        #for KF comparison
+        self.epsq = torch.Tensor([[0.0]])
+        self.epsv = torch.Tensor([[0.0]])
+        self.tau = torch.Tensor([[20./3600.]])
+        self.nu = torch.Tensor([[35.0]])
+        self.delta = torch.Tensor([[13.0]])
+        self.num_common_params = 7
+        self.num_segment_specific_params = 2
+        ####
+
+
         self.active_onramps = active_onramps
         self.active_offramps = active_offramps
 
@@ -384,21 +396,30 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.ntf_projection = nn.Linear(self.input_size, self.ntf_proj)
 
         ##NEW BU
-        self.input_feed_projection = nn.Linear(self.input_size, self.input_size)
+        #self.input_feed_projection = nn.Linear(self.input_size, self.input_size)
         # self.output_layer = nn.Linear(lin_layer_sizes[-1],
         #                           self.ntf_proj)
 
-        if segment_lengths!=None and t_var!=None:
-            print(self.segment_lengths,self.num_lanes)
-            self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, \
+
+        
+
+        self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, \
                 lambda_var=self.num_lanes, t_var=self.t_var, \
                 active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
+                epsq=self.epsq,epsv=self.epsv, tau=self.tau, nu=self.nu, delta=self.delta,\
                 device=self.device)
-        else:
-            print("no num lanes segment lengths")
-            self.ntf_module = NTF_Module(num_segments=self.num_segments, \
-                active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
-                device=self.device)
+
+        # if segment_lengths!=None and t_var!=None:
+        #     print(self.segment_lengths,self.num_lanes)
+        #     self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, \
+        #         lambda_var=self.num_lanes, t_var=self.t_var, \
+        #         active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
+        #         device=self.device)
+        # else:
+        #     print("no num lanes segment lengths")
+        #     self.ntf_module = NTF_Module(num_segments=self.num_segments, \
+        #         active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
+        #         device=self.device)
 
         self.print_count = 0
         #self.fc_out = Linear(self.output_size, self.output_size, dropout=dropout_out)
@@ -437,8 +458,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #input_feed = x.new_ones(bsz, self.input_size) * encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
         input_feed = prev_hiddens[0][:,:self.input_size]#encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
         #print(prev_hiddens[0].size())
-        input_feed = self.input_feed_projection(input_feed)
-        input_feed = torch.sigmoid(input_feed)
+        #input_feed = self.input_feed_projection(input_feed)
+        #input_feed = torch.sigmoid(input_feed)
+        input_feed = F.relu(input_feed)
 
         attn_scores = x.new_zeros(srclen, seqlen, bsz)#x.new_zeros(segment_units, seqlen, bsz)  #x.new_zeros(srclen, seqlen, bsz)
         outs = []
@@ -482,9 +504,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #NTF
             common_params, segment_params = torch.split(ntf_input, [self.num_common_params, self.num_segment_specific_params*self.num_segments], dim=1)
             #10./3600.,17./3600.,23.,1.7,13.
-            common_params = torch.cat([torch.sigmoid(common_params[:, :1]), torch.sigmoid(common_params[:, 1:4]), torch.sigmoid(common_params[:, 4:])], dim=1).to(self.device)
-            
-            v0, q0, rhoNp1, tau, nu, delta, kappa = torch.unbind(torch.Tensor([self.vmax, 10000.0, 100.0, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
+            #common_params = torch.cat([torch.sigmoid(common_params[:, :1]), torch.sigmoid(common_params[:, 1:4]), torch.sigmoid(common_params[:, 4:])], dim=1).to(self.device)
+            common_params = torch.sigmoid(common_params)
+            #v0, q0, rhoNp1, tau, nu, delta, kappa = torch.unbind(torch.Tensor([self.vmax, 10000.0, 100.0, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
+            v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(torch.Tensor([self.vmax-self.vmin, 10000.0, 100.0, self.vmax-self.vmin, 2.0, 100.0, 10.0]).to(self.device)*common_params, dim=1)
             v0 = v0 + self.vmin
             tau = 1./3600. + tau
             delta = 1.0 + delta
@@ -492,29 +515,39 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             nu = 1.0 + nu
             
             segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
-            segment_params = torch.cat([torch.sigmoid(segment_params[:,:4,:]),torch.sigmoid(segment_params[:,4:5,:]),torch.sigmoid(segment_params[:,5:6,:]),torch.tanh(segment_params[:,6:,:])],dim=1)
-                                                                                                                                #  vf, a, rhocr, g, omegar, omegas, epsq, epsv 
-            vf, a_var, rhocr, g_var, future_r, offramp_prop, epsq, epsv = torch.unbind(segment_params* torch.Tensor(\
-                [[self.vmax],[2.0],[100.0],[10.0],[4000.0],[1.0],[100.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
+            #segment_params = torch.cat([torch.sigmoid(segment_params[:,:4,:]),torch.sigmoid(segment_params[:,4:5,:]),torch.sigmoid(segment_params[:,5:6,:]),torch.tanh(segment_params[:,6:,:])],dim=1)
+            #                                                                                                                    #  vf, a, rhocr, g, omegar, omegas, epsq, epsv 
+            #future_r, offramp_prop = torch.unbind(segment_params* torch.Tensor(\
+            #    [[self.vmax],[2.0],[100.0],[10.0],[4000.0],[1.0],[100.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
+            
+            segment_params = torch.sigmoid(segment_params[:,:,:])
+            future_r, offramp_prop = torch.unbind(segment_params* torch.Tensor(\
+                [[5000.0],[1.0]]).to(self.device),dim=1)#.to(self.device)
             rhocr = 1.0 + rhocr
             vf = self.vmin + vf
             a_var = 1.0 + a_var
             g_var = 1.0 + g_var
+            
+            # epsq = [0.0]
+            # epsv = [0.0]
 
             x_input = input_in*self.max_vals
             model_steps = []
             
             for _ in range(self.num_ntf_steps):
+                # output1 = self.ntf_module(
+                #     x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
+                #     g_var=g_var, future_r=future_r, offramp_prop=offramp_prop, epsq=epsq, epsv=epsv,\
+                #     tau=tau, nu=nu, delta=delta, kappa=kappa)
                 output1 = self.ntf_module(
                     x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
-                    g_var=g_var, future_r=future_r, offramp_prop=offramp_prop, epsq=epsq, epsv=epsv,\
-                    tau=tau, nu=nu, delta=delta, kappa=kappa)
+                    g_var=g_var, future_r=future_r, offramp_prop=offramp_prop)
                 model_steps.append(output1)
                 x_input = output1
 
-            #output = torch.stack(model_steps,dim=0).mean(dim=0)
-            #output = output/(self.max_vals+1e-6)
-            output = output1/(self.max_vals+1e-6)
+            output = torch.stack(model_steps,dim=0).mean(dim=0)
+            output = output/(self.max_vals+1e-6)
+            # output = output1/(self.max_vals+1e-6)
 
             common_params_list.append(common_params)
             segment_params_list.append(segment_params)

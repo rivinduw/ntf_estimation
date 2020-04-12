@@ -59,7 +59,7 @@ class TrafficPredictionTask(FairseqTask):
         self.active_offramps = self.active_offramps[:self.num_segments]
         
         self.output_seq_len = 10
-        self.input_seq_len = 120
+        self.input_seq_len = 30
         
         self.variables_per_segment = 4
         self.total_input_variables = self.num_segments*self.variables_per_segment
@@ -72,10 +72,10 @@ class TrafficPredictionTask(FairseqTask):
         data_file = self.args.data#os.path.join(self.args.data, '{}.csv'.format('valid_data_109'))#split))
         self.datasets[split] = TrafficDataset(data_file, output_seq_len=self.output_seq_len, split=split, \
                         input_seq_len=self.input_seq_len, num_segments=self.num_segments,\
-                        train_from = "2019-09-01 00:00:00",\
+                        train_from = "2019-01-01 00:00:00",\
                         train_to = "2019-10-01 00:00:00",\
-                        valid_from = "2019-08-01 00:00:00",\
-                        valid_to = "2019-09-01 00:00:00",\
+                        valid_from = "2018-10-01 00:00:00",\
+                        valid_to = "2018-11-01 00:00:00",\
                         test_from = "2019-10-01 00:00:00",\
                         test_to = "2019-11-01 00:00:00",\
                         mainlines_to_include_in_input = None,\

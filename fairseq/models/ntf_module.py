@@ -136,8 +136,8 @@ class NTF_Module(nn.Module):
         if g_var is not None: self.g_var = torch.mean(g_var).view(-1,1)
         if future_r is not None: self.future_r = future_r
         if offramp_prop is not None: self.offramp_prop = offramp_prop
-        if epsq is not None: self.epsq = epsq
-        if epsv is not None: self.epsv = epsv
+        if epsq is not None: self.epsq = epsq.view(-1,1)
+        if epsv is not None: self.epsv = epsv.view(-1,1)
         if t_var is not None: self.t_var = t_var.view(-1,1)
         if tau is not None: self.tau = tau.view(-1,1)
         if nu is not None: self.nu = nu.view(-1,1)
