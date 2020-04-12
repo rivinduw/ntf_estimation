@@ -165,7 +165,7 @@ class TrafficDataset(FairseqDataset):
         return F.interpolate(x.view(1, 1, -1), scale_factor=factor).squeeze()
 
     def __len__(self):
-        return (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)#//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
+        return (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
 
 
     def collater(self, samples):
