@@ -57,7 +57,8 @@ class TrafficDataset(FairseqDataset):
         self.all_data = self.all_data.iloc[:,:total_input_variables]
         #make the extreme values equal to not found 
         #self.all_data[self.all_data.quantile(0.99)<=self.all_data] = -1e-6
-
+        
+        self.split = split
         if split == 'train':
             train_from_idx = self.all_data.index.get_loc(pd.to_datetime(train_from), method='nearest')
             train_to_idx = self.all_data.index.get_loc(pd.to_datetime(train_to), method='nearest')
@@ -129,10 +130,12 @@ class TrafficDataset(FairseqDataset):
         return torch.Tensor(self.max_vals)
     
     def __getitem__(self, index):
-
-        #rand = np.random.randint(self.output_seq_len, size=1)[0]
-        idx = (index * (self.output_seq_len-1))# + rand
-        # idx = index
+        
+        if self.split=='train':
+            rand = np.random.randint(self.output_seq_len, size=1)[0]
+            idx = (index * (self.output_seq_len-1)) + rand
+        else:
+            idx = index
 
         input_len = self.input_seq_len
         label_len = self.output_seq_len
@@ -165,7 +168,11 @@ class TrafficDataset(FairseqDataset):
         return F.interpolate(x.view(1, 1, -1), scale_factor=factor).squeeze()
 
     def __len__(self):
-        return (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
+        if self.split=='train':
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
+        else:
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)
+        return data_len
 
 
     def collater(self, samples):
