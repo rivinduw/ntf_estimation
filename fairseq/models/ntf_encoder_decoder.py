@@ -472,8 +472,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         input_feed = prev_hiddens[0][:,:self.input_size]#encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
         #print(prev_hiddens[0].size())
         #input_feed = self.input_feed_projection(input_feed)
-        #input_feed = torch.sigmoid(input_feed)
-        input_feed = F.relu(input_feed)
+        input_feed = torch.sigmoid(input_feed)
+        # input_feed = F.relu(input_feed)
 
         attn_scores = x.new_zeros(srclen, seqlen, bsz)#x.new_zeros(segment_units, seqlen, bsz)  #x.new_zeros(srclen, seqlen, bsz)
         outs = []
