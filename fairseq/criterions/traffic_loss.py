@@ -42,13 +42,14 @@ class MSECriterion(FairseqCriterion):
         3) logging outputs to display while training
         """
         net_output = model(**sample['net_input'])
-        loss, _ = self.compute_loss(model, net_output, sample, reduce=reduce)
+        loss, internal_params = self.compute_loss(model, net_output, sample, reduce=reduce)
         sample_size = sample['target'].size(0) if self.args.sentence_avg else sample['ntokens']
         logging_output = {
             'loss': utils.item(loss.data) if reduce else loss.data,
             'ntokens': sample['ntokens'],
             'nsentences': sample['target'].size(0),
             'sample_size': sample_size,
+            'internal_params': internal_params,
         }
         return loss, sample_size, logging_output
 
@@ -56,6 +57,9 @@ class MSECriterion(FairseqCriterion):
         # import fairseq.pdb as pdb; pdb.set_trace()
         lprobs, common_params, segment = model.get_normalized_probs(net_output, log_probs=False)
         lprobs = lprobs.float() #self.max_vals*
+        internal_params = {}
+        internal_params['common_params'] = common_params
+        internal_params['segment_params'] = segment
         
         #bsz, ts, var
         # torch.Size([32, 10, 8])
@@ -150,7 +154,7 @@ class MSECriterion(FairseqCriterion):
         #     ignore_index=self.padding_idx,
         #     reduction='sum' if reduce else 'none',
         # )
-        return total_loss, total_loss
+        return total_loss, internal_params
 
     @staticmethod
     def aggregate_logging_outputs(logging_outputs):
