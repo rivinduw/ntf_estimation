@@ -96,7 +96,8 @@ class NTF_Module(nn.Module):
                 wandb.log({"v0": wandb.Histogram(self.v0.cpu().detach().numpy())})
                 wandb.log({"q0": wandb.Histogram(self.q0.cpu().detach().numpy())})
                 wandb.log({"rhoNp1": wandb.Histogram(self.rhoNp1.cpu().detach().numpy())})
-
+                q_max = self.rhocr * self.vf
+                wandb.log({"q_max": wandb.Histogram(q_max.cpu().detach().numpy())})
                 wandb.log({"t_var": wandb.Histogram(self.t_var.cpu().detach().numpy())})
                 wandb.log({"tau": wandb.Histogram(self.tau.cpu().detach().numpy())})
                 wandb.log({"nu": wandb.Histogram(self.nu.cpu().detach().numpy())})
