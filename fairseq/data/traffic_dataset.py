@@ -131,7 +131,7 @@ class TrafficDataset(FairseqDataset):
     
     def __getitem__(self, index):
         
-        if self.split=='train':
+        if not self.split=='test':
             rand = np.random.randint(self.output_seq_len, size=1)[0]
             idx = (index * (self.output_seq_len-1)) + rand
         else:
@@ -168,7 +168,7 @@ class TrafficDataset(FairseqDataset):
         return F.interpolate(x.view(1, 1, -1), scale_factor=factor).squeeze()
 
     def __len__(self):
-        if self.split=='train':
+        if not self.split=='test':
             data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
         else:
             data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)
