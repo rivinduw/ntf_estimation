@@ -554,10 +554,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             segment_params = torch.sigmoid(segment_params[:,:,:])
             future_r, offramp_prop = torch.unbind(segment_params*self.segment_param_multipliers,dim=1) #.to(self.device)
             
-            rhocr = 1.0 + rhocr
-            vf = self.vmin + vf
-            a_var = self.amin + a_var
-            g_var = self.gmin + g_var
+            # rhocr = 1.0 + rhocr
+            # vf = self.vmin + vf
+            # a_var = self.amin + a_var
+            # g_var = self.gmin + g_var
             
             # epsq = [0.0]
             # epsv = [0.0]
