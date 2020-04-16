@@ -488,19 +488,19 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         segment_params_list = []
         
         for j in range(seqlen):
-            #print(x.shape)
-            # from fairseq import pdb; pdb.set_trace()
-            # input feeding: concatenate context vector from previous time step
-            input_d = F.dropout(x[j, :], p=0.5, training=self.training)
-            input_mask = input_d > 1e-6#0.#-1e-6
-            input_in = (x[j, :]*input_mask.float()) + ( (1-input_mask.float())*input_feed)
-            #input = torch.clamp(input, min=-1.0, max=1.0)
-            #import pdb; pdb.set_trace()
+            # #print(x.shape)
+            # # from fairseq import pdb; pdb.set_trace()
+            # # input feeding: concatenate context vector from previous time step
+            # input_d = F.dropout(x[j, :], p=0.5, training=self.training)
+            # input_mask = input_d > 1e-6#0.#-1e-6
+            # input_in = (x[j, :]*input_mask.float()) + ( (1-input_mask.float())*input_feed)
+            # #input = torch.clamp(input, min=-1.0, max=1.0)
+            # #import pdb; pdb.set_trace()
             self.print_count += 1
             # if self.print_count%1000==0:#random.random() > 0.9999:
             #     print(x[j, :].mean(),input_feed.mean(),input_feed,encoder_outs.size())
 
-            input = input_in
+            input = x[j, :]#input_in
             for i, rnn in enumerate(self.layers):
                 # recurrent cell
                 hidden, cell = rnn(input, (prev_hiddens[i], prev_cells[i]))
@@ -518,6 +518,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 # out, attn_scores[:, j, :] = self.attention(cell, encoder_outs, encoder_padding_mask)
             else:
                 out = hidden
+
+            new_input_feed = torch.sigmoid(out[:,:self.input_size])
+
+            input_d = F.dropout(x[j, :], p=0.5, training=self.training)
+            input_mask = input_d > 1e-6#0.#-1e-6
+            input_in = (x[j, :]*input_mask.float()) + ( (1-input_mask.float())*new_input_feed)
 
             ntf_input = self.ntf_projection(out[:,self.input_size:])
 
