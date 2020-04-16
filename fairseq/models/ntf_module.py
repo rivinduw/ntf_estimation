@@ -17,11 +17,12 @@ class NTF_Module(nn.Module):
                  cap_delta=None, lambda_var=None,\
                  active_onramps=None, active_offramps=None, \
                  v0=None, q0=None, rhoNp1=None, vf=None, a_var=None, rhocr=None,\
-                 g_var=None, future_r=None, offramp_prop=None, epsq=None, epsv=None, \
+                 g_var=None, future_r=None, future_s=None,\
+                 epsq=None, epsv=None, \
                  device=None, print_every=100
                 ):
         super(NTF_Module, self).__init__()
-
+        # offramp_prop=None, 
         if device == None:
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         else:
@@ -35,7 +36,8 @@ class NTF_Module(nn.Module):
         if rhocr is not None: self.rhocr = torch.mean(rhocr).view(-1,1)
         if g_var is not None: self.g_var = torch.mean(g_var).view(-1,1)
         if future_r is not None: self.future_r = future_r
-        if offramp_prop is not None: self.offramp_prop = offramp_prop
+        if future_s is not None: self.future_r = future_s
+        # if offramp_prop is not None: self.offramp_prop = offramp_prop
         if epsq is not None: self.epsq = epsq
         if epsv is not None: self.epsv = epsv
         if t_var is not None: self.t_var = t_var
@@ -123,11 +125,12 @@ class NTF_Module(nn.Module):
                       (flow_residual))
 
     def forward(self,x=None, v0=None, q0=None, rhoNp1=None, \
-                vf=None, a_var=None, rhocr=None, g_var=None, future_r=None, offramp_prop=None, epsq=None, epsv=None,\
+                vf=None, a_var=None, rhocr=None, g_var=None, future_r=None, future_s=None,\
+                epsq=None, epsv=None,\
                 t_var=None, tau=None, nu=None, delta=None, kappa=None,\
                 cap_delta=None, lambda_var=None):
         self.print_count+=1
-        
+        # offramp_prop=None,
         if v0 is not None: self.v0 = v0.view(-1,1)
         if q0 is not None: self.q0 = q0.view(-1,1)
         if rhoNp1 is not None: self.rhoNp1 = rhoNp1.view(-1,1)
@@ -136,7 +139,8 @@ class NTF_Module(nn.Module):
         if rhocr is not None: self.rhocr = torch.mean(rhocr).view(-1,1)
         if g_var is not None: self.g_var = torch.mean(g_var).view(-1,1)
         if future_r is not None: self.future_r = future_r
-        if offramp_prop is not None: self.offramp_prop = offramp_prop
+        if future_s is not None: self.future_s = future_s
+        # if offramp_prop is not None: self.offramp_prop = offramp_prop
         if epsq is not None: self.epsq = epsq.view(-1,1)
         if epsv is not None: self.epsv = epsv.view(-1,1)
         if t_var is not None: self.t_var = t_var.view(-1,1)
@@ -171,7 +175,8 @@ class NTF_Module(nn.Module):
         future_flows = future_densities * future_velocities * self.lambda_var - self.epsq
 
         #old future_s = self.active_offramps * (self.offramp_prop*self.current_flows) #active_offramps.float() * 
-        future_s = self.active_offramps * (self.offramp_prop*self.prev_flows) #active_offramps.float() * 
+        # future_s = self.active_offramps * (self.offramp_prop*self.prev_flows) #active_offramps.float() * 
+        future_s = self.active_offramps * future_s
         
         future_r = self.active_onramps * future_r
 

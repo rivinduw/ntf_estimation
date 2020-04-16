@@ -399,9 +399,11 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.flow_max = 10000.0
         self.flow_min = 0.0
 
+        self.ramp_max = 5000.0
+
 
         self.common_param_multipliers = torch.Tensor([self.vmax-self.vmin, self.flow_max-self.flow_min, self.rhoNp1_max-self.rhoNp1_min, self.vmax-self.vmin, self.amax-self.amin, self.rhocr_max-self.rhocr_min, self.gmax-self.gmin]).to(self.device)
-        self.segment_param_multipliers = torch.Tensor([[5000.0],[1.0]]).to(self.device)
+        self.segment_param_multipliers = torch.Tensor([[self.ramp_max],[self.ramp_max]]).to(self.device)
 
         self.common_param_additions = torch.Tensor([self.vmin, self.flow_min, self.rhoNp1_min, self.vmin, self.amin, self.rhocr_min, self.gmin]).to(self.device)
 
@@ -420,7 +422,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.ntf_projection = nn.Linear(self.input_size, self.ntf_proj)
 
 
-        self.missing_data_projection = nn.Linear(self.input_size, self.input_size)
+        #self.missing_data_projection = nn.Linear(self.input_size, self.input_size)
 
         ##NEW BU
         #self.input_feed_projection = nn.Linear(self.input_size, self.input_size)
@@ -526,7 +528,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             else:
                 out = hidden
 
-            new_input_feed = torch.sigmoid(self.missing_data_projection(out[:,:self.input_size]))#torch.sigmoid(out[:,:self.input_size])
+            new_input_feed = out[:,:self.input_size]#torch.sigmoid(self.missing_data_projection(out[:,:self.input_size]))#torch.sigmoid(out[:,:self.input_size])
 
             input_d = F.dropout(x[j, :], p=0.5, training=self.training)
             input_mask = (input_d*self.max_vals) > 1e-6#0.#-1e-6
@@ -555,7 +557,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #    [[self.vmax],[2.0],[100.0],[10.0],[4000.0],[1.0],[100.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
             
             segment_params = torch.sigmoid(segment_params[:,:,:])
-            future_r, offramp_prop = torch.unbind(segment_params*self.segment_param_multipliers,dim=1) #.to(self.device)
+            #future_r, offramp_prop = torch.unbind(segment_params*self.segment_param_multipliers,dim=1) #.to(self.device)
+            future_r, future_s = torch.unbind(segment_params*self.segment_param_multipliers,dim=1)
             
             # rhocr = 1.0 + rhocr
             # vf = self.vmin + vf
@@ -573,9 +576,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 #     x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
                 #     g_var=g_var, future_r=future_r, offramp_prop=offramp_prop, epsq=epsq, epsv=epsv,\
                 #     tau=tau, nu=nu, delta=delta, kappa=kappa)
+                # output1 = self.ntf_module(
+                #     x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
+                #     g_var=g_var, future_r=future_r, offramp_prop=offramp_prop)
                 output1 = self.ntf_module(
                     x=x_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
-                    g_var=g_var, future_r=future_r, offramp_prop=offramp_prop)
+                    g_var=g_var, future_r=future_r, future_s=future_s)
                 model_steps.append(output1)
                 x_input = output1
 
