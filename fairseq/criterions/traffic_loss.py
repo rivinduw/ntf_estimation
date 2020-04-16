@@ -24,12 +24,23 @@ class MSECriterion(FairseqCriterion):
         super().__init__(args, task)
         # wandb.init(job_type='mse_loss', config=args)
         # self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
-        # self.loss_fn = torch.nn.L1Loss()
-        self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = torch.nn.L1Loss()
+        # self.loss_fn = torch.nn.MSELoss()
 
         self.common_lambda = 1.0
-        self.segment_lambda = 0.0
-        self.segment_time_lambda = 0.0
+        self.segment_lambda = 1.0
+        self.segment_time_lambda = 1.0
+
+        self.active_onramps = task.get_active_onramps()
+        self.active_offramps = task.get_active_offramps()
+        self.inactive_onramps = [not x for x in self.active_onramps]
+        self.inactive_offramps = [not x for x in self.active_offramps]
+
+        self.active_onramps = torch.tensor(self.active_onramps, dtype=torch.bool)
+        self.active_offramps = torch.tensor(self.active_offramps, dtype=torch.bool)
+        self.inactive_onramps = torch.tensor(self.inactive_onramps, dtype=torch.bool)
+        self.inactive_offramps = torch.tensor(self.inactive_offramps, dtype=torch.bool)
+
 
         self.max_vals = task.get_max_vals()
 
@@ -64,7 +75,8 @@ class MSECriterion(FairseqCriterion):
         #bsz, ts, var
         # torch.Size([32, 10, 8])
         # v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)      
-        common_loss = self.loss_fn(common_params[:,1:,4], common_params[:,:-1,4]) + self.loss_fn(common_params[:,1:,6], common_params[:,:-1,6])
+        # common_loss = self.loss_fn(common_params[:,1:,4], common_params[:,:-1,4]) + self.loss_fn(common_params[:,1:,6], common_params[:,:-1,6])
+        common_loss = 0.0#self.loss_fn(common_params[:,1:,3:], common_params[:,:-1,3:])
         #NEv0, q0, rhoNp1, vf, a_var, rhocr, g_var
         
 
@@ -75,7 +87,11 @@ class MSECriterion(FairseqCriterion):
         #bsz, t, var, segments
         # torch.Size([32, 10, 10, 12])
         #cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[200.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[10.0],[10.0]]).to(self.device),dim=1)  
-        segment_loss = 0.0#self.loss_fn(segment[:,:,:3,1:],segment[:,:,:3,:-1])
+        #between segments
+        #segment_loss = self.loss_fn(segment[:,:,:,1:],segment[:,:,:,:-1])
+        keep_ons_zero = self.loss_fn(segment[:,:,0,self.inactive_onramps],0.0*segment[:,:,0,self.inactive_onramps])
+        keep_offs_zero = self.loss_fn(segment[:,:,1,self.inactive_offramps],0.0*segment[:,:,1,self.inactive_offramps])
+        segment_loss = keep_ons_zero + keep_offs_zero
         
         
         # segment_mean = torch.mean(segment,dim=2,keepdim=True) #[1,360,18,8]
@@ -84,7 +100,7 @@ class MSECriterion(FairseqCriterion):
 
         #import fairseq.pdb as pdb; pdb.set_trace()
 
-        segment_time_loss = 0.0#self.loss_fn(segment[:,1:,:6,:],segment[:,:-1,:6,:])
+        segment_time_loss = self.loss_fn(segment[:,1:,:,:],segment[:,:-1,:,:])
         
         # segment_time_mean = torch.mean(segment,dim=1,keepdim=True) #[1,360,18,8]
         # segment_time_loss = torch.mean((segment-segment_time_mean)**2,dim=1)

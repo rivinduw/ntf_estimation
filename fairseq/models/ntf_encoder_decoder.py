@@ -399,7 +399,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.common_param_multipliers = torch.Tensor([self.vmax-self.vmin, 10000.0, 100.0, self.vmax-self.vmin, self.amax-self.amin, self.rhocr_max-self.rhocr_min, self.gmax-self.gmin]).to(self.device)
         self.segment_param_multipliers = torch.Tensor([[5000.0],[1.0]]).to(self.device)
 
-        self.common_param_additions = torch.Tensor([self.vmin, 0., 0., self.amin, self.vmin, self.rhocr_min, self.gmin]).to(self.device)
+        self.common_param_additions = torch.Tensor([self.vmin, 0., 0., self.vmin, self.amin, self.rhocr_min, self.gmin]).to(self.device)
 
         #v0, q0, rhoNp1, vf, a_var, rhocr, g_var
         # v0 = self.vmin + v0
