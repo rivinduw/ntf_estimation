@@ -419,6 +419,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #self.ntf_projection = nn.Linear(hidden_size, self.ntf_proj)
         self.ntf_projection = nn.Linear(self.input_size, self.ntf_proj)
 
+
+        self.missing_data_projection = nn.Linear(self.input_size, self.input_size)
+
         ##NEW BU
         #self.input_feed_projection = nn.Linear(self.input_size, self.input_size)
         # self.output_layer = nn.Linear(lin_layer_sizes[-1],
@@ -523,10 +526,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             else:
                 out = hidden
 
-            new_input_feed = torch.sigmoid(out[:,:self.input_size])
+            new_input_feed = torch.sigmoid(self.missing_data_projection(out[:,:self.input_size]))#torch.sigmoid(out[:,:self.input_size])
 
             input_d = F.dropout(x[j, :], p=0.5, training=self.training)
-            input_mask = input_d > 1e-6#0.#-1e-6
+            input_mask = (input_d*self.max_vals) > 1e-6#0.#-1e-6
             input_in = (x[j, :]*input_mask.float()) + ( (1-input_mask.float())*new_input_feed)
 
             ntf_input = self.ntf_projection(out[:,self.input_size:])
