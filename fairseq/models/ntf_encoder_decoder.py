@@ -537,7 +537,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #common_params = torch.cat([torch.sigmoid(common_params[:, :1]), torch.sigmoid(common_params[:, 1:4]), torch.sigmoid(common_params[:, 4:])], dim=1).to(self.device)
             common_params = torch.sigmoid(common_params)
             #v0, q0, rhoNp1, tau, nu, delta, kappa = torch.unbind(torch.Tensor([self.vmax, 10000.0, 100.0, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
-            v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(self.common_param_multipliers*common_params, dim=1)
+            common_params = self.common_param_multipliers*common_params+self.common_param_additions
+            v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(common_params, dim=1)
             v0 = v0 + self.vmin
             #tau = 1./3600. + tau
             #delta = 1.0 + delta
@@ -551,7 +552,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #    [[self.vmax],[2.0],[100.0],[10.0],[4000.0],[1.0],[100.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
             
             segment_params = torch.sigmoid(segment_params[:,:,:])
-            future_r, offramp_prop = torch.unbind(segment_params*self.segment_param_multipliers,dim=1)#.to(self.device)
+            future_r, offramp_prop = torch.unbind(segment_params*self.segment_param_multipliers,dim=1) #.to(self.device)
+            
             rhocr = 1.0 + rhocr
             vf = self.vmin + vf
             a_var = self.amin + a_var
