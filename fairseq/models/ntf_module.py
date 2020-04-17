@@ -53,12 +53,14 @@ class NTF_Module(nn.Module):
         if active_onramps!=None:
             self.active_onramps = torch.Tensor(active_onramps)
         else:
-            self.active_onramps = torch.ones(self.num_segments)
+            # self.active_onramps = torch.ones(self.num_segments)
+            self.active_onramps = torch.zeros(self.num_segments)
         
         if active_offramps!=None:
             self.active_offramps = torch.Tensor(active_offramps)
         else:
-            self.active_offramps = torch.ones(self.num_segments)
+            # self.active_offramps = torch.ones(self.num_segments)
+            self.active_offramps = torch.zeros(self.num_segments)
 
         self.vmin = 10
         self.vmax = 120
@@ -155,8 +157,8 @@ class NTF_Module(nn.Module):
 
         self.current_densities = (x[:, :, self.rho_index] * self.g_var)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
         self.current_flows = x[:, :, self.q_index] + self.epsq #########
-        self.current_onramp = self.active_onramps * x[:, :, self.r_index]
-        self.current_offramp = self.active_offramps * x[:, :, self.s_index]
+        self.current_onramp = self.active_onramps.float() * x[:, :, self.r_index]
+        self.current_offramp = self.active_offramps.float() * x[:, :, self.s_index]
         
         self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
         self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
@@ -176,9 +178,9 @@ class NTF_Module(nn.Module):
 
         #old future_s = self.active_offramps * (self.offramp_prop*self.current_flows) #active_offramps.float() * 
         # future_s = self.active_offramps * (self.offramp_prop*self.prev_flows) #active_offramps.float() * 
-        future_s = self.active_offramps * future_s
+        future_s = self.active_offramps.float() * future_s
         
-        future_r = self.active_onramps * future_r
+        future_r = self.active_onramps.float() * future_r
 
         try:
             if self.print_count%self.print_every==0:
