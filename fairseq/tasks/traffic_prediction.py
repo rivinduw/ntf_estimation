@@ -174,8 +174,7 @@ class TrafficPredictionTask(FairseqTask):
                         pd.DataFrame(10000*preds[0,:,14]).plot(ax=ax2)
                         pd.DataFrame(10000*src[0,:,14]).plot(ax=ax2)
                         plt.show()
-                        wandb.log({"on
-                        ramp": ax2})
+                        wandb.log({"onramp": ax2})
                     except Exception as e:
                         print(e)
                         

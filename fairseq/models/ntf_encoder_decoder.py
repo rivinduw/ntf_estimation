@@ -528,7 +528,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             else:
                 out = hidden
 
-            new_input_feed = out[:,:self.input_size]#torch.sigmoid(self.missing_data_projection(out[:,:self.input_size]))#torch.sigmoid(out[:,:self.input_size])
+            new_input_feed = torch.sigmoid(out[:,:self.input_size])#torch.sigmoid(self.missing_data_projection(out[:,:self.input_size]))#torch.sigmoid(out[:,:self.input_size])
 
             input_d = F.dropout(x[j, :], p=0.5, training=self.training)
             input_mask = (input_d*self.max_vals) > 1e-6#0.#-1e-6
