@@ -520,16 +520,20 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             input_to_rnn = x[j, :, :]#input_in
             # input_to_rnn = torch.cat((x[j, :, :], encoder_hiddens), dim=1)
 
-            for i, rnn in enumerate(self.layers):
-                # recurrent cell
-                hidden, cell = rnn(input_to_rnn, (prev_hiddens[i], prev_cells[i]))
+            hidden, cell = self.layers[0](input_to_rnn, (prev_hiddens, prev_cells))
+            prev_hiddens = hidden
+            prev_cells = cell
 
-            #     # hidden state becomes the input to the next layer
-            #     #input = F.dropout(hidden, p=self.dropout_out, training=self.training)
+            # for i, rnn in enumerate(self.layers):
+            #     # recurrent cell
+            #     hidden, cell = rnn(input_to_rnn, (prev_hiddens[i], prev_cells[i]))
 
-            #     # save state for next time step
-                prev_hiddens[i] = hidden
-                prev_cells[i] = cell
+            # #     # hidden state becomes the input to the next layer
+            # #     #input = F.dropout(hidden, p=self.dropout_out, training=self.training)
+
+            # #     # save state for next time step
+            #     prev_hiddens[i] = hidden
+            #     prev_cells[i] = cell
 
             # apply attention using the last layer's hidden state
             # if self.attention is not None:
