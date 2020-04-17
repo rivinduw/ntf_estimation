@@ -46,7 +46,7 @@ class TrafficPredictionTask(FairseqTask):
         super().__init__(args)
         self.valid_step_num = 0
         # self.segment_lengths = segment_lengths
-        metadata = pd.read_csv('data/estimation_sites4.csv')
+        metadata = pd.read_csv('data/estimation_sites5.csv')
         self.segment_lengths = list(metadata.loc[metadata['type']=='q','distance']/1000.)
         self.num_lanes = list(metadata.loc[metadata['type']=='q','num_lanes'])
         self.num_segments = 4#len(self.num_lanes)#12
@@ -161,7 +161,7 @@ class TrafficPredictionTask(FairseqTask):
                             pd.DataFrame(10000*src[0,:,i*4]).plot(ax=ax)
                             plt.show()
                             plt.pause(0.1)
-                            wandb.log({"chart"+str(i): ax})
+                            wandb.log({"chart"+str(i+1): ax})
                             plt.close('all')
                         except Exception as e:
                             print(e)
@@ -171,12 +171,12 @@ class TrafficPredictionTask(FairseqTask):
                             pd.DataFrame(5000*preds[0,:,i*4+2]).fillna(0.0).plot(ax=ax)
                             pd.DataFrame(5000*src[0,:,i*4+2]).fillna(0.0).plot(ax=ax)
                             plt.show()
-                            wandb.log({"offramp"+str(i): ax})
+                            wandb.log({"offramp"+str(i+1): ax})
                             ax2 = pd.DataFrame(5000*target[0,:,i*4+3]).fillna(0.0).plot()
                             pd.DataFrame(5000*preds[0,:,i*4+3]).fillna(0.0).plot(ax=ax2)
                             pd.DataFrame(5000*src[0,:,i*4+3]).fillna(0.0).plot(ax=ax2)
                             plt.show()
-                            wandb.log({"onramp"+str(i): ax2})
+                            wandb.log({"onramp"+str(i+1): ax2})
 
                         # ax = pd.DataFrame(5000*target[0,:,7]).fillna(0.0).plot()
                         # pd.DataFrame(5000*preds[0,:,7]).fillna(0.0).plot(ax=ax)
