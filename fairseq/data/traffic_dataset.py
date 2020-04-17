@@ -143,22 +143,26 @@ class TrafficDataset(FairseqDataset):
         NEG = -1e-6
 
         one_input = self.all_data.iloc[idx:idx+input_len, :].values
-        if self.scale_input:
-          one_input = one_input/self.max_vals
+
         one_input[:,::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,::self.variables_per_segment]
         one_input[:,1::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,1::self.variables_per_segment]
         one_input[one_input==0] = NEG
         one_input[:,2::self.variables_per_segment] = one_input[:,2::self.variables_per_segment] + 1e-3
         one_input[:,3::self.variables_per_segment] = one_input[:,3::self.variables_per_segment] + 1e-3
         
+        if self.scale_input:
+          one_input = one_input/self.max_vals
+        
         one_label = self.all_data.iloc[idx+input_len:idx+input_len+label_len, :].values
-        if self.scale_output:
-          one_label = one_label/self.max_vals
+
         one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
         one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
         one_label[one_label==0] = NEG
         one_label[:,2::self.variables_per_segment] = one_label[:,2::self.variables_per_segment] + 1e-3
         one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] + 1e-3
+        
+        if self.scale_output:
+          one_label = one_label/self.max_vals
         
         
 
@@ -170,8 +174,8 @@ class TrafficDataset(FairseqDataset):
             'target': one_label.astype('float'),
         }
 
-    def resample(self, x, factor):
-        return F.interpolate(x.view(1, 1, -1), scale_factor=factor).squeeze()
+    # def resample(self, x, factor):
+    #     return F.interpolate(x.view(1, 1, -1), scale_factor=factor).squeeze()
 
     def __len__(self):
         if not self.split=='test':
@@ -194,7 +198,7 @@ class TrafficDataset(FairseqDataset):
         ntokens = sum(len(s['target']) for s in samples)
 
         # previous_output = [s['source'][-1:]+s['target'][:-1] for s in samples] # [samples[0]['target'][0]]
-        previous_output = [np.concatenate([s['source'][-1:],s['target'][:-1]]).shape for s in samples]
+        previous_output = [np.concatenate([s['source'][-1:],s['target'][:-1]]) for s in samples]
 
         #previous_output = [np.insert(previous_output[x],0,samples[x]['source'][-1],axis=0) for x in range(len(samples))]
 

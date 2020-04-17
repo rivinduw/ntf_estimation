@@ -422,7 +422,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.ntf_projection = nn.Linear(self.input_size, self.ntf_proj)
 
 
-        #self.missing_data_projection = nn.Linear(self.input_size, self.input_size)
+        self.missing_data_projection = nn.Linear(self.input_size, self.input_size)
 
         ##NEW BU
         #self.input_feed_projection = nn.Linear(self.input_size, self.input_size)
@@ -450,7 +450,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #         active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
         #         device=self.device)
 
-        self.print_count = 0
+        # self.print_count = 0
         #self.fc_out = Linear(self.output_size, self.output_size, dropout=dropout_out)
 
 
@@ -458,10 +458,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         encoder_padding_mask = encoder_out['encoder_padding_mask']
         encoder_out = encoder_out['encoder_out']
 
-        if incremental_state is not None:
-            #print(prev_output_tokens.size())
-            # prev_output_tokens = prev_output_tokens[:, -1:]
-            prev_output_tokens = prev_output_tokens[:, -1:,:]
+        # if incremental_state is not None:
+        #     #print(prev_output_tokens.size())
+        #     # prev_output_tokens = prev_output_tokens[:, -1:]
+        #     prev_output_tokens = prev_output_tokens[:, -1:,:]
         
         bsz, seqlen, segment_units = prev_output_tokens.size()
 
@@ -469,26 +469,34 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         encoder_outs, encoder_hiddens, encoder_cells = encoder_out[:3]
         srclen = encoder_outs.size(0)
         
-        x = prev_output_tokens.view(-1,self.seq_len,self.input_size).float()
+        # x = prev_output_tokens.view(-1,self.seq_len,self.input_size).float()
+        
+        x = prev_output_tokens
+        x = F.dropout(x, p=self.dropout_in, training=self.training)
+        
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
 
-        # initialize previous states (or get from cache during incremental generation)
-        cached_state = utils.get_incremental_state(self, incremental_state, 'cached_state')
-        if cached_state is not None:
-            prev_hiddens, prev_cells, input_feed = cached_state
-        else:
-            num_layers = len(self.layers)
-            prev_hiddens = [encoder_hiddens[i] for i in range(num_layers)]
-            prev_cells = [encoder_cells[i] for i in range(num_layers)]
-            if self.encoder_hidden_proj is not None:
-                prev_hiddens = [self.encoder_hidden_proj(x) for x in prev_hiddens]
-                prev_cells = [self.encoder_cell_proj(x) for x in prev_cells]
+        # # initialize previous states (or get from cache during incremental generation)
+        # cached_state = utils.get_incremental_state(self, incremental_state, 'cached_state')
+        # if cached_state is not None:
+        #     prev_hiddens, prev_cells, input_feed = cached_state
+        # else:
+        num_layers = len(self.layers)
+        prev_hiddens = [encoder_hiddens[i] for i in range(num_layers)]
+        prev_cells = [encoder_cells[i] for i in range(num_layers)]
+        if self.encoder_hidden_proj is not None:
+            prev_hiddens = [self.encoder_hidden_proj(x) for x in prev_hiddens]
+            prev_cells = [self.encoder_cell_proj(x) for x in prev_cells]
         #input_feed = x.new_ones(bsz, self.input_size) * encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5 
-        input_feed = prev_hiddens[0][:,:self.input_size]#encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
+        
+        #input_feed = prev_hiddens[0][:,:self.input_size]#encoder_outs[-1,:bsz,:self.input_size]#[0.5,0.1,1.0,0.0,0.0]#0.5
+        
         #print(prev_hiddens[0].size())
         #input_feed = self.input_feed_projection(input_feed)
-        input_feed = torch.sigmoid(input_feed)
+        
+        #input_feed = torch.sigmoid(input_feed)
+        
         # input_feed = F.relu(input_feed)
 
         attn_scores = x.new_zeros(srclen, seqlen, bsz)#x.new_zeros(segment_units, seqlen, bsz)  #x.new_zeros(srclen, seqlen, bsz)
@@ -505,21 +513,25 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             # input_in = (x[j, :]*input_mask.float()) + ( (1-input_mask.float())*input_feed)
             # #input = torch.clamp(input, min=-1.0, max=1.0)
             # #import pdb; pdb.set_trace()
-            self.print_count += 1
+            # self.print_count += 1
             # if self.print_count%1000==0:#random.random() > 0.9999:
             #     print(x[j, :].mean(),input_feed.mean(),input_feed,encoder_outs.size())
 
-            input = x[j, :]#input_in
-            for i, rnn in enumerate(self.layers):
-                # recurrent cell
-                hidden, cell = rnn(input, (prev_hiddens[i], prev_cells[i]))
+            input_to_rnn = x[j, :, :]#input_in
+            # input_to_rnn = torch.cat((x[j, :, :], input_feed), dim=1)
 
-                # hidden state becomes the input to the next layer
-                #input = F.dropout(hidden, p=self.dropout_out, training=self.training)
+            hidden, cell = rnn(input_to_rnn, (prev_hiddens[0], prev_cells[0]))
 
-                # save state for next time step
-                prev_hiddens[i] = hidden
-                prev_cells[i] = cell
+            # for i, rnn in enumerate(self.layers):
+            #     # recurrent cell
+            #     hidden, cell = rnn(input_to_rnn, (prev_hiddens[i], prev_cells[i]))
+
+            #     # hidden state becomes the input to the next layer
+            #     #input = F.dropout(hidden, p=self.dropout_out, training=self.training)
+
+            #     # save state for next time step
+            #     prev_hiddens[i] = hidden
+            #     prev_cells[i] = cell
 
             # apply attention using the last layer's hidden state
             if self.attention is not None:
@@ -528,19 +540,25 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             else:
                 out = hidden
 
-            new_input_feed = torch.sigmoid(out[:,:self.input_size])#torch.sigmoid(self.missing_data_projection(out[:,:self.input_size]))#torch.sigmoid(out[:,:self.input_size])
+            #new_input_feed = torch.sigmoid(out[:,:self.input_size])#torch.sigmoid(self.missing_data_projection(out[:,:self.input_size]))#torch.sigmoid(out[:,:self.input_size])
+            # new_input_feed = F.relu(out[:,:self.input_size])
 
-            input_d = F.dropout(x[j, :], p=0.5, training=self.training)
+            new_input_feed = torch.sigmoid(self.missing_data_projection(out[:,:self.input_size]))
+
+
+            input_d = x[j, :] #F.dropout(x[j, :], p=0.5, training=self.training)
             input_mask = (input_d*self.max_vals) > 1e-6#0.#-1e-6
             input_in = (x[j, :]*input_mask.float()) + ( (1-input_mask.float())*new_input_feed)
 
-            ntf_input = self.ntf_projection(out[:,self.input_size:])
+            ntf_input = torch.sigmoid(self.ntf_projection(out[:,self.input_size:]))
 
             #NTF
             common_params, segment_params = torch.split(ntf_input, [self.num_common_params, self.num_segment_specific_params*self.num_segments], dim=1)
             #10./3600.,17./3600.,23.,1.7,13.
             #common_params = torch.cat([torch.sigmoid(common_params[:, :1]), torch.sigmoid(common_params[:, 1:4]), torch.sigmoid(common_params[:, 4:])], dim=1).to(self.device)
-            common_params = torch.sigmoid(common_params)
+            
+            # common_params = torch.sigmoid(common_params)
+            
             #v0, q0, rhoNp1, tau, nu, delta, kappa = torch.unbind(torch.Tensor([self.vmax, 10000.0, 100.0, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)
             common_params = self.common_param_multipliers*common_params+self.common_param_additions
             v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(common_params, dim=1)
@@ -556,7 +574,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #future_r, offramp_prop = torch.unbind(segment_params* torch.Tensor(\
             #    [[self.vmax],[2.0],[100.0],[10.0],[4000.0],[1.0],[100.0],[10.0]]).to(self.device),dim=1)#.to(self.device)
             
-            segment_params = torch.sigmoid(segment_params[:,:,:])
+            # segment_params = torch.sigmoid(segment_params[:,:,:])
+
             #future_r, offramp_prop = torch.unbind(segment_params*self.segment_param_multipliers,dim=1) #.to(self.device)
             future_r, future_s = torch.unbind(segment_params*self.segment_param_multipliers,dim=1)
             
@@ -592,17 +611,17 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             common_params_list.append(common_params)
             segment_params_list.append(segment_params)
 
-            input_feed = output#.view(-1,360,90)
+            # input_feed = output#.view(-1,360,90)
 
 
             # save final output
             outs.append(output)
             
-        # cache previous states (no-op except during incremental generation)
-        utils.set_incremental_state(
-            self, incremental_state, 'cached_state',
-            (prev_hiddens, prev_cells, input_feed),
-        )
+        # # cache previous states (no-op except during incremental generation)
+        # utils.set_incremental_state(
+        #     self, incremental_state, 'cached_state',
+        #     (prev_hiddens, prev_cells, input_feed),
+        # )
 
         # collect outputs across time steps
         x = torch.stack(outs, dim=1)

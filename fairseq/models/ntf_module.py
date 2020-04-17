@@ -99,6 +99,11 @@ class NTF_Module(nn.Module):
                 
                 wandb.log({"current_r_4": wandb.Histogram(self.current_onramp[:, 3].cpu().detach().numpy())})
                 wandb.log({"current_s_2": wandb.Histogram(self.current_offramp[:, 1].cpu().detach().numpy())})
+                
+                wandb.log({"current_flows_1": wandb.Histogram(self.current_flows[:, 0].cpu().detach().numpy())})
+                wandb.log({"current_flows_2": wandb.Histogram(self.current_flows[:, 1].cpu().detach().numpy())})
+                wandb.log({"current_flows_3": wandb.Histogram(self.current_flows[:, 2].cpu().detach().numpy())})
+                wandb.log({"current_flows_4": wandb.Histogram(self.current_flows[:, 3].cpu().detach().numpy())})
 
                 wandb.log({"stat_speed": wandb.Histogram(self.stat_speed.cpu().detach().numpy())})
                 wandb.log({"v0": wandb.Histogram(self.v0.cpu().detach().numpy())})
