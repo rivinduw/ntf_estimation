@@ -164,7 +164,19 @@ class TrafficPredictionTask(FairseqTask):
                             plt.close('all')
                         except Exception as e:
                             print(e)
-                            
+                    try:
+                        ax = pd.DataFrame(10000*target[0,:,7]).plot()
+                        pd.DataFrame(10000*preds[0,:,7]).plot(ax=ax)
+                        pd.DataFrame(10000*src[0,:,7]).plot(ax=ax)
+                        plt.show()
+                        wandb.log({"offramp": ax})
+                        ax2 = pd.DataFrame(10000*target[0,:,14]).plot()
+                        pd.DataFrame(10000*preds[0,:,7]).plot(ax=ax2)
+                        pd.DataFrame(10000*src[0,:,7]).plot(ax=ax2)
+                        plt.show()
+                        wandb.log({"onramp": ax2})
+                    except Exception as e:
+                        print(e)
                         
                 #         for seg in range(0,10):
                 #             ax = pd.DataFrame(preds[i,:,seg*1]).plot()
