@@ -140,7 +140,7 @@ class TrafficDataset(FairseqDataset):
         input_len = self.input_seq_len
         label_len = self.output_seq_len
 
-        NEG = -1e-3
+        NEG = -1e-6
 
         one_input = self.all_data.iloc[idx:idx+input_len, :].values
         if self.scale_input:
@@ -148,13 +148,19 @@ class TrafficDataset(FairseqDataset):
         one_input[:,::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,::self.variables_per_segment]
         one_input[:,1::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,1::self.variables_per_segment]
         one_input[one_input==0] = NEG
-
+        one_input[:,2::self.variables_per_segment] = one_input[:,2::self.variables_per_segment] + 1e-3
+        one_input[:,3::self.variables_per_segment] = one_input[:,3::self.variables_per_segment] + 1e-3
+        
         one_label = self.all_data.iloc[idx+input_len:idx+input_len+label_len, :].values
         if self.scale_output:
           one_label = one_label/self.max_vals
         one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
         one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
         one_label[one_label==0] = NEG
+        one_label[:,2::self.variables_per_segment] = one_label[:,2::self.variables_per_segment] + 1e-3
+        one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] + 1e-3
+        
+        
 
         one_label = one_label.transpose(0,1)
 
