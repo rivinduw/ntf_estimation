@@ -86,6 +86,7 @@ class TrafficPredictionTask(FairseqTask):
         print('| {} {} {} examples'.format(self.args.data, split, len(self.datasets[split])))
     
     def get_active_onramps(self):
+        print(self.active_onramps)
         return self.active_onramps
     
     def get_active_offramps(self):
@@ -165,16 +166,28 @@ class TrafficPredictionTask(FairseqTask):
                         except Exception as e:
                             print(e)
                     try:
-                        ax = pd.DataFrame(10000*target[0,:,7]).fillna(0.0).plot()
-                        pd.DataFrame(10000*preds[0,:,7]).fillna(0.0).plot(ax=ax)
-                        pd.DataFrame(10000*src[0,:,7]).fillna(0.0).plot(ax=ax)
-                        plt.show()
-                        wandb.log({"offramp": ax})
-                        ax2 = pd.DataFrame(10000*target[0,:,14]).fillna(0.0).plot()
-                        pd.DataFrame(10000*preds[0,:,14]).fillna(0.0).plot(ax=ax2)
-                        pd.DataFrame(10000*src[0,:,14]).fillna(0.0).plot(ax=ax2)
-                        plt.show()
-                        wandb.log({"onramp": ax2})
+                        for i in range(4):
+                            ax = pd.DataFrame(5000*target[0,:,i*4+2]).fillna(0.0).plot()
+                            pd.DataFrame(5000*preds[0,:,i*4+2]).fillna(0.0).plot(ax=ax)
+                            pd.DataFrame(5000*src[0,:,i*4+2]).fillna(0.0).plot(ax=ax)
+                            plt.show()
+                            wandb.log({"offramp"+str(i): ax})
+                            ax2 = pd.DataFrame(5000*target[0,:,i*4+3]).fillna(0.0).plot()
+                            pd.DataFrame(5000*preds[0,:,i*4+3]).fillna(0.0).plot(ax=ax2)
+                            pd.DataFrame(5000*src[0,:,i*4+3]).fillna(0.0).plot(ax=ax2)
+                            plt.show()
+                            wandb.log({"onramp"+str(i): ax2})
+
+                        # ax = pd.DataFrame(5000*target[0,:,7]).fillna(0.0).plot()
+                        # pd.DataFrame(5000*preds[0,:,7]).fillna(0.0).plot(ax=ax)
+                        # pd.DataFrame(5000*src[0,:,7]).fillna(0.0).plot(ax=ax)
+                        # plt.show()
+                        # wandb.log({"offramp": ax})
+                        # ax2 = pd.DataFrame(5000*target[0,:,14]).fillna(0.0).plot()
+                        # pd.DataFrame(5000*preds[0,:,14]).fillna(0.0).plot(ax=ax2)
+                        # pd.DataFrame(5000*src[0,:,14]).fillna(0.0).plot(ax=ax2)
+                        # plt.show()
+                        # wandb.log({"onramp": ax2})
                     except Exception as e:
                         print(e)
                         
