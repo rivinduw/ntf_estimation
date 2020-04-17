@@ -483,8 +483,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #     prev_hiddens, prev_cells, input_feed = cached_state
         # else:
         num_layers = len(self.layers)
-        prev_hiddens = encoder_hiddens #[encoder_hiddens[i] for i in range(num_layers)]
-        prev_cells = encoder_cells#[encoder_cells[i] for i in range(num_layers)]
+        prev_hiddens = [encoder_hiddens[i] for i in range(num_layers)]
+        prev_cells = [encoder_cells[i] for i in range(num_layers)]
         # if self.encoder_hidden_proj is not None:
         #     prev_hiddens = [self.encoder_hidden_proj(x) for x in prev_hiddens]
         #     prev_cells = [self.encoder_cell_proj(x) for x in prev_cells]
@@ -520,20 +520,20 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             input_to_rnn = x[j, :, :]#input_in
             # input_to_rnn = torch.cat((x[j, :, :], encoder_hiddens), dim=1)
 
-            hidden, cell = self.layers[0](input_to_rnn, (prev_hiddens, prev_cells))
-            prev_hiddens = hidden
-            prev_cells = cell
+            # hidden, cell = self.layers[0](input_to_rnn, (prev_hiddens, prev_cells))
+            # prev_hiddens = hidden
+            # prev_cells = cell
 
-            # for i, rnn in enumerate(self.layers):
-            #     # recurrent cell
-            #     hidden, cell = rnn(input_to_rnn, (prev_hiddens[i], prev_cells[i]))
+            for i, rnn in enumerate(self.layers):
+                # recurrent cell
+                hidden, cell = rnn(input_to_rnn, (prev_hiddens[i], prev_cells[i]))
 
-            # #     # hidden state becomes the input to the next layer
-            # #     #input = F.dropout(hidden, p=self.dropout_out, training=self.training)
+            #     # hidden state becomes the input to the next layer
+            #     #input = F.dropout(hidden, p=self.dropout_out, training=self.training)
 
-            # #     # save state for next time step
-            #     prev_hiddens[i] = hidden
-            #     prev_cells[i] = cell
+            #     # save state for next time step
+                prev_hiddens[i] = hidden
+                prev_cells[i] = cell
 
             # apply attention using the last layer's hidden state
             # if self.attention is not None:
