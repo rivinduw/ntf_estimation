@@ -193,7 +193,8 @@ class TrafficDataset(FairseqDataset):
 
         ntokens = sum(len(s['target']) for s in samples)
 
-        previous_output = [s['source'][-1:]+s['target'][:-1] for s in samples] # [samples[0]['target'][0]]
+        # previous_output = [s['source'][-1:]+s['target'][:-1] for s in samples] # [samples[0]['target'][0]]
+        previous_output = [np.concatenate([s['source'][-1:],s['target'][:-1]]).shape for s in samples]
 
         #previous_output = [np.insert(previous_output[x],0,samples[x]['source'][-1],axis=0) for x in range(len(samples))]
 

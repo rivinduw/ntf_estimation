@@ -435,7 +435,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, \
                 lambda_var=self.num_lanes, t_var=self.t_var, \
                 active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
-                epsq=self.epsq,epsv=self.epsv, tau=self.tau, nu=self.nu, delta=self.delta,kappa=self.kappa,\
+                epsq=self.epsq,epsv=self.epsv, tau=self.tau, nu=self.nu, delta=self.delta, kappa=self.kappa,\
                 device=self.device)
 
         # if segment_lengths!=None and t_var!=None:

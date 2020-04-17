@@ -96,6 +96,10 @@ class NTF_Module(nn.Module):
                 wandb.log({"current_flows": wandb.Histogram(self.current_flows.cpu().detach().numpy())})
                 wandb.log({"current_onramp": wandb.Histogram(self.current_onramp.cpu().detach().numpy())})
                 wandb.log({"current_offramp": wandb.Histogram(self.current_offramp.cpu().detach().numpy())})
+                
+                wandb.log({"current_r_4": wandb.Histogram(self.current_onramp[:, 3].cpu().detach().numpy())})
+                wandb.log({"current_s_2": wandb.Histogram(self.current_offramp[:, 1].cpu().detach().numpy())})
+
                 wandb.log({"stat_speed": wandb.Histogram(self.stat_speed.cpu().detach().numpy())})
                 wandb.log({"v0": wandb.Histogram(self.v0.cpu().detach().numpy())})
                 wandb.log({"q0": wandb.Histogram(self.q0.cpu().detach().numpy())})
@@ -190,6 +194,14 @@ class NTF_Module(nn.Module):
                 wandb.log({"future_flows": wandb.Histogram(future_flows.cpu().detach().numpy())})
                 wandb.log({"future_r": wandb.Histogram(future_r.cpu().detach().numpy())})
                 wandb.log({"future_s": wandb.Histogram(future_s.cpu().detach().numpy())})
+                
+                wandb.log({"future_r_4": wandb.Histogram(future_r[:, 3].cpu().detach().numpy())})
+                wandb.log({"future_s_2": wandb.Histogram(future_s[:, 1].cpu().detach().numpy())})
+                wandb.log({"future_flows_1": wandb.Histogram(future_flows[:, 0].cpu().detach().numpy())})
+                wandb.log({"future_flows_2": wandb.Histogram(future_flows[:, 1].cpu().detach().numpy())})
+                wandb.log({"future_flows_3": wandb.Histogram(future_flows[:, 2].cpu().detach().numpy())})
+                wandb.log({"future_flows_4": wandb.Histogram(future_flows[:, 3].cpu().detach().numpy())})
+
                 wandb.log({"epsq": wandb.Histogram(self.epsq.cpu().detach().numpy())})
         except Exception as e:
             print(e)

@@ -117,12 +117,14 @@ class MSECriterion(FairseqCriterion):
 
         # target_mask = (self.max_vals * target) > 1e-6
 
-        # volume_target = target[:,:,::4] * 10000
-        # volume_outputs = lprobs[:,:,::4] *10000
-        # volume_mask = (10000* volume_target) > 1e-6
-        # vol_y = volume_target[volume_mask]
-        # vol_outs =  volume_outputs[volume_mask]                    'volume_loss': volume_loss,                    'volume_acc': vol_acc,
-        
+        volume_target = target[:,:,::4] * 10000
+        volume_outputs = lprobs[:,:,::4] *10000
+        volume_mask = (10000* volume_target) > 1e-6
+        vol_y = volume_target[volume_mask]
+        vol_outs =  volume_outputs[volume_mask]#                    'volume_loss': volume_loss,                    'volume_acc': vol_acc,
+        vol_mape = torch.mean((torch.abs(torch.div(torch.sub(vol_outs,vol_y),(vol_y + 1e-6)))).clamp(0,1))
+        vol_accuracy = 1. - vol_mape
+        vol_accuracy = vol_accuracy.clamp(0,1)
 
         y = target * self.max_vals
         target_mask = y > 1e-6
@@ -152,6 +154,7 @@ class MSECriterion(FairseqCriterion):
         try:
             wandb.log(
                     {'normal_loss':total_loss,
+                    'vol_accuracy':vol_accuracy,
                     'common_loss':common_loss,
                     'segment_loss':segment_loss,
                     'segment_time_loss':segment_time_loss,
