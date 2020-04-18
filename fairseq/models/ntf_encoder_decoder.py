@@ -32,24 +32,24 @@ class NTFModel(FairseqEncoderDecoderModel):
         
         device = "cpu"#torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        max_vals = torch.Tensor(task.get_max_vals()).to(self.device)
+        max_vals = torch.Tensor(task.get_max_vals()).to(device)
         output_seq_len = task.get_output_seq_len()
         input_seq_len = task.get_input_seq_len()
         num_segments = task.get_num_segments()
         segment_lengths = task.get_segment_lengths()
         num_lanes = task.get_num_lanes()
         
-        active_onramps = torch.Tensor(task.get_active_onramps()).to(self.device)
-        active_offramps = torch.Tensor(task.get_active_offramps()).to(self.device)
+        active_onramps = torch.Tensor(task.get_active_onramps()).to(device)
+        active_offramps = torch.Tensor(task.get_active_offramps()).to(device)
 
         num_var_per_segment = task.get_variables_per_segment()
         total_input_variables = task.get_total_input_variables()
         
         encoder_hidden_size = total_input_variables
-        is_encoder_bidirectional = False
+        is_encoder_bidirectional = True
         decoder_hidden_size = total_input_variables# * 2
 
-        encoder = TrafficNTFEncoder(seq_len=input_seq_len, num_segments=num_segments, hidden_size=encoder_hidden_size, \
+        encoder = TrafficNTFEncoder(input_size=total_input_variables, seq_len=input_seq_len, num_segments=num_segments, hidden_size=encoder_hidden_size, \
             num_var_per_segment=num_var_per_segment,bidirectional=is_encoder_bidirectional, device=device)
 
         decoder = TrafficNTFDecoder(input_size=total_input_variables, hidden_size=decoder_hidden_size, max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
@@ -63,7 +63,7 @@ class TrafficNTFEncoder(FairseqEncoder):
     def __init__(
         self, input_size=32, hidden_size=32, \
         seq_len=360, num_segments=12, num_layers=1, num_var_per_segment=4, \
-        dropout_in=0.1, bidirectional=False, padding_value=0, device=None):
+        dropout_in=0.1,dropout_out=0.1, bidirectional=False, padding_value=0, device=None):
         super().__init__(dictionary=None)
         
         self.num_layers = num_layers
@@ -95,24 +95,14 @@ class TrafficNTFEncoder(FairseqEncoder):
         
     def forward(self, src_tokens, src_lengths=None):
         
-        input_x = src_tokens
+        bsz, ts, _ = src_tokens.size() #input_size [32, 120, 16]
 
-        bsz, one_sample_length = input_x.size()
-        # bsz, ts, n_seg_var = input_x.size()
-        
-        # one_timestep_size = self.input_size
-        #print(input_x.size())
-        # assert one_timestep_size == n_seg_var
-
-        #TODO: check input_x shape
-        x = input_x.view(-1,self.seq_len,self.input_size).float()
+        x = src_tokens
         
         x = F.dropout(x, p=self.dropout_in, training=self.training)
 
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
-
-        # x_mask = x < 1e-6 #BU
 
         # apply LSTM
         if self.bidirectional:
@@ -129,7 +119,6 @@ class TrafficNTFEncoder(FairseqEncoder):
         else:
             x = lstm_outs
         
-
         x = F.dropout(x, p=self.dropout_out, training=self.training)
 
         if self.bidirectional:
@@ -271,34 +260,30 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # get outputs from encoder
         encoder_outs, encoder_hiddens, encoder_cells = encoder_out[:3]
         srclen = encoder_outs.size(0)
-        
-        # x = prev_output_tokens.view(-1,self.seq_len,self.input_size).float()
-        
+
         x = prev_output_tokens
         x = F.dropout(x, p=self.dropout_in, training=self.training)
         
-        # B x T x C -> T x B x C
+        # B x T x C -> T x B x C 10,32,16
         x = x.transpose(0, 1)
 
-        prev_hiddens = encoder_hiddens[0]
-        prev_cells = encoder_cells[0]
+        prev_hiddens = encoder_hiddens[0,:,:]
+        prev_cells = encoder_cells[0,:,:]
 
-        input_feed = self.encoder_hidden_to_input_feed_proj(prev_hiddens[0])
+        input_feed = torch.sigmoid(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
         
         outs = []
         common_params_list = []
         segment_params_list = []
         
         for j in range(seqlen):
-            input_to_rnn = torch.cat((x[j, :, :], input_feed), dim=1)
+            input_to_rnn = torch.cat((x[j, :,:], input_feed), dim=1)
 
             hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
             prev_hiddens = hidden #for next loop
             prev_cells = cell
 
-            out = hidden
-
-            input_x = x[j, :]
+            input_x = x[j, :,:]
             input_mask = (input_x*self.max_vals) > 1e-6
             blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*input_feed)
 
@@ -332,17 +317,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             input_feed = scaled_output
             
         # collect outputs across time steps
-        x = torch.stack(outs, dim=1)
+        # dim=1 to go from T x B x C -> B x T x C
+        returned_out = torch.stack(outs, dim=1)
         self.all_common_params = torch.stack(common_params_list, dim=1)
         self.all_segment_params = torch.stack(segment_params_list, dim=1)
 
-        # T x B x C -> B x T x C
-        #x = x.transpose(1, 0)
-        #print(x.size())
-        
-        x = x.contiguous().view(bsz,-1)
-
-        return x, _
+        return returned_out, self.all_common_params, self.all_segment_params
     
     #my implementation
     def get_normalized_probs(self, net_output, log_probs=None, sample=None):
