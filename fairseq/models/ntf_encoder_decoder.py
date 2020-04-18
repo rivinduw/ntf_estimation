@@ -286,7 +286,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             prev_cells = encoder_cells[0,:,:]
 
         # input_feed = torch.sigmoid(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
-        input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
+        if self.encoder_hidden_to_input_feed_proj!=None:
+            input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:]))
+        else:
+            input_feed = self.input_feed_activation(encoder_hiddens[0,:,:])
         
         outs = []
         common_params_list = []
