@@ -187,14 +187,16 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.encoder_output_units = encoder_output_units
 
-        #if self.encoder_output_units != self.input_size:
-        self.encoder_hidden_to_input_feed_proj = Linear(self.encoder_output_units, self.input_size)
+        if self.encoder_output_units != self.input_size:
+            self.encoder_hidden_to_input_feed_proj = Linear(self.encoder_output_units, self.input_size)
+        else:
+            self.encoder_hidden_to_input_feed_proj = None
 
-        # if self.encoder_output_units != self.hidden_size:
-        #     self.encoder_hidden_proj = Linear(self.encoder_output_units, self.hidden_size)
-        #     self.encoder_cell_proj = Linear(self.encoder_output_units, self.hidden_size)
-        # else:
-        #     self.encoder_hidden_proj = self.encoder_cell_proj = None
+        if self.encoder_output_units != self.hidden_size:
+            self.encoder_hidden_proj = Linear(self.encoder_output_units, self.hidden_size)
+            self.encoder_cell_proj = Linear(self.encoder_output_units, self.hidden_size)
+        else:
+            self.encoder_hidden_proj = self.encoder_cell_proj = None
         
         self.rnn = LSTMCell(input_size=self.input_size*2,hidden_size=hidden_size)
         
@@ -276,8 +278,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # B x T x C -> T x B x C 10,32,16
         x = x.transpose(0, 1)
 
-        prev_hiddens = encoder_hiddens[0,:,:]
-        prev_cells = encoder_cells[0,:,:]
+        if self.encoder_hidden_proj!=None:
+            prev_hiddens = self.encoder_hidden_proj(encoder_hiddens[0,:,:])
+            prev_cells = self.encoder_cell_proj(encoder_cells[0,:,:])
+        else:
+            prev_hiddens = encoder_hiddens[0,:,:]
+            prev_cells = encoder_cells[0,:,:]
 
         # input_feed = torch.sigmoid(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
         input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
