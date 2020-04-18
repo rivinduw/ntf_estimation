@@ -243,6 +243,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.segment_param_multipliers = torch.Tensor([[self.ramp_max],[self.ramp_max]]).to(self.device)
         self.segment_param_additions = torch.Tensor([[0.0],[0.0]]).to(self.device)
 
+        self.common_param_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
+        self.segment_param_activation = nn.Hardtanh(min_val=0.0, max_val=1.0)
+        self.input_feed_activation = nn.Sigmoid()
+
         self.total_segment_specific_params = self.num_segment_specific_params*self.num_segments
 
         self.total_ntf_parameters = self.num_segment_specific_params*self.num_segments+self.num_common_params
@@ -275,7 +279,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         prev_hiddens = encoder_hiddens[0,:,:]
         prev_cells = encoder_cells[0,:,:]
 
-        input_feed = torch.sigmoid(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
+        # input_feed = torch.sigmoid(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
+        input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
         
         outs = []
         common_params_list = []
@@ -292,13 +297,17 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             input_mask = (input_x*self.max_vals) > 0.0
             blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*input_feed)
 
-            ntf_params = torch.sigmoid(self.ntf_projection(hidden))
+            # ntf_params = torch.sigmoid(self.ntf_projection(hidden))
+            ntf_params = self.ntf_projection(hidden)
 
             #NTF
             common_params, segment_params = torch.split(ntf_params, [self.num_common_params, self.total_segment_specific_params], dim=1)
+
+            common_params = self.common_param_activation(common_params)
             common_params = (self.common_param_multipliers*common_params)+self.common_param_additions
             v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(common_params, dim=1)
             
+            segment_params = self.segment_param_activation(segment_params)
             segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
             segment_params = segment_params*self.segment_param_multipliers + self.segment_param_additions
             future_r, future_s = torch.unbind(segment_params,dim=1)
