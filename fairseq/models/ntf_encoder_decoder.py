@@ -73,13 +73,14 @@ class TrafficNTFEncoder(FairseqEncoder):
         self.hidden_size = hidden_size
         self.input_size = input_size
         self.output_size = input_size
-        if bidirectional:
-            self.output_size *= 2
 
         self.seq_len = seq_len
         
         # self.num_segments = num_segments
         # self.num_var_per_segment = num_var_per_segment
+
+        if bidirectional:
+            self.hidden_size = self.hidden_size // 2
 
         self.lstm = LSTM(
             input_size=self.input_size,
@@ -89,8 +90,12 @@ class TrafficNTFEncoder(FairseqEncoder):
             bidirectional=bidirectional,
         )
         
-        if self.output_size !=  self.hidden_size:
-            self.output_projection = Linear(self.hidden_size, self.input_size)
+        # if bidirectional:
+        #     self.hidden_size = self.hidden_size * 2
+        # else:
+        #     self.hidden_size = self.hidden_size
+        
+        # self.output_projection = Linear(self.output_units, self.input_size)
 
         
     def forward(self, src_tokens, src_lengths=None):
@@ -113,11 +118,6 @@ class TrafficNTFEncoder(FairseqEncoder):
         h0 = x.new_zeros(*state_size)
         c0 = x.new_zeros(*state_size)
         lstm_outs, (final_hiddens, final_cells) = self.lstm(x, (h0, c0))
-
-        if self.output_size !=  self.hidden_size:
-            x = self.output_projection(lstm_outs)
-        else:
-            x = lstm_outs
         
         x = F.dropout(x, p=self.dropout_out, training=self.training)
 
@@ -128,6 +128,11 @@ class TrafficNTFEncoder(FairseqEncoder):
 
             final_hiddens = combine_bidir(final_hiddens)
             final_cells = combine_bidir(final_cells)
+
+        # if self.output_size !=  self.output_units:
+        #     x = self.output_projection(lstm_outs)
+        # else:
+        x = lstm_outs
 
         return {
             'encoder_out': (x, final_hiddens, final_cells),
@@ -252,14 +257,14 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
 
     def forward(self, prev_output_tokens, encoder_out, incremental_state=None):
-        encoder_padding_mask = encoder_out['encoder_padding_mask']
+        # encoder_padding_mask = encoder_out['encoder_padding_mask']
         encoder_out = encoder_out['encoder_out']
         
-        bsz, seqlen, segment_units = prev_output_tokens.size()
+        bsz, seqlen, _ = prev_output_tokens.size()
 
         # get outputs from encoder
         encoder_outs, encoder_hiddens, encoder_cells = encoder_out[:3]
-        srclen = encoder_outs.size(0)
+        # srclen = encoder_outs.size(0)
 
         x = prev_output_tokens
         x = F.dropout(x, p=self.dropout_in, training=self.training)
@@ -284,7 +289,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             prev_cells = cell
 
             input_x = x[j, :,:]
-            input_mask = (input_x*self.max_vals) > 1e-6
+            input_mask = (input_x*self.max_vals) > 0.0
             blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*input_feed)
 
             ntf_params = torch.sigmoid(self.ntf_projection(hidden))
