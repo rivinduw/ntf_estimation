@@ -188,8 +188,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.encoder_output_units = encoder_output_units
 
         if self.encoder_output_units != self.input_size:
-            #self.encoder_hidden_to_input_feed_proj = Linear(self.encoder_output_units, self.input_size)
-            self.encoder_hidden_to_input_feed_proj = nn.Linear(self.encoder_output_units, self.input_size, bias=True)
+            # self.encoder_hidden_to_input_feed_proj = Linear(self.encoder_output_units, self.input_size)
+            self.encoder_hidden_to_input_feed_proj = Custom_Linear(self.encoder_output_units, self.input_size, min_val=-5.0, max_val=5.0, bias=True)
         else:
             self.encoder_hidden_to_input_feed_proj = None
 
@@ -254,7 +254,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.total_ntf_parameters = self.num_segment_specific_params*self.num_segments+self.num_common_params
 
-        self.ntf_projection = nn.Linear(self.hidden_size, self.total_ntf_parameters)
+        # self.ntf_projection = nn.Linear(self.hidden_size, self.total_ntf_parameters)
+        self.ntf_projection = Custom_Linear(self.hidden_size, self.total_ntf_parameters, min_val=-5.0, max_val=5.0, bias=True)
 
         self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, \
                 lambda_var=self.num_lanes, t_var=self.t_var, \
@@ -392,6 +393,13 @@ def LSTMCell(input_size, hidden_size, **kwargs):
             param.data.uniform_(-0.1, 0.1)
     return m
 
+def Custom_Linear(in_features, out_features, min_val=0.0, max_val=1.0, bias=True):
+    """Linear layer (input: N x T x C)"""
+    m = nn.Linear(in_features, out_features, bias=bias)
+    m.weight.data.uniform_(min_val, max_val)
+    if bias:
+        m.bias.data.uniform_(min_val, max_val)
+    return m
 
 def Linear(in_features, out_features, bias=True, dropout=0):
     """Linear layer (input: N x T x C)"""
