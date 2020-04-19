@@ -47,7 +47,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         
         encoder_hidden_size = total_input_variables // 4
         is_encoder_bidirectional = True
-        decoder_hidden_size = total_input_variables #* 2
+        decoder_hidden_size = total_input_variables // 2 #* 2
 
         encoder = TrafficNTFEncoder(input_size=total_input_variables, seq_len=input_seq_len, num_segments=num_segments, hidden_size=encoder_hidden_size, \
             num_var_per_segment=num_var_per_segment,bidirectional=is_encoder_bidirectional, device=device)
@@ -230,7 +230,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.amin = 1.0
         self.amax = 2.0
         self.gmin = 0.01
-        self.gmax = 1.0
+        self.gmax = 10.0
         self.rhocr_min = 1.0
         self.rhocr_max = 100.0
         self.rhoNp1_min = 0.0
@@ -246,8 +246,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.segment_param_additions = torch.Tensor([[0.0],[0.0]]).to(self.device)
 
         self.common_param_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
-        self.segment_param_activation = nn.Hardtanh(min_val=0.0, max_val=1.0)
-        self.input_feed_activation = nn.Hardtanh(min_val=0.0, max_val=1.0)#nn.Sigmoid()
+        self.segment_param_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
+        self.input_feed_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
 
         self.total_segment_specific_params = self.num_segment_specific_params*self.num_segments
 
