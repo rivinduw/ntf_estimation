@@ -104,6 +104,10 @@ class NTF_Module(nn.Module):
                 wandb.log({"current_flows_2": wandb.Histogram(self.current_flows[:, 1].cpu().detach().numpy())})
                 wandb.log({"current_flows_3": wandb.Histogram(self.current_flows[:, 2].cpu().detach().numpy())})
                 wandb.log({"current_flows_4": wandb.Histogram(self.current_flows[:, 3].cpu().detach().numpy())})
+                
+                wandb.log({"current_flows_1_to_2": wandb.Histogram(self.current_flows[:, 1].cpu().detach().numpy()-self.current_flows[:, 0].cpu().detach().numpy())})
+                wandb.log({"current_flows_2_to_3": wandb.Histogram(self.current_flows[:, 2].cpu().detach().numpy()-self.current_flows[:, 1].cpu().detach().numpy())})
+                wandb.log({"current_flows_3_to_4": wandb.Histogram(self.current_flows[:, 3].cpu().detach().numpy()-self.current_flows[:, 2].cpu().detach().numpy())})
 
                 wandb.log({"stat_speed": wandb.Histogram(self.stat_speed.cpu().detach().numpy())})
                 wandb.log({"v0": wandb.Histogram(self.v0.cpu().detach().numpy())})
@@ -206,6 +210,10 @@ class NTF_Module(nn.Module):
                 wandb.log({"future_flows_2": wandb.Histogram(future_flows[:, 1].cpu().detach().numpy())})
                 wandb.log({"future_flows_3": wandb.Histogram(future_flows[:, 2].cpu().detach().numpy())})
                 wandb.log({"future_flows_4": wandb.Histogram(future_flows[:, 3].cpu().detach().numpy())})
+                wandb.log({"future_flows_1_to_2": wandb.Histogram(future_flows[:, 1].cpu().detach().numpy()-future_flows[:, 0].cpu().detach().numpy())})
+                wandb.log({"future_flows_2_to_3": wandb.Histogram(future_flows[:, 2].cpu().detach().numpy()-future_flows[:, 1].cpu().detach().numpy())})
+                wandb.log({"future_flows_3_to_4": wandb.Histogram(future_flows[:, 3].cpu().detach().numpy()-future_flows[:, 2].cpu().detach().numpy())})
+
 
                 wandb.log({"epsq": wandb.Histogram(self.epsq.cpu().detach().numpy())})
         except Exception as e:
