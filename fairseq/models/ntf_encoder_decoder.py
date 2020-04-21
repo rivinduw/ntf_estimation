@@ -233,7 +233,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.amin = 1.0
         self.amax = 2.0
         self.gmin = 0.1
-        self.gmax = 20.0
+        self.gmax = 10.0
         self.rhocr_min = 1.0
         self.rhocr_max = 100.0
         self.rhoNp1_min = 0.0

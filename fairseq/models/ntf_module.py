@@ -19,7 +19,7 @@ class NTF_Module(nn.Module):
                  v0=None, q0=None, rhoNp1=None, vf=None, a_var=None, rhocr=None,\
                  g_var=None, future_r=None, future_s=None,\
                  epsq=None, epsv=None, \
-                 device=None, print_every=100
+                 device=None, print_every=1000
                 ):
         super(NTF_Module, self).__init__()
         # offramp_prop=None, 
