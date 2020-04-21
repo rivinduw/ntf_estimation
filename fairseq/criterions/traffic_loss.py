@@ -78,7 +78,7 @@ class MSECriterion(FairseqCriterion):
         # torch.Size([32, 10, 8])
         # v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)      
         common_loss = 0.0#self.loss_fn(common_params[:,1:,4], common_params[:,:-1,4]) + self.loss_fn(common_params[:,1:,6], common_params[:,:-1,6])
-        # common_loss = 0.0#self.loss_fn(common_params[:,1:,3:], common_params[:,:-1,3:])
+        common_loss = self.loss_fn(common_params[:,1:,3:], common_params[:,:-1,3:])
         #NEv0, q0, rhoNp1, vf, a_var, rhocr, g_var
         
 
@@ -93,7 +93,7 @@ class MSECriterion(FairseqCriterion):
         #segment_loss = self.loss_fn(segment[:,:,:,1:],segment[:,:,:,:-1])
         keep_ons_zero = self.loss_fn(segment[:,:,0,self.inactive_onramps]/5000.,0.0*segment[:,:,0,self.inactive_onramps])
         keep_offs_zero = self.loss_fn(segment[:,:,1,self.inactive_offramps]/5000.,0.0*segment[:,:,1,self.inactive_offramps])
-        segment_loss = 0.0 #keep_ons_zero + keep_offs_zero
+        segment_loss = keep_ons_zero + keep_offs_zero
         
         
         # segment_mean = torch.mean(segment,dim=2,keepdim=True) #[1,360,18,8]
@@ -102,7 +102,7 @@ class MSECriterion(FairseqCriterion):
 
         #import fairseq.pdb as pdb; pdb.set_trace()
 
-        segment_time_loss = 0.0#self.loss_fn(segment[:,1:,:,:],segment[:,:-1,:,:])
+        segment_time_loss = self.loss_fn(segment[:,1:,:,:],segment[:,:-1,:,:])
         
         # segment_time_mean = torch.mean(segment,dim=1,keepdim=True) #[1,360,18,8]
         # segment_time_loss = torch.mean((segment-segment_time_mean)**2,dim=1)
@@ -124,8 +124,8 @@ class MSECriterion(FairseqCriterion):
         volume_mask = (10000* volume_target) > 1e-6
         vol_y = volume_target[volume_mask]
         vol_outs =  volume_outputs[volume_mask]#                    'volume_loss': volume_loss,                    'volume_acc': vol_acc,
-        wandb.log({"flows_actual": wandb.Histogram(vol_y.detach().numpy())})
-        wandb.log({"flows_predictions": wandb.Histogram(vol_outs.detach().numpy())})
+        # wandb.log({"flows_actual": wandb.Histogram(vol_y.detach().numpy())})
+        # wandb.log({"flows_predictions": wandb.Histogram(vol_outs.detach().numpy())})
         vol_mape = torch.mean((torch.abs(torch.div(torch.sub(vol_outs,vol_y),(vol_y + 1e-6)))).clamp(0,1))
         vol_accuracy = 1. - vol_mape
         vol_accuracy = vol_accuracy.clamp(0,1)
