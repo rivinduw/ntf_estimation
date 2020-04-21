@@ -147,8 +147,8 @@ class TrafficDataset(FairseqDataset):
         one_input[:,::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,::self.variables_per_segment]
         one_input[:,1::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,1::self.variables_per_segment]
         one_input[one_input==0] = NEG
-        one_input[:,2::self.variables_per_segment] = one_input[:,2::self.variables_per_segment] + 1e-3
-        one_input[:,3::self.variables_per_segment] = one_input[:,3::self.variables_per_segment] + 1e-3
+        one_input[:,2::self.variables_per_segment] = one_input[:,2::self.variables_per_segment] + 1.0#1e-3
+        one_input[:,3::self.variables_per_segment] = one_input[:,3::self.variables_per_segment] + 1.0#1e-3
         
         if self.scale_input:
           one_input = one_input/self.max_vals

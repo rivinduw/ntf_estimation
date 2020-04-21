@@ -24,8 +24,9 @@ class MSECriterion(FairseqCriterion):
         super().__init__(args, task)
         # wandb.init(job_type='mse_loss', config=args)
         # self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
-        # self.loss_fn = torch.nn.L1Loss()
-        self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = torch.nn.L1Loss()
+        #self.loss_fn = torch.nn.MSELoss()
+        #self.loss_fn = nn.KLDivLoss(reduction='batchmean')
 
         self.common_lambda = 1.0
         self.segment_lambda = 1.0
@@ -122,6 +123,8 @@ class MSECriterion(FairseqCriterion):
         volume_mask = (10000* volume_target) > 1e-6
         vol_y = volume_target[volume_mask]
         vol_outs =  volume_outputs[volume_mask]#                    'volume_loss': volume_loss,                    'volume_acc': vol_acc,
+        wandb.log({"flows_actual": wandb.Histogram(vol_y)})
+        wandb.log({"flows_predictions": wandb.Histogram(vol_outs)})
         vol_mape = torch.mean((torch.abs(torch.div(torch.sub(vol_outs,vol_y),(vol_y + 1e-6)))).clamp(0,1))
         vol_accuracy = 1. - vol_mape
         vol_accuracy = vol_accuracy.clamp(0,1)
@@ -131,6 +134,7 @@ class MSECriterion(FairseqCriterion):
         y = y[target_mask]
         outs = lprobs * self.max_vals
         outputs = outs[target_mask]
+
         num_valid = target_mask.float().sum()
 
         wmape = 100. * torch.div( torch.div(torch.sum(torch.abs(torch.sub(outputs,y))),torch.sum(torch.abs(y))),num_valid)
@@ -145,6 +149,8 @@ class MSECriterion(FairseqCriterion):
         if num_valid>=1:
             target_loss = self.loss_fn(outputs, y)
             # volume_loss = self.loss_fn(vol_outs, vol_y)
+            wandb.log({"all_actual": wandb.Histogram(y)})
+            wandb.log({"all_predictions": wandb.Histogram(outputs)})
         else:
             target_loss = 0.0
             # volume_loss = 0.0
