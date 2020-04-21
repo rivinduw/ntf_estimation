@@ -233,7 +233,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.amin = 1.0
         self.amax = 2.0
         self.gmin = 0.1
-        self.gmax = 10.0
+        self.gmax = 1.0
         self.rhocr_min = 1.0
         self.rhocr_max = 100.0
         self.rhoNp1_min = 0.0
@@ -307,7 +307,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             prev_cells = cell
 
             input_x = x[j, :,:]
-            input_mask = (input_x*self.max_vals) > 0.0
+            input_mask = (input_x*self.max_vals) >= 0.0
             blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*input_feed)
 
             # ntf_params = torch.sigmoid(self.ntf_projection(hidden))

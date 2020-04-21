@@ -19,7 +19,7 @@ class NTF_Module(nn.Module):
                  v0=None, q0=None, rhoNp1=None, vf=None, a_var=None, rhocr=None,\
                  g_var=None, future_r=None, future_s=None,\
                  epsq=None, epsv=None, \
-                 device=None, print_every=1000
+                 device=None, print_every=100
                 ):
         super(NTF_Module, self).__init__()
         # offramp_prop=None, 
@@ -168,7 +168,7 @@ class NTF_Module(nn.Module):
             
         x = x.view(-1, self.num_segments, self.inputs_per_segment)
 
-        self.current_densities = x[:, :, self.rho_index] / (self.g_var+1e-6)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
+        self.current_densities = x[:, :, self.rho_index] * (self.g_var+1e-6)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
         self.current_flows = x[:, :, self.q_index] + self.epsq #########
         self.current_onramp = self.active_onramps.float() * x[:, :, self.r_index]
         self.current_offramp = self.active_offramps.float() * x[:, :, self.s_index]
@@ -184,7 +184,7 @@ class NTF_Module(nn.Module):
         future_velocities = self.future_v()
         future_velocities = torch.clamp(future_velocities, min=self.vmin, max=self.vmax)
         future_densities = self.future_rho()
-        future_occupancies = (future_densities) * (self.g_var+1e-6)#* (100*self.g_var/1000) #* self.lambda_var
+        future_occupancies = (future_densities) / (self.g_var+1e-6)#* (100*self.g_var/1000) #* self.lambda_var
         # future_occupancies = (future_densities / self.lambda_var) / (self.g_var+1e-6)
 
         future_flows = future_densities * future_velocities * self.lambda_var - self.epsq
