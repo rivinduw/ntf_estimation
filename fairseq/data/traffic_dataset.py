@@ -158,8 +158,8 @@ class TrafficDataset(FairseqDataset):
         one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
         one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
         one_label[one_label==0] = NEG
-        one_label[:,2::self.variables_per_segment] = one_label[:,2::self.variables_per_segment] + 1e-3
-        one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] + 1e-3
+        one_label[:,2::self.variables_per_segment] = one_label[:,2::self.variables_per_segment] + 1.0
+        one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] + 1.0
         
         if self.scale_output:
           one_label = one_label/self.max_vals
