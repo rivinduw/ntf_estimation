@@ -91,7 +91,7 @@ class MSECriterion(FairseqCriterion):
         #segment_loss = self.loss_fn(segment[:,:,:,1:],segment[:,:,:,:-1])
         keep_ons_zero = self.loss_fn(segment[:,:,0,self.inactive_onramps]/5000.,0.0*segment[:,:,0,self.inactive_onramps])
         keep_offs_zero = self.loss_fn(segment[:,:,1,self.inactive_offramps]/5000.,0.0*segment[:,:,1,self.inactive_offramps])
-        segment_loss = keep_ons_zero + keep_offs_zero
+        segment_loss = 0.0 #keep_ons_zero + keep_offs_zero
         
         
         # segment_mean = torch.mean(segment,dim=2,keepdim=True) #[1,360,18,8]
