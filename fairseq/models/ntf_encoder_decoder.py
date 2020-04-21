@@ -199,7 +199,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         else:
             self.encoder_hidden_proj = self.encoder_cell_proj = None
         
-        self.rnn = LSTMCell(input_size=self.input_size*2,hidden_size=hidden_size)
+        self.rnn = LSTMCell(input_size=self.input_size,hidden_size=hidden_size)
         
         self.num_segments = num_segments
         self.max_vals = max_vals
@@ -300,15 +300,18 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         segment_params_list = []
         
         for j in range(seqlen):
-            input_to_rnn = torch.cat((x[j, :,:], input_feed), dim=1)
-
-            hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
-            prev_hiddens = hidden #for next loop
-            prev_cells = cell
+            
+            #input_to_rnn = torch.cat((x[j, :,:], input_feed), dim=1)
+            # hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
 
             input_x = x[j, :,:]
             input_mask = (input_x*self.max_vals) >= 0.0
             blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*input_feed)
+            
+            hidden, cell = self.rnn(blended_input, (prev_hiddens, prev_cells))
+            
+            prev_hiddens = hidden #for next loop
+            prev_cells = cell
 
             # ntf_params = torch.sigmoid(self.ntf_projection(hidden))
             ntf_params = self.ntf_projection(hidden)
