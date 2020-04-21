@@ -77,7 +77,7 @@ class MSECriterion(FairseqCriterion):
         #bsz, ts, var
         # torch.Size([32, 10, 8])
         # v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)      
-        common_loss = 0.0#self.loss_fn(common_params[:,1:,4], common_params[:,:-1,4]) + self.loss_fn(common_params[:,1:,6], common_params[:,:-1,6])
+        # common_loss = 0.0#self.loss_fn(common_params[:,1:,4], common_params[:,:-1,4]) + self.loss_fn(common_params[:,1:,6], common_params[:,:-1,6])
         common_loss = self.loss_fn(common_params[:,1:,3:], common_params[:,:-1,3:])
         #NEv0, q0, rhoNp1, vf, a_var, rhocr, g_var
         

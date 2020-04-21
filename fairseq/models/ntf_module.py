@@ -134,7 +134,7 @@ class NTF_Module(nn.Module):
 
     def future_rho(self):
         flow_residual = (self.prev_flows - self.current_flows + self.current_onramp - self.current_offramp)
-        flow_residual = torch.clamp(flow_residual, min=0, max=10000)
+        #flow_residual = torch.clamp(flow_residual, min=0, max=10000)
         return self.current_densities + \
             torch.mul(torch.div(self.t_var,torch.mul(self.cap_delta,self.lambda_var)),\
                       (flow_residual))
@@ -175,6 +175,10 @@ class NTF_Module(nn.Module):
         
         self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
         self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
+        self.current_densities = torch.clamp(self.current_densities, min=0., max=100.)
+        self.current_flows = torch.clamp(self.current_flows, min=0., max=10000.)
+        self.current_onramp = torch.clamp(self.current_onramp, min=0., max=5000.)
+        self.current_offramp = torch.clamp(self.current_offramp, min=0., max=5000.)
         self.v0 = torch.clamp(self.v0, min=self.vmin, max=self.vmax)
 
         self.prev_velocities = torch.cat([self.v0,self.current_velocities[:,:-1]],dim=1)
