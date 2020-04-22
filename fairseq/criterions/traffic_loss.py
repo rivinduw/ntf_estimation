@@ -156,7 +156,7 @@ class MSECriterion(FairseqCriterion):
             target_loss = 0.0
             # volume_loss = 0.0
         
-        total_loss = target_loss + flow_res.sum() + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
+        total_loss = target_loss + flow_res.mean() + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
         
         try:
             wandb.log(
@@ -170,7 +170,7 @@ class MSECriterion(FairseqCriterion):
                     'accuracy': accuracy,
                     'wmape': wmape,
                     'w-accuracy': 100. - wmape,
-                    'flow_res.sum': flow_res.sum(),
+                    'flow_res.mean': flow_res.mean(),
                     }
                 )
         except Exception as e:

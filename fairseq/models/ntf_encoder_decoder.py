@@ -361,8 +361,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.all_common_params = torch.stack(common_params_list, dim=1)
         self.all_segment_params = torch.stack(segment_params_list, dim=1)
 
-        self.mean_flow_res = torch.stack(flow_res_list,dim=0).abs()
-        self.mean_flow_res = self.mean_flow_res.sum()
+        self.mean_flow_res = torch.stack(flow_res_list,dim=2).sum(axis=1).abs().mean(axis=1)
 
         return returned_out, self.all_common_params, self.all_segment_params
     
