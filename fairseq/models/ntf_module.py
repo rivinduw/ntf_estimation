@@ -175,10 +175,10 @@ class NTF_Module(nn.Module):
         
         self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
         self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
-        self.current_densities = torch.clamp(self.current_densities, min=0., max=100.)
-        self.current_flows = torch.clamp(self.current_flows, min=0., max=10000.)
-        self.current_onramp = torch.clamp(self.current_onramp, min=0., max=5000.)
-        self.current_offramp = torch.clamp(self.current_offramp, min=0., max=5000.)
+        # self.current_densities = torch.clamp(self.current_densities, min=0., max=100.)
+        # self.current_flows = torch.clamp(self.current_flows, min=0., max=10000.)
+        # self.current_onramp = torch.clamp(self.current_onramp, min=0., max=5000.)
+        # self.current_offramp = torch.clamp(self.current_offramp, min=0., max=5000.)
         self.v0 = torch.clamp(self.v0, min=self.vmin, max=self.vmax)
 
         self.prev_velocities = torch.cat([self.v0,self.current_velocities[:,:-1]],dim=1)
@@ -224,12 +224,12 @@ class NTF_Module(nn.Module):
         except Exception as e:
             print(e)
 
-        future_velocities = torch.clamp(future_velocities, min=10, max=120)
-        future_densities = torch.clamp(future_densities, min=0, max=100)
-        future_occupancies = torch.clamp(future_occupancies, min=0, max=100)
-        future_flows = torch.clamp(future_flows, min=1, max=10000)
-        future_r = torch.clamp(future_r, min=0, max=10000)
-        future_s = torch.clamp(future_s, min=0, max=10000)
+        # future_velocities = torch.clamp(future_velocities, min=10, max=120)
+        # future_densities = torch.clamp(future_densities, min=0, max=100)
+        # future_occupancies = torch.clamp(future_occupancies, min=0, max=100)
+        # future_flows = torch.clamp(future_flows, min=0, max=10000)
+        # future_r = torch.clamp(future_r, min=0, max=10000)
+        # future_s = torch.clamp(future_s, min=0, max=10000)
 
         one_stack =  torch.stack((future_flows,future_occupancies,future_r,future_s),dim=2)
 
