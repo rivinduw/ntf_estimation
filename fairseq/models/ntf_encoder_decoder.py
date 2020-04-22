@@ -298,6 +298,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         outs = []
         common_params_list = []
         segment_params_list = []
+
+        flow_res_list = []
         
         for j in range(seqlen):
             
@@ -330,17 +332,20 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             
             real_size_input = blended_input*self.max_vals
             model_steps = []
+            
             for _ in range(self.num_ntf_steps):
-                one_ntf_output = self.ntf_module(
+                one_ntf_output, flow_res = self.ntf_module(
                     x=real_size_input, v0=v0, q0=q0, rhoNp1=rhoNp1, vf=vf, a_var=a_var, rhocr=rhocr,\
                     g_var=g_var, future_r=future_r, future_s=future_s)
                 real_size_input = one_ntf_output
+                flow_res_list.append(flow_res)
                 # if self.print_count%self.print_every==0:
                 #     print(real_size_input.shape)
                 #     print(real_size_input.view(-1,4,4)[0,:,:])
                 model_steps.append(one_ntf_output)
 
             mean_ntf_output = torch.stack(model_steps,dim=0).mean(dim=0)
+            
             # mean_ntf_output = real_size_input
             scaled_output = mean_ntf_output/(self.max_vals+1e-6)
 
@@ -356,12 +361,14 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.all_common_params = torch.stack(common_params_list, dim=1)
         self.all_segment_params = torch.stack(segment_params_list, dim=1)
 
+        self.mean_flow_res = torch.stack(flow_res_list,dim=0).mean(dim=0)
+
         return returned_out, self.all_common_params, self.all_segment_params
     
     #my implementation
     def get_normalized_probs(self, net_output, log_probs=None, sample=None):
         
-        return net_output[0], self.all_common_params, self.all_segment_params
+        return net_output[0], self.all_common_params, self.all_segment_params, self.mean_flow_res
     
     def get_targets(self, sample, net_output):
         """Get targets from either the sample or the net's output."""
