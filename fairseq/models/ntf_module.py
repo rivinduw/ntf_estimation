@@ -105,8 +105,6 @@ class NTF_Module(nn.Module):
                 wandb.log({"current_flows_3": wandb.Histogram(self.current_flows[:, 2].cpu().detach().numpy())})
                 wandb.log({"current_flows_4": wandb.Histogram(self.current_flows[:, 3].cpu().detach().numpy())})
 
-                wandb.log({"flow_residual": wandb.Histogram(self.flow_residual.cpu().detach().numpy())})
-                
                 wandb.log({"current_flows_1_to_2": wandb.Histogram(self.current_flows[:, 1].cpu().detach().numpy()-self.current_flows[:, 0].cpu().detach().numpy())})
                 wandb.log({"current_flows_2_to_3": wandb.Histogram(self.current_flows[:, 2].cpu().detach().numpy()-self.current_flows[:, 1].cpu().detach().numpy())})
                 wandb.log({"current_flows_3_to_4": wandb.Histogram(self.current_flows[:, 3].cpu().detach().numpy()-self.current_flows[:, 2].cpu().detach().numpy())})
@@ -139,7 +137,7 @@ class NTF_Module(nn.Module):
         #flow_residual = torch.clamp(flow_residual, min=0, max=10000)
         return self.current_densities + \
             torch.mul(torch.div(self.t_var,torch.mul(self.cap_delta,self.lambda_var)),\
-                      (flow_residual))
+                      (self.flow_residual))
 
     def forward(self,x=None, v0=None, q0=None, rhoNp1=None, \
                 vf=None, a_var=None, rhocr=None, g_var=None, future_r=None, future_s=None,\
@@ -220,6 +218,7 @@ class NTF_Module(nn.Module):
                 wandb.log({"future_flows_2_to_3": wandb.Histogram(future_flows[:, 2].cpu().detach().numpy()-future_flows[:, 1].cpu().detach().numpy())})
                 wandb.log({"future_flows_3_to_4": wandb.Histogram(future_flows[:, 3].cpu().detach().numpy()-future_flows[:, 2].cpu().detach().numpy())})
 
+                wandb.log({"flow_residual": wandb.Histogram(self.flow_residual.cpu().detach().numpy())})
 
                 wandb.log({"epsq": wandb.Histogram(self.epsq.cpu().detach().numpy())})
         except Exception as e:
