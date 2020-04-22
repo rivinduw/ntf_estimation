@@ -150,13 +150,13 @@ class MSECriterion(FairseqCriterion):
         if num_valid>=1:
             target_loss = self.loss_fn(outputs, y)
             # volume_loss = self.loss_fn(vol_outs, vol_y)
-            wandb.log({"all_actual": wandb.Histogram(y.detach().numpy())})
-            wandb.log({"all_predictions": wandb.Histogram(outputs.detach().numpy())})
+            #wandb.log({"all_actual": wandb.Histogram(y.detach().numpy())})
+            #wandb.log({"all_predictions": wandb.Histogram(outputs.detach().numpy())})
         else:
             target_loss = 0.0
             # volume_loss = 0.0
         
-        total_loss = target_loss + flow_res + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
+        total_loss = target_loss + flow_res.mean() + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
         
         try:
             wandb.log(
