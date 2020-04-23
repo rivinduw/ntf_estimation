@@ -72,8 +72,9 @@ class MSECriterion(FairseqCriterion):
         flow_res = extra_params['mean_flow_res']
         first_input_feed = extra_params['first_input_feed']
 
-        input_feed_consistancy_loss = self.loss_fn(first_input_feed[:,4::4],first_input_feed[:,:-4:4]) + self.loss_fn(first_input_feed[:,4+1::4],first_input_feed[:,:(-4+1):4])
-        
+        input_feed_consistancy_loss = self.loss_fn(first_input_feed[:,4::4],first_input_feed[:,:-5:4]) + self.loss_fn(first_input_feed[:,4+1::4],first_input_feed[:,1:(-5+1):4])
+        input_feed_consistancy_loss = input_feed_consistancy_loss * 10000
+
         lprobs = lprobs.float() #self.max_vals*
         internal_params = {}
         internal_params['common_params'] = common_params
@@ -176,6 +177,7 @@ class MSECriterion(FairseqCriterion):
                     'wmape': wmape,
                     'w-accuracy': 100. - wmape,
                     'flow_res.mean': flow_res.mean(),
+                    'input_feed_consistancy_loss' : input_feed_consistancy_loss,
                     }
                 )
         except Exception as e:
