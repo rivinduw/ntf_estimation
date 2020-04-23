@@ -68,7 +68,12 @@ class MSECriterion(FairseqCriterion):
 
     def compute_loss(self, model, net_output, sample, reduce=True):
         # import fairseq.pdb as pdb; pdb.set_trace()
-        lprobs, common_params, segment, flow_res = model.get_normalized_probs(net_output, log_probs=False)
+        lprobs, common_params, segment, extra_params = model.get_normalized_probs(net_output, log_probs=False)
+        flow_res = extra_params['mean_flow_res']
+        first_input_feed = extra_params['first_input_feed']
+
+        input_feed_consistancy_loss = self.loss_fn(first_input_feed[:,4::4],first_input_feed[:,:-4:4]) + self.loss_fn(first_input_feed[:,4+1::4],first_input_feed[:,:(-4+1):4])
+        
         lprobs = lprobs.float() #self.max_vals*
         internal_params = {}
         internal_params['common_params'] = common_params
@@ -155,8 +160,8 @@ class MSECriterion(FairseqCriterion):
         else:
             target_loss = 0.0
             # volume_loss = 0.0
-        
-        total_loss = target_loss + flow_res.mean() + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
+        # + flow_res.mean()
+        total_loss = target_loss + input_feed_consistancy_loss  + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
         
         try:
             wandb.log(

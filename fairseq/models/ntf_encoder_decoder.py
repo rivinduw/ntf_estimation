@@ -294,6 +294,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:]))
         else:
             input_feed = self.input_feed_activation(encoder_hiddens[0,:,:])
+
+        self.first_input_feed = input_feed
         
         outs = []
         common_params_list = []
@@ -367,8 +369,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
     
     #my implementation
     def get_normalized_probs(self, net_output, log_probs=None, sample=None):
-        
-        return net_output[0], self.all_common_params, self.all_segment_params, self.mean_flow_res
+        extra_params = {
+            'first_input_feed':self.first_input_feed,
+            'mean_flow_res': self.mean_flow_res,
+        }
+        self.mean_flow_res
+        return net_output[0], self.all_common_params, self.all_segment_params, extra_params
     
     def get_targets(self, sample, net_output):
         """Get targets from either the sample or the net's output."""
