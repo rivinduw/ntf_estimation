@@ -73,7 +73,7 @@ class MSECriterion(FairseqCriterion):
         first_input_feed = extra_params['first_input_feed']
 
         input_feed_consistancy_loss = self.loss_fn(first_input_feed[:,4::4],first_input_feed[:,:-5:4]) + self.loss_fn(first_input_feed[:,4+1::4],first_input_feed[:,1:(-5+1):4])
-        input_feed_consistancy_loss = input_feed_consistancy_loss * 500
+        input_feed_consistancy_loss = input_feed_consistancy_loss * 1000
 
         lprobs = lprobs.float() #self.max_vals*
         internal_params = {}
@@ -139,10 +139,10 @@ class MSECriterion(FairseqCriterion):
         y = target * self.max_vals
         target_mask = y > 1e-6
         #y = y[target_mask]
-        y = target[target_mask]
-        outs = lprobs * self.max_vals
+        y = target[target_mask] *1000
+        # outs = lprobs * self.max_vals
         # outputs = outs[target_mask]
-        outputs = lprobs[target_mask]
+        outputs = lprobs[target_mask] * 1000
 
         num_valid = target_mask.float().sum()
 
