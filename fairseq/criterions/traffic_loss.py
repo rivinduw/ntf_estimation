@@ -138,11 +138,11 @@ class MSECriterion(FairseqCriterion):
 
         y = target * self.max_vals
         target_mask = y > 1e-6
-        #y = y[target_mask]
-        y = target[target_mask]
-        # outs = lprobs * self.max_vals
-        # outputs = outs[target_mask]
-        outputs = lprobs[target_mask]
+        y = y[target_mask]
+        # y = target[target_mask]
+        outs = lprobs * self.max_vals
+        outputs = outs[target_mask]
+        # outputs = lprobs[target_mask]
 
         num_valid = target_mask.float().sum()
 
@@ -168,7 +168,7 @@ class MSECriterion(FairseqCriterion):
             target_loss = 0.0
             # volume_loss = 0.0
         # + flow_res.mean()
-        total_loss = 10000 * target_loss + 100*input_feed_consistancy_loss  #+ self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
+        total_loss = target_loss #+ 100*input_feed_consistancy_loss  #+ self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
         
         try:
             wandb.log(
