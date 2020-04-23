@@ -249,7 +249,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.segment_param_additions = torch.Tensor([[self.flow_min],[self.flow_min]]).to(self.device)
 
         self.common_param_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
-        self.segment_param_activation = nn.Sigmoid()#nn.ReLU()#nn.Hardtanh(min_val=0.0, max_val=1.0)
+        self.segment_param_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Hardtanh(min_val=0.0, max_val=1.0)
         self.input_feed_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
 
         self.total_segment_specific_params = self.num_segment_specific_params*self.num_segments
@@ -333,7 +333,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             common_params = (self.common_param_multipliers*common_params)+self.common_param_additions
             v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(common_params, dim=1)
             
-            segment_params = self.segment_param_activation(segment_params)
+            if self.segment_param_activation!=None:
+                segment_params = self.segment_param_activation(segment_params)
+            else:
+                segment_params = segment_params
             segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
             segment_params = segment_params*self.segment_param_multipliers + self.segment_param_additions
             future_r, future_s = torch.unbind(segment_params,dim=1)
