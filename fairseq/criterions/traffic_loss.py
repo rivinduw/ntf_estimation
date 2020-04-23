@@ -156,7 +156,7 @@ class MSECriterion(FairseqCriterion):
         
         # print("mask sum",target_mask.float().sum(),target.sum())
         if num_valid>=1:
-            target_loss = 1000 * self.loss_fn(outputs, y)
+            target_loss = self.loss_fn(outputs, y)
             # volume_loss = self.loss_fn(vol_outs, vol_y)
             #wandb.log({"all_actual": wandb.Histogram(y.detach().numpy())})
             #wandb.log({"all_predictions": wandb.Histogram(outputs.detach().numpy())})
