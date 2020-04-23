@@ -168,7 +168,7 @@ class MSECriterion(FairseqCriterion):
             target_loss = 0.0
             # volume_loss = 0.0
         # + flow_res.mean()
-        total_loss = 10000 * target_loss + 10000*input_feed_consistancy_loss  #+ self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
+        total_loss = 10000 * target_loss + 100*input_feed_consistancy_loss  #+ self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
         
         try:
             wandb.log(
