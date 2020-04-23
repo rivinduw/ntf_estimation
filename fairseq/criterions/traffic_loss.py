@@ -73,7 +73,7 @@ class MSECriterion(FairseqCriterion):
         first_input_feed = extra_params['first_input_feed']
 
         input_feed_consistancy_loss = self.loss_fn(first_input_feed[:,4::4],first_input_feed[:,:-5:4]) + self.loss_fn(first_input_feed[:,4+1::4],first_input_feed[:,1:(-5+1):4])
-        input_feed_consistancy_loss = input_feed_consistancy_loss * 10000
+        input_feed_consistancy_loss = input_feed_consistancy_loss * 500
 
         lprobs = lprobs.float() #self.max_vals*
         internal_params = {}
@@ -138,9 +138,11 @@ class MSECriterion(FairseqCriterion):
 
         y = target * self.max_vals
         target_mask = y > 1e-6
-        y = y[target_mask]
+        #y = y[target_mask]
+        y = target[target_mask]
         outs = lprobs * self.max_vals
-        outputs = outs[target_mask]
+        # outputs = outs[target_mask]
+        outputs = lprobs[target_mask]
 
         num_valid = target_mask.float().sum()
 
@@ -154,7 +156,7 @@ class MSECriterion(FairseqCriterion):
         
         # print("mask sum",target_mask.float().sum(),target.sum())
         if num_valid>=1:
-            target_loss = self.loss_fn(outputs, y)
+            target_loss = 1000 * self.loss_fn(outputs, y)
             # volume_loss = self.loss_fn(vol_outs, vol_y)
             #wandb.log({"all_actual": wandb.Histogram(y.detach().numpy())})
             #wandb.log({"all_predictions": wandb.Histogram(outputs.detach().numpy())})
@@ -162,7 +164,7 @@ class MSECriterion(FairseqCriterion):
             target_loss = 0.0
             # volume_loss = 0.0
         # + flow_res.mean()
-        total_loss = target_loss + input_feed_consistancy_loss  + self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
+        total_loss = target_loss + input_feed_consistancy_loss  #+ self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
         
         try:
             wandb.log(
