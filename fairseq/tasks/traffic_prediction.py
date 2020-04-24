@@ -80,7 +80,9 @@ class TrafficPredictionTask(FairseqTask):
                         test_from = "2019-10-01 00:00:00",\
                         test_to = "2019-11-01 00:00:00",\
                         mainlines_to_include_in_input = None,\
-                        mainlines_to_include_in_output = None)
+                        mainlines_to_include_in_output = None,\
+                        scale_input=True,\
+                        scale_output=True)
         #if split=='train':
         self.max_vals = self.datasets[split].get_max_vals()
 
@@ -136,7 +138,6 @@ class TrafficPredictionTask(FairseqTask):
 
     def valid_step(self, sample, model, criterion):
         model.eval()
-        self.valid_step_num += 1
         with torch.no_grad():
             loss, sample_size, logging_output = criterion(model, sample)
             try:
@@ -213,6 +214,7 @@ class TrafficPredictionTask(FairseqTask):
                     # wandb.save('checkpoints/checkpoint_last.pt')
             except Exception as e:
                 print(e)
+        self.valid_step_num += 1
         return loss, sample_size, logging_output
 
     def train_step(self, sample, model, criterion, optimizer, ignore_grad=False):

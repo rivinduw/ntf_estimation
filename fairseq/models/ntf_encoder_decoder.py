@@ -231,9 +231,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.num_ntf_steps = 3
 
         self.amin = 1.0
-        self.amax = 2.0
+        self.amax = 3.0
         self.gmin = 0.1
-        self.gmax = 1.0
+        self.gmax = 2.0
         self.rhocr_min = 1.0
         self.rhocr_max = 100.0
         self.rhoNp1_min = 0.0
@@ -355,9 +355,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 #     print(real_size_input.view(-1,4,4)[0,:,:])
                 model_steps.append(one_ntf_output)
 
-            mean_ntf_output = torch.stack(model_steps,dim=0).mean(dim=0)
+            # mean_ntf_output = torch.stack(model_steps,dim=0).mean(dim=0)
             
-            # mean_ntf_output = real_size_input
+            mean_ntf_output = real_size_input
             scaled_output = mean_ntf_output/(self.max_vals+1e-6)
 
             common_params_list.append(common_params)
