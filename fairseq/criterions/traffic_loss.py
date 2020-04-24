@@ -79,6 +79,8 @@ class MSECriterion(FairseqCriterion):
         internal_params = {}
         internal_params['common_params'] = common_params
         internal_params['segment_params'] = segment
+
+        model.parameters()
         
         #bsz, ts, var
         # torch.Size([32, 10, 8])
