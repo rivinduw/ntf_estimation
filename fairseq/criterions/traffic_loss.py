@@ -186,6 +186,7 @@ class MSECriterion(FairseqCriterion):
                     'w-accuracy': 100. - wmape,
                     'flow_res.mean': flow_res.mean(),
                     'input_feed_consistancy_loss' : input_feed_consistancy_loss,
+                    'first_input_feed': wandb.Histogram(first_input_feed),
                     }
                 )
         except Exception as e:
