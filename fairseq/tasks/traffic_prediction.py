@@ -166,7 +166,7 @@ class TrafficPredictionTask(FairseqTask):
                             pd.DataFrame(10000*preds[0,:,i*4]).plot(ax=ax)
                             pd.DataFrame(10000*src[0,:,i*4]).plot(ax=ax)
                             ax.set_legend(['target','pred','input'])
-                            wandb.log({"mainline"+str(i+1): wandb.Image(ax)})
+                            wandb.log({"mainline"+str(i+1): ax})
                             plt.close('all')
                         except Exception as e:
                             print(e)
@@ -186,11 +186,11 @@ class TrafficPredictionTask(FairseqTask):
                         ax = pd.DataFrame(5000*target[0,:,7]).fillna(0.0).plot()
                         pd.DataFrame(5000*preds[0,:,7]).fillna(0.0).plot(ax=ax)
                         pd.DataFrame(5000*src[0,:,7]).fillna(0.0).plot(ax=ax)
-                        wandb.log({"offramp": wandb.Image(ax)})
+                        wandb.log({"offramp": ax})
                         ax2 = pd.DataFrame(5000*target[0,:,14]).fillna(0.0).plot()
                         pd.DataFrame(5000*preds[0,:,14]).fillna(0.0).plot(ax=ax2)
                         pd.DataFrame(5000*src[0,:,14]).fillna(0.0).plot(ax=ax2)
-                        wandb.log({"onramp": wandb.Image(ax2)})
+                        wandb.log({"onramp": ax2})
                     except Exception as e:
                         print(e)
                         
@@ -252,6 +252,9 @@ class TrafficPredictionTask(FairseqTask):
         if (self.print_count // 100) == 0:
           #plot_grad_flow(model.named_parameters())
           wandb.log({'train_loss':loss})
+          for n, p in model.named_parameters():
+            if(p.requires_grad):
+                wandb.log({n: wandb.Histogram(p.grad)})
         
         # wandb.log({'train_loss':loss})
         return loss, sample_size, logging_output
