@@ -61,7 +61,7 @@ class TrafficPredictionTask(FairseqTask):
         self.active_offramps = self.active_offramps[:self.num_segments]
         
         self.output_seq_len = 10
-        self.input_seq_len = 120
+        self.input_seq_len = 720#120
         
         self.variables_per_segment = 4
         self.total_input_variables = self.num_segments*self.variables_per_segment
@@ -249,7 +249,7 @@ class TrafficPredictionTask(FairseqTask):
             if(p.requires_grad) and ("bias" not in n):
                 if(p.grad.abs().max()>1.0):
                     p.grad = torch.clamp(p.grad, min=-5., max=5.)
-                    #p.grad = p.grad/p.grad.abs().max()
+                    p.grad = p.grad/p.grad.abs().max()
 
         self.print_count += 0
         if (self.print_count // 100) == 0:
