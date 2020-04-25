@@ -67,6 +67,7 @@ class TrafficPredictionTask(FairseqTask):
         self.total_input_variables = self.num_segments*self.variables_per_segment
 
         # self.max_vals = [10000,100,5000,5000]
+        self.print_count = 0
 
     def load_dataset(self, split, **kwargs):
         """Load a given dataset split (e.g., train, valid, test)."""
@@ -245,7 +246,14 @@ class TrafficPredictionTask(FairseqTask):
             loss *= 0
         optimizer.backward(loss)
 
-        plot_grad_flow(model.named_parameters())
+        for n, p in model.named_parameters():
+            if(p.requires_grad):
+                p.grad = torch.clamp(p.grad, min=-10., max=10.)/p.grad.abs().max()
+
+        self.print_count += 0
+        if (self.print_count // 100) == 0:
+          plot_grad_flow(model.named_parameters())
+          wandb.log({'train_loss':loss})
         
         # wandb.log({'train_loss':loss})
         return loss, sample_size, logging_output
@@ -267,6 +275,8 @@ def plot_grad_flow(named_parameters):
     
     Usage: Plug this function in Trainer class after loss.backwards() as 
     "plot_grad_flow(self.model.named_parameters())" to visualize the gradient flow'''
+    plt.figure(figsize=(10,10))
+
     ave_grads = []
     max_grads= []
     layers = []
@@ -275,12 +285,14 @@ def plot_grad_flow(named_parameters):
             layers.append(n)
             ave_grads.append(p.grad.abs().mean())
             max_grads.append(p.grad.abs().max())
+            wandb.log({n: wandb.Histogram(p.grad)})
     plt.bar(np.arange(len(max_grads)), max_grads, alpha=0.1, lw=1, color="c")
     plt.bar(np.arange(len(max_grads)), ave_grads, alpha=0.1, lw=1, color="b")
     plt.hlines(0, 0, len(ave_grads)+1, lw=2, color="k" )
-    plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
+    plt.xticks(range(0,len(ave_grads), 1), layers, rotation=45)
     plt.xlim(left=0, right=len(ave_grads))
-    plt.ylim(bottom = -0.001, top=0.02) # zoom in on the lower gradient regions
+    # plt.ylim(bottom = -0.001, top=0.02) # zoom in on the lower gradient regions
+    # plt.ylim(bottom = -0.001, top=1.1)
     plt.xlabel("Layers")
     plt.ylabel("average gradient")
     plt.title("Gradient flow")
@@ -288,4 +300,6 @@ def plot_grad_flow(named_parameters):
     plt.legend([Line2D([0], [0], color="c", lw=4),
                 Line2D([0], [0], color="b", lw=4),
                 Line2D([0], [0], color="k", lw=4)], ['max-gradient', 'mean-gradient', 'zero-gradient'])
-    wandb.log({"gradients": plt})
+    
+    plt.tight_layout()
+    wandb.log({"gradients": wandb.Image(plt)})
