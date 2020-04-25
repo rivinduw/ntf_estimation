@@ -226,7 +226,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.active_offramps = active_offramps
 
         self.vmin = 10
-        self.vmax = 110
+        self.vmax = 120
         self.shortest_segment_length = 0.278
         self.num_ntf_steps = 3
 
