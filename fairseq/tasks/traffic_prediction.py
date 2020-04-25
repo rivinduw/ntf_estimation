@@ -165,7 +165,7 @@ class TrafficPredictionTask(FairseqTask):
                             ax = pd.DataFrame(10000*target[0,:,i*4]).plot()
                             pd.DataFrame(10000*preds[0,:,i*4]).plot(ax=ax)
                             pd.DataFrame(10000*src[0,:,i*4]).plot(ax=ax)
-                            ax.set_legend(['target','pred','input'])
+                            ax.legend(['target','pred','input'])
                             wandb.log({"mainline"+str(i+1): ax})
                             plt.close('all')
                         except Exception as e:
@@ -186,10 +186,12 @@ class TrafficPredictionTask(FairseqTask):
                         ax = pd.DataFrame(5000*target[0,:,7]).fillna(0.0).plot()
                         pd.DataFrame(5000*preds[0,:,7]).fillna(0.0).plot(ax=ax)
                         pd.DataFrame(5000*src[0,:,7]).fillna(0.0).plot(ax=ax)
+                        ax.legend(['target','pred','input'])
                         wandb.log({"offramp": ax})
                         ax2 = pd.DataFrame(5000*target[0,:,14]).fillna(0.0).plot()
                         pd.DataFrame(5000*preds[0,:,14]).fillna(0.0).plot(ax=ax2)
                         pd.DataFrame(5000*src[0,:,14]).fillna(0.0).plot(ax=ax2)
+                        ax.legend(['target','pred','input'])
                         wandb.log({"onramp": ax2})
                     except Exception as e:
                         print(e)
@@ -246,7 +248,8 @@ class TrafficPredictionTask(FairseqTask):
         for n, p in model.named_parameters():
             if(p.requires_grad):
                 if(p.grad.abs().max()>1.0):
-                    p.grad = torch.clamp(p.grad, min=-10., max=10.)#/p.grad.abs().max()
+                    p.grad = torch.clamp(p.grad, min=-10., max=10.)
+                    p.grad = p.grad/p.grad.abs().max()
 
         self.print_count += 0
         if (self.print_count // 100) == 0:
