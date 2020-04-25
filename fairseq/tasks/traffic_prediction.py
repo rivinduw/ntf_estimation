@@ -165,9 +165,8 @@ class TrafficPredictionTask(FairseqTask):
                             ax = pd.DataFrame(10000*target[0,:,i*4]).plot()
                             pd.DataFrame(10000*preds[0,:,i*4]).plot(ax=ax)
                             pd.DataFrame(10000*src[0,:,i*4]).plot(ax=ax)
-                            plt.show()
-                            plt.pause(0.1)
-                            wandb.log({"mainline"+str(i+1): ax})
+                            ax.set_legend(['target','pred','input'])
+                            wandb.log({"mainline"+str(i+1): wandb.Image(ax)})
                             plt.close('all')
                         except Exception as e:
                             print(e)
@@ -187,13 +186,11 @@ class TrafficPredictionTask(FairseqTask):
                         ax = pd.DataFrame(5000*target[0,:,7]).fillna(0.0).plot()
                         pd.DataFrame(5000*preds[0,:,7]).fillna(0.0).plot(ax=ax)
                         pd.DataFrame(5000*src[0,:,7]).fillna(0.0).plot(ax=ax)
-                        plt.show()
-                        wandb.log({"offramp": ax})
+                        wandb.log({"offramp": wandb.Image(ax)})
                         ax2 = pd.DataFrame(5000*target[0,:,14]).fillna(0.0).plot()
                         pd.DataFrame(5000*preds[0,:,14]).fillna(0.0).plot(ax=ax2)
                         pd.DataFrame(5000*src[0,:,14]).fillna(0.0).plot(ax=ax2)
-                        plt.show()
-                        wandb.log({"onramp": ax2})
+                        wandb.log({"onramp": wandb.Image(ax2)})
                     except Exception as e:
                         print(e)
                         
@@ -249,11 +246,11 @@ class TrafficPredictionTask(FairseqTask):
         for n, p in model.named_parameters():
             if(p.requires_grad):
                 if(p.grad.abs().max()>1.0):
-                    p.grad = torch.clamp(p.grad, min=-10., max=10.)/p.grad.abs().max()
+                    p.grad = torch.clamp(p.grad, min=-10., max=10.)#/p.grad.abs().max()
 
         self.print_count += 0
         if (self.print_count // 100) == 0:
-          plot_grad_flow(model.named_parameters())
+          #plot_grad_flow(model.named_parameters())
           wandb.log({'train_loss':loss})
         
         # wandb.log({'train_loss':loss})
