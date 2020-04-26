@@ -45,9 +45,9 @@ class NTFModel(FairseqEncoderDecoderModel):
         num_var_per_segment = task.get_variables_per_segment()
         total_input_variables = task.get_total_input_variables()
         
-        encoder_hidden_size = total_input_variables // 2
+        encoder_hidden_size = total_input_variables *8#// 2
         is_encoder_bidirectional = True
-        decoder_hidden_size = total_input_variables // 2
+        decoder_hidden_size = total_input_variables *8#// 2
 
         encoder = TrafficNTFEncoder(input_size=total_input_variables, seq_len=input_seq_len, num_segments=num_segments, hidden_size=encoder_hidden_size, \
             num_var_per_segment=num_var_per_segment,bidirectional=is_encoder_bidirectional, dropout_in=0.5, dropout_out=0.5, device=device)
@@ -282,7 +282,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # srclen = encoder_outs.size(0)
 
         x = prev_output_tokens
-        # x = F.dropout(x, p=self.dropout_in, training=self.training)
+        x = F.dropout(x, p=self.dropout_in, training=self.training)
         
         # B x T x C -> T x B x C 10,32,16
         x = x.transpose(0, 1)
@@ -324,9 +324,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #input_to_rnn = torch.cat((x[j, :,:], input_feed), dim=1)
             # hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
 
-            input_x = x[j, :,:]  + torch.Tensor([0.5]).float()
+            input_x = x[j, :,:]  #+ torch.Tensor([0.5]).float()
             input_x = F.dropout(input_x, p=self.dropout_in, training=self.training)
-            input_feed = input_feed + torch.Tensor([0.5]).float()
+            input_feed = input_feed #+ torch.Tensor([0.5]).float()
             input_mask = (input_x*self.max_vals) > 0.0
             blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*(input_feed))
             
@@ -377,7 +377,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             segment_params_list.append(segment_params)
             outs.append(scaled_output)
 
-            input_feed = scaled_output - torch.Tensor([0.5]).float()
+            input_feed = scaled_output #- torch.Tensor([0.5]).float()
             
         # collect outputs across time steps
         # dim=1 to go from T x B x C -> B x T x C
