@@ -314,12 +314,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #input_to_rnn = torch.cat((x[j, :,:], input_feed), dim=1)
             # hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
 
-            input_x = x[j, :,:]
+            input_x = x[j, :,:]  + 0.5
             input_mask = (input_x*self.max_vals) >= 0.0
-            blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*input_feed)
+            blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*(input_feed+0.5))
             
             # hidden, cell = self.rnn(blended_input, (prev_hiddens, prev_cells))
-            hidden, cell = self.rnn(input_x, (prev_hiddens, prev_cells))
+            hidden, cell = self.rnn(x[j, :,:], (prev_hiddens, prev_cells))
             
             prev_hiddens = hidden #for next loop
             prev_cells = cell
@@ -356,16 +356,16 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 #     print(real_size_input.view(-1,4,4)[0,:,:])
                 model_steps.append(one_ntf_output)
 
-            mean_ntf_output = torch.stack(model_steps,dim=0).mean(dim=0)
+            # mean_ntf_output = torch.stack(model_steps,dim=0).mean(dim=0)
             
-            # mean_ntf_output = real_size_input
+            mean_ntf_output = real_size_input
             scaled_output = mean_ntf_output/(self.max_vals+1e-6)
 
             common_params_list.append(common_params)
             segment_params_list.append(segment_params)
             outs.append(scaled_output)
 
-            input_feed = scaled_output
+            input_feed = scaled_output - 0.5
             
         # collect outputs across time steps
         # dim=1 to go from T x B x C -> B x T x C
