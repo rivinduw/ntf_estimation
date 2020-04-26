@@ -185,9 +185,14 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.seq_len = seq_len
         self.hidden_size = hidden_size
 
+        self.extra_hidden_layer = True
+
         self.encoder_output_units = encoder_output_units
 
         if self.encoder_output_units != self.input_size:
+            if self.extra_hidden_layer:
+                self.encoder_hidden_to_decoder_input_feed_hidden_layer = nn.Linear(self.encoder_output_units, self.encoder_output_units)
+            
             self.encoder_hidden_to_input_feed_proj = nn.Linear(self.encoder_output_units, self.input_size)
             # self.encoder_hidden_to_input_feed_proj = Custom_Linear(self.encoder_output_units, self.input_size, min_val=-5.0, max_val=5.0, bias=True)
         else:
@@ -294,7 +299,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             if self.input_feed_activation!=None:
                 input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:]))
             else:
-                input_feed = self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:])
+                if self.extra_hidden_layer:
+                    extra_hidden = torch.relu(self.encoder_hidden_to_decoder_input_feed_hidden_layer(encoder_hiddens[0,:,:]))
+                else:
+                    extra_hidden = encoder_hiddens[0,:,:]
+                input_feed = self.encoder_hidden_to_input_feed_proj(extra_hidden)
+                # input_feed = self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:])
         else:
             if self.input_feed_activation!=None:
                 input_feed = self.input_feed_activation(encoder_hiddens[0,:,:])
