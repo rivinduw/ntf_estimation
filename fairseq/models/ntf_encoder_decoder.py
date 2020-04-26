@@ -318,7 +318,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             input_mask = (input_x*self.max_vals) >= 0.0
             blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*input_feed)
             
-            hidden, cell = self.rnn(blended_input, (prev_hiddens, prev_cells))
+            # hidden, cell = self.rnn(blended_input, (prev_hiddens, prev_cells))
+            hidden, cell = self.rnn(input_x, (prev_hiddens, prev_cells))
             
             prev_hiddens = hidden #for next loop
             prev_cells = cell
