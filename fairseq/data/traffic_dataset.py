@@ -152,7 +152,7 @@ class TrafficDataset(FairseqDataset):
         
         if self.scale_input:
           one_input = one_input/self.max_vals
-        #   one_input = one_input - 0.5
+          one_input = one_input - 0.5
         
         one_label = self.all_data.iloc[idx+input_len:idx+input_len+label_len, :].values
 
