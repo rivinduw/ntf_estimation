@@ -191,9 +191,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         if self.encoder_output_units != self.input_size:
             if self.extra_hidden_layer:
-                self.encoder_hidden_to_decoder_input_feed_hidden_layer = nn.Linear(self.encoder_output_units, self.encoder_output_units)
+                self.encoder_hidden_to_decoder_input_feed_hidden_layer = Linear(self.encoder_output_units, self.encoder_output_units)
             
-            self.encoder_hidden_to_input_feed_proj = nn.Linear(self.encoder_output_units, self.input_size)
+            self.encoder_hidden_to_input_feed_proj = Linear(self.encoder_output_units, self.input_size)
             # self.encoder_hidden_to_input_feed_proj = Custom_Linear(self.encoder_output_units, self.input_size, min_val=-5.0, max_val=5.0, bias=True)
         else:
             self.encoder_hidden_to_input_feed_proj = None
