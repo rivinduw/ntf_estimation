@@ -45,9 +45,9 @@ class NTFModel(FairseqEncoderDecoderModel):
         num_var_per_segment = task.get_variables_per_segment()
         total_input_variables = task.get_total_input_variables()
         
-        encoder_hidden_size = total_input_variables // 2
+        encoder_hidden_size = total_input_variables * 16 #// 2
         is_encoder_bidirectional = True
-        decoder_hidden_size = total_input_variables // 2
+        decoder_hidden_size = total_input_variables * 8 #// 2
 
         encoder = TrafficNTFEncoder(input_size=total_input_variables, seq_len=input_seq_len, num_segments=num_segments, hidden_size=encoder_hidden_size, \
             num_var_per_segment=num_var_per_segment,bidirectional=is_encoder_bidirectional, dropout_in=0.5, dropout_out=0.5, device=device)
@@ -185,15 +185,15 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.seq_len = seq_len
         self.hidden_size = hidden_size
 
-        self.extra_hidden_layer = True
+        self.extra_hidden_layer = False
 
         self.encoder_output_units = encoder_output_units
 
         if self.encoder_output_units != self.input_size:
             if self.extra_hidden_layer:
-                self.encoder_hidden_to_decoder_input_feed_hidden_layer = Linear(self.encoder_output_units, self.encoder_output_units)
+                self.encoder_hidden_to_decoder_input_feed_hidden_layer = nn.Linear(self.encoder_output_units, self.encoder_output_units)
             
-            self.encoder_hidden_to_input_feed_proj = Linear(self.encoder_output_units, self.input_size)
+            self.encoder_hidden_to_input_feed_proj = nn.Linear(self.encoder_output_units, self.input_size)
             # self.encoder_hidden_to_input_feed_proj = Custom_Linear(self.encoder_output_units, self.input_size, min_val=-5.0, max_val=5.0, bias=True)
         else:
             self.encoder_hidden_to_input_feed_proj = None
@@ -255,7 +255,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.common_param_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
         self.segment_param_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Hardtanh(min_val=0.0, max_val=1.0)
-        self.input_feed_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
+        self.input_feed_activation = nn.Hardtanh(min_val=0.0, max_val=1.0)#None#nn.Sigmoid()#nn.ReLU()#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
 
         self.total_segment_specific_params = self.num_segment_specific_params*self.num_segments
 
@@ -324,9 +324,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #input_to_rnn = torch.cat((x[j, :,:], input_feed), dim=1)
             # hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
 
-            input_x = x[j, :,:]  + 0.5 #+ torch.Tensor([0.5]).float()
-            input_x = F.dropout(input_x, p=self.dropout_in, training=self.training)
-            input_feed = input_feed + 0.5 #+ torch.Tensor([0.5]).float()
+            input_x = x[j, :,:]  #+ torch.Tensor([0.5]).float()
+            # input_x = F.dropout(input_x, p=self.dropout_in, training=self.training)
+            input_feed = input_feed #+ torch.Tensor([0.5]).float()
             input_mask = (input_x*self.max_vals) > 0.0
             blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*(input_feed))
             
@@ -336,7 +336,6 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             prev_hiddens = hidden #for next loop
             prev_cells = cell
 
-            # ntf_params = torch.sigmoid(self.ntf_projection(hidden))
             ntf_params = self.ntf_projection(hidden)
 
             #NTF
@@ -377,7 +376,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             segment_params_list.append(segment_params)
             outs.append(scaled_output)
 
-            input_feed = scaled_output - 0.5#- torch.Tensor([0.5]).float()
+            input_feed = scaled_output #- torch.Tensor([0.5]).float()
             
         # collect outputs across time steps
         # dim=1 to go from T x B x C -> B x T x C
