@@ -250,7 +250,7 @@ class TrafficPredictionTask(FairseqTask):
         clip_value = 10.0
         for p in model.parameters():
             p.register_hook(lambda grad: torch.clamp(grad, -clip_value, clip_value))
-        torch.nn.utils.clip_grad_norm_(model.parameters(),5.0)
+        #torch.nn.utils.clip_grad_norm_(model.parameters(),5.0)
         # for n, p in model.named_parameters():
         #     if(p.requires_grad) and ("bias" not in n):
         #         if(p.grad.abs().max()>1.0):
