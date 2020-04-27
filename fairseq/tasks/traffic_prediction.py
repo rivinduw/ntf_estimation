@@ -60,8 +60,8 @@ class TrafficPredictionTask(FairseqTask):
         self.active_onramps = self.active_onramps[:self.num_segments]
         self.active_offramps = self.active_offramps[:self.num_segments]
         
-        self.output_seq_len = 10
-        self.input_seq_len = 720
+        self.output_seq_len = 120
+        self.input_seq_len = 120
         print("self.input_seq_len:",self.input_seq_len," self.output_seq_len:",self.output_seq_len)
         
         self.variables_per_segment = 4
@@ -250,7 +250,7 @@ class TrafficPredictionTask(FairseqTask):
         clip_value = 10.0
         for p in model.parameters():
             p.register_hook(lambda grad: torch.clamp(grad, -clip_value, clip_value))
-        torch.nn.utils.clip_grad_norm(model.parameters(),1.0)
+        torch.nn.utils.clip_grad_norm_(model.parameters(),5.0)
         # for n, p in model.named_parameters():
         #     if(p.requires_grad) and ("bias" not in n):
         #         if(p.grad.abs().max()>1.0):
