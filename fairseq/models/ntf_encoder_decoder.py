@@ -185,9 +185,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.seq_len = seq_len
         self.hidden_size = hidden_size
 
-        self.extra_hidden_layer = False
-
         self.encoder_output_units = encoder_output_units
+
+        self.extra_hidden_layer = False
 
         if self.encoder_output_units != self.input_size:
             if self.extra_hidden_layer:
