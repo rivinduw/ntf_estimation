@@ -60,8 +60,8 @@ class TrafficPredictionTask(FairseqTask):
         self.active_onramps = self.active_onramps[:self.num_segments]
         self.active_offramps = self.active_offramps[:self.num_segments]
         
-        self.output_seq_len = 10
-        self.input_seq_len = 10
+        self.output_seq_len = 2
+        self.input_seq_len = 60
         print("self.input_seq_len:",self.input_seq_len," self.output_seq_len:",self.output_seq_len)
         
         self.variables_per_segment = 4
@@ -240,17 +240,22 @@ class TrafficPredictionTask(FairseqTask):
                   gradient
                 - logging outputs to display while training
         """
+
+        clip_value = 10.0
+        for p in model.parameters():
+            p.register_hook(lambda grad: torch.clamp(grad, -clip_value, clip_value))
+        
+        torch.nn.utils.clip_grad_norm_(model.parameters(),5.0)
+        
         model.train()
+
         loss, sample_size, logging_output = criterion(model, sample)
         if ignore_grad:
             loss *= 0
         optimizer.backward(loss)
 
         
-        clip_value = 10.0
-        for p in model.parameters():
-            p.register_hook(lambda grad: torch.clamp(grad, -clip_value, clip_value))
-        #torch.nn.utils.clip_grad_norm_(model.parameters(),5.0)
+
         # for n, p in model.named_parameters():
         #     if(p.requires_grad) and ("bias" not in n):
         #         if(p.grad.abs().max()>1.0):
