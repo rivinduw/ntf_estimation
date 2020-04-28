@@ -60,8 +60,8 @@ class TrafficPredictionTask(FairseqTask):
         self.active_onramps = self.active_onramps[:self.num_segments]
         self.active_offramps = self.active_offramps[:self.num_segments]
         
-        self.output_seq_len = 2
-        self.input_seq_len = 60
+        self.output_seq_len = 60
+        self.input_seq_len = 30
         print("self.input_seq_len:",self.input_seq_len," self.output_seq_len:",self.output_seq_len)
         
         self.variables_per_segment = 4
@@ -86,7 +86,8 @@ class TrafficPredictionTask(FairseqTask):
                         mainlines_to_include_in_input = None,\
                         mainlines_to_include_in_output = None,\
                         scale_input=True,\
-                        scale_output=True)
+                        scale_output=True,\
+                        input_feeding=False)
         #if split=='train':
         self.max_vals = self.datasets[split].get_max_vals()
 
