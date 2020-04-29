@@ -124,6 +124,14 @@ class TrafficDataset(FairseqDataset):
         self.max_sample_size = max_sample_size if max_sample_size is not None else sys.maxsize
         self.min_sample_size = min_sample_size if min_sample_size is not None else self.max_sample_size
 
+        self.all_data_5min = self.all_data
+        self.all_data_5min[self.all_data_5min<0] = np.nan
+        self.all_data_5min = self.all_data_5min.fillna(method='pad')
+        self.all_data_5min = self.all_data_5min.rolling('5min').mean()
+        self.all_data_5min = self.all_data_5min.iloc[10:,:]
+        self.all_data      = self.all_data.iloc[10:,:]
+        self.all_data_5min = self.all_data_5min.fillna(0.0)
+
         # self.shuffle = shuffle
     
     def get_max_vals(self):
@@ -142,11 +150,12 @@ class TrafficDataset(FairseqDataset):
 
         NEG = -1e-6
 
-        one_input = self.all_data.iloc[idx:idx+input_len, :].values
+        # one_input = self.all_data.iloc[idx:idx+input_len, :].values
+        one_input = self.all_data_5min.iloc[idx:10*idx+input_len:10, :].values
 
         one_input[:,::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,::self.variables_per_segment]
         one_input[:,1::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,1::self.variables_per_segment]
-        one_input[one_input==0] = NEG
+        #one_input[one_input==0] = NEG
         one_input[:,2::self.variables_per_segment] = one_input[:,2::self.variables_per_segment] #+ 1e-3
         one_input[:,3::self.variables_per_segment] = one_input[:,3::self.variables_per_segment] #+ 1e-3
         
@@ -154,7 +163,7 @@ class TrafficDataset(FairseqDataset):
           one_input = one_input/self.max_vals
         #   one_input = one_input - 0.5
         
-        one_label = self.all_data.iloc[idx+input_len:idx+input_len+label_len, :].values
+        one_label = self.all_data.iloc[10*idx+input_len:10*idx+input_len+label_len, :].values
 
         one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
         one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
@@ -180,9 +189,9 @@ class TrafficDataset(FairseqDataset):
 
     def __len__(self):
         if not self.split=='test':
-            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*10) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
         else:
-            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len) - 1)
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*10) - 1)
         return data_len
 
 
