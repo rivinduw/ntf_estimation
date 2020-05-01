@@ -209,7 +209,9 @@ class TrafficDataset(FairseqDataset):
 
         # previous_output = [s['source'][-1:]+s['target'][:-1] for s in samples] # [samples[0]['target'][0]]
         if self.scale_input and self.scale_output:
-            previous_output = [np.concatenate([s['source'][-1:],s['target'][:-1]]) for s in samples]
+            last_inputs = [s['source'][-1:]*0-1e-6 for s in samples]
+            previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
+            # previous_output = [np.concatenate([s['source'][-1:],s['target'][:-1]]) for s in samples]
         elif self.scale_input and not self.scale_output:
             last_inputs = [s['source'][-1:]*self.max_vals for s in samples]
             previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
