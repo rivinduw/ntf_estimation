@@ -145,13 +145,13 @@ class TrafficDataset(FairseqDataset):
         else:
             idx = index
 
-        input_len = self.input_seq_len * 10
+        input_len = self.input_seq_len #* 10
         label_len = self.output_seq_len
 
         NEG = -1e-6
 
         # one_input = self.all_data.iloc[idx:idx+input_len, :].values
-        one_input = self.all_data_5min.iloc[idx:idx+input_len*10:10, :].values
+        one_input = self.all_data_5min.iloc[idx:idx+input_len*1:1, :].values
 
         one_input[:,::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,::self.variables_per_segment]
         one_input[:,1::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,1::self.variables_per_segment]
@@ -189,9 +189,9 @@ class TrafficDataset(FairseqDataset):
 
     def __len__(self):
         if not self.split=='test':
-            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*10) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
         else:
-            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*10) - 1)
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)
         return data_len
 
 

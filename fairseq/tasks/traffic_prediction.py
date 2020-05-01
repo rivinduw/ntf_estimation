@@ -60,8 +60,8 @@ class TrafficPredictionTask(FairseqTask):
         self.active_onramps = self.active_onramps[:self.num_segments]
         self.active_offramps = self.active_offramps[:self.num_segments]
         
-        self.output_seq_len = 30
-        self.input_seq_len = 288
+        self.output_seq_len = 10
+        self.input_seq_len = 120#288
         print("self.input_seq_len:",self.input_seq_len," self.output_seq_len:",self.output_seq_len)
         
         self.variables_per_segment = 4
