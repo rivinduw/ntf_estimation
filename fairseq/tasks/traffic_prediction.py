@@ -242,7 +242,7 @@ class TrafficPredictionTask(FairseqTask):
                 - logging outputs to display while training
         """
 
-        clip_value = 10.0
+        clip_value = 0.04
         for p in model.parameters():
             p.register_hook(lambda grad: torch.clamp(grad, -clip_value, clip_value))
         
