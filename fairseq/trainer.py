@@ -20,6 +20,8 @@ from fairseq.file_io import PathManager
 from fairseq.meters import AverageMeter, StopwatchMeter, TimeMeter
 from fairseq.optim import lr_scheduler
 
+import wandb
+
 
 class Trainer(object):
     """Main class for data parallel training.
@@ -442,6 +444,10 @@ class Trainer(object):
             # clip grads
             grad_norm = self.optimizer.clip_grad_norm(self.args.clip_norm)
             self._prev_grad_norm = grad_norm
+
+            for n, p in model.named_parameters():
+                if(p.requires_grad) and ("bias" not in n):
+                    wandb.log({n: wandb.Histogram(p.grad)})
 
             # take an optimization step
             self.optimizer.step()

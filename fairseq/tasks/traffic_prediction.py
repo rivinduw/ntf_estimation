@@ -253,7 +253,6 @@ class TrafficPredictionTask(FairseqTask):
             loss *= 0
         optimizer.backward(loss)
 
-        
         # for n, p in model.named_parameters():
         #     if(p.requires_grad) and ("bias" not in n):
         #         if(p.grad.abs().max()>1.0):
@@ -264,11 +263,9 @@ class TrafficPredictionTask(FairseqTask):
         if (self.print_count // 100) == 0:
           #plot_grad_flow(model.named_parameters())
           wandb.log({'train_loss':loss})
-          for n, p in model.named_parameters():
-            if(p.requires_grad) and ("bias" not in n):
-                wandb.log({n: wandb.Histogram(p.grad)})
+
         
-        torch.nn.utils.clip_grad_norm_(model.parameters(),5.0)
+        #torch.nn.utils.clip_grad_norm_(model.parameters(),5.0)
         
         # wandb.log({'train_loss':loss})
         return loss, sample_size, logging_output

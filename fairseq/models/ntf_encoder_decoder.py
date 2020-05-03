@@ -344,6 +344,10 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             common_params = self.common_param_activation(common_params)
             common_params = (self.common_param_multipliers*common_params)+self.common_param_additions
             v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(common_params, dim=1)
+            vf = vf.detach()
+            a_var = a_var.detach()
+            rhocr = rhocr.detach()
+            g_var = g_var.detach()
             
             if self.segment_param_activation!=None:
                 segment_params = self.segment_param_activation(segment_params)
