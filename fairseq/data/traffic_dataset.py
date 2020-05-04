@@ -133,13 +133,13 @@ class TrafficDataset(FairseqDataset):
         self.max_sample_size = max_sample_size if max_sample_size is not None else sys.maxsize
         self.min_sample_size = min_sample_size if min_sample_size is not None else self.max_sample_size
 
-        self.all_data_5min = self.all_data
-        self.all_data_5min[self.all_data_5min<0] = np.nan
-        self.all_data_5min = self.all_data_5min.fillna(method='pad')
-        self.all_data_5min = self.all_data_5min.rolling('5min').mean()
-        self.all_data_5min = self.all_data_5min.iloc[10:,:]
-        self.all_data_5min = self.all_data_5min.fillna(0.0)
-        self.all_data      = self.all_data_5min#self.all_data.iloc[10:,:]
+        # self.all_data_5min = self.all_data
+        # self.all_data_5min[self.all_data_5min<0] = np.nan
+        # self.all_data_5min = self.all_data_5min.fillna(method='pad')
+        # self.all_data_5min = self.all_data_5min.rolling('5min').mean()
+        # self.all_data_5min = self.all_data_5min.iloc[10:,:]
+        # self.all_data_5min = self.all_data_5min.fillna(0.0)
+        # self.all_data      = self.all_data_5min#self.all_data.iloc[10:,:]
 
 
         #add context
@@ -232,7 +232,7 @@ class TrafficDataset(FairseqDataset):
         if self.scale_input and self.scale_output:
             last_inputs = [s['target'][:1]*0-1e-6 for s in samples]
             previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
-            
+
         # # previous_output = [s['source'][-1:]+s['target'][:-1] for s in samples] # [samples[0]['target'][0]]
         # if self.scale_input and self.scale_output:
         #     last_inputs = [s['source'][-1:]*0-1e-6 for s in samples]
