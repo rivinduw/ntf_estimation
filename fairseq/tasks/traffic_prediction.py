@@ -59,6 +59,10 @@ class TrafficPredictionTask(FairseqTask):
         self.active_offramps = [x>0 for x in list(metadata.loc[metadata['type']=='s','num_lanes'])]
         self.active_onramps = self.active_onramps[:self.num_segments]
         self.active_offramps = self.active_offramps[:self.num_segments]
+
+        self.mainlines_to_include_in_input =  [1.,0.,0.,1.]
+
+        self.encoder_input_variables = np.array(self.mainlines_to_include_in_input).sum()*2 + np.array(self.active_onramps).sum() + np.array(self.active_offramps).sum() + 2
         
         self.output_seq_len = 10
         self.input_seq_len = 120#288
@@ -85,6 +89,8 @@ class TrafficPredictionTask(FairseqTask):
                         test_to = "2019-11-01 00:00:00",\
                         mainlines_to_include_in_input = None,\
                         mainlines_to_include_in_output = None,\
+                        active_onramps = self.active_onramps,\
+                        active_offramps = self.active_offramps,\
                         scale_input=True,\
                         scale_output=True,\
                         input_feeding=True)
@@ -118,6 +124,9 @@ class TrafficPredictionTask(FairseqTask):
     
     def get_total_input_variables(self):
         return self.total_input_variables
+
+    def get_encoder_input_variables(self):
+        return self.encoder_input_variables
 
     def get_output_seq_len(self):
         return self.output_seq_len
@@ -242,7 +251,7 @@ class TrafficPredictionTask(FairseqTask):
                 - logging outputs to display while training
         """
 
-        clip_value = 0.04
+        clip_value = 5.0#0.04
         for p in model.parameters():
             p.register_hook(lambda grad: torch.clamp(grad, -clip_value, clip_value))
         

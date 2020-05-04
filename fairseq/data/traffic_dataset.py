@@ -33,6 +33,8 @@ class TrafficDataset(FairseqDataset):
                 test_to = "2018-10-01 00:00:00",
                 mainlines_to_include_in_input = None,
                 mainlines_to_include_in_output = None,
+                active_onramps=None,
+                active_offramps=None,
                 shuffle=True, input_feeding=True, 
                 max_sample_size=None, min_sample_size=None,split='train'
                 ):
@@ -105,6 +107,13 @@ class TrafficDataset(FairseqDataset):
         else:
             self.mainlines_to_include_in_output = np.array(mainlines_to_include_in_output)
 
+        all_active_vars = np.zeros(total_input_variables)
+        all_active_vars[::self.variables_per_segment] = self.mainlines_to_include_in_input
+        all_active_vars[1::self.variables_per_segment] = self.mainlines_to_include_in_input
+        all_active_vars[2::self.variables_per_segment] = np.array(active_onramps)
+        all_active_vars[3::self.variables_per_segment] = np.array(active_offramps)
+        all_active_vars = all_active_vars.astype(bool).tolist()
+        
         # broken_detector_id = self.variables_per_segment*10
         # simulate_detector_breakdown = True
         # if simulate_detector_breakdown == True and split!='train':
@@ -132,7 +141,18 @@ class TrafficDataset(FairseqDataset):
         self.all_data_5min = self.all_data_5min.fillna(0.0)
         self.all_data      = self.all_data_5min#self.all_data.iloc[10:,:]
 
-        # self.shuffle = shuffle
+
+        #add context
+        all_dates = pd.to_datetime(self.all_data.index)
+        all_context = pd.DataFrame(all_dates.dayofweek.values/6.0,columns=['dow'])
+        all_context['tod'] = (all_dates.hour * 60. + all_dates.minute) / 1440.
+        all_context.index = data.index
+        input_cols_to_include = np.arange(len(all_active_vars))[all_active_vars]
+        self.all_input_data = self.all_input_data/self.max_vals
+        self.all_input_data = self.all_input_data.iloc[:,input_cols_to_include]
+        self.all_input_data = pd.concat([self.all_input_data,all_context],axis=1)
+        
+        self.shuffle = shuffle
     
     def get_max_vals(self):
         return torch.Tensor(self.max_vals)
@@ -150,18 +170,22 @@ class TrafficDataset(FairseqDataset):
 
         NEG = -1e-6
 
-        # one_input = self.all_data.iloc[idx:idx+input_len, :].values
-        one_input = self.all_data_5min.iloc[idx:idx+input_len*1:1, :].values
 
-        one_input[:,::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,::self.variables_per_segment]
-        one_input[:,1::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,1::self.variables_per_segment]
-        #one_input[one_input==0] = NEG
-        one_input[:,2::self.variables_per_segment] = one_input[:,2::self.variables_per_segment] #+ 1e-3
-        one_input[:,3::self.variables_per_segment] = one_input[:,3::self.variables_per_segment] #+ 1e-3
-        
         if self.scale_input:
-          one_input = one_input/self.max_vals
-        #   one_input = one_input - 0.5
+            one_input = self.all_input_data.iloc[idx:idx+input_len, :].values
+
+        # # one_input = self.all_data.iloc[idx:idx+input_len, :].values
+        # one_input = self.all_data_5min.iloc[idx:idx+input_len*1:1, :].values
+
+        # one_input[:,::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,::self.variables_per_segment]
+        # one_input[:,1::self.variables_per_segment] = self.mainlines_to_include_in_input * one_input[:,1::self.variables_per_segment]
+        # #one_input[one_input==0] = NEG
+        # one_input[:,2::self.variables_per_segment] = one_input[:,2::self.variables_per_segment] #+ 1e-3
+        # one_input[:,3::self.variables_per_segment] = one_input[:,3::self.variables_per_segment] #+ 1e-3
+        
+        # if self.scale_input:
+        #   one_input = one_input/self.max_vals
+        # #   one_input = one_input - 0.5
         
         one_label = self.all_data.iloc[idx+input_len:idx+input_len+label_len, :].values
 
@@ -174,8 +198,6 @@ class TrafficDataset(FairseqDataset):
         if self.scale_output:
           one_label = one_label/self.max_vals
         
-        
-
         one_label = one_label.transpose(0,1)
 
         return {
@@ -207,14 +229,18 @@ class TrafficDataset(FairseqDataset):
 
         ntokens = sum(len(s['target']) for s in samples)
 
-        # previous_output = [s['source'][-1:]+s['target'][:-1] for s in samples] # [samples[0]['target'][0]]
         if self.scale_input and self.scale_output:
-            last_inputs = [s['source'][-1:]*0-1e-6 for s in samples]
+            last_inputs = [s['target'][:1]*0-1e-6 for s in samples]
             previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
-            # previous_output = [np.concatenate([s['source'][-1:],s['target'][:-1]]) for s in samples]
-        elif self.scale_input and not self.scale_output:
-            last_inputs = [s['source'][-1:]*self.max_vals for s in samples]
-            previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
+            
+        # # previous_output = [s['source'][-1:]+s['target'][:-1] for s in samples] # [samples[0]['target'][0]]
+        # if self.scale_input and self.scale_output:
+        #     last_inputs = [s['source'][-1:]*0-1e-6 for s in samples]
+        #     previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
+        #     # previous_output = [np.concatenate([s['source'][-1:],s['target'][:-1]]) for s in samples]
+        # elif self.scale_input and not self.scale_output:
+        #     last_inputs = [s['source'][-1:]*self.max_vals for s in samples]
+        #     previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
 
         #previous_output = [np.insert(previous_output[x],0,samples[x]['source'][-1],axis=0) for x in range(len(samples))]
 

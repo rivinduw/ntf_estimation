@@ -445,7 +445,7 @@ class Trainer(object):
             grad_norm = self.optimizer.clip_grad_norm(self.args.clip_norm)
             self._prev_grad_norm = grad_norm
 
-            for n, p in model.named_parameters():
+            for n, p in self.model.named_parameters():
                 if(p.requires_grad) and ("bias" not in n):
                     wandb.log({n: wandb.Histogram(p.grad)})
 
