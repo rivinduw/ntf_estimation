@@ -60,7 +60,7 @@ class TrafficPredictionTask(FairseqTask):
         self.active_onramps = self.active_onramps[:self.num_segments]
         self.active_offramps = self.active_offramps[:self.num_segments]
 
-        self.mainlines_to_include_in_input =  [1.,0.,0.,1.]
+        self.mainlines_to_include_in_input = [1., 0., 0., 1.]
 
         self.encoder_input_variables = np.array(self.mainlines_to_include_in_input).sum()*2 + np.array(self.active_onramps).sum() + np.array(self.active_offramps).sum() + 2
         self.encoder_input_variables = int(self.encoder_input_variables)
@@ -69,7 +69,7 @@ class TrafficPredictionTask(FairseqTask):
         self.input_seq_len = 120#288
         print("self.input_seq_len:",self.input_seq_len," self.output_seq_len:",self.output_seq_len)
         
-        self.variables_per_segment = 4
+        self.variables_per_segment = 5#4
         self.total_input_variables = self.num_segments*self.variables_per_segment
 
         # self.max_vals = [10000,100,5000,5000]
@@ -79,9 +79,11 @@ class TrafficPredictionTask(FairseqTask):
         """Load a given dataset split (e.g., train, valid, test)."""
 
         data_file = self.args.data#os.path.join(self.args.data, '{}.csv'.format('valid_data_109'))#split))
-        max_vals = [10000,100,5000,5000]
+        max_vals = [10000, 100, 5000, 5000]
         self.datasets[split] = TrafficDataset(data_file, output_seq_len=self.output_seq_len, split=split, \
-                        input_seq_len=self.input_seq_len, num_segments=self.num_segments,max_vals=max_vals,\
+                        input_seq_len=self.input_seq_len, \
+                        num_segments=self.num_segments, variables_per_segment=self.variables_per_segment, \
+                        max_vals=max_vals,\
                         train_from = "2019-02-01 00:00:00",\
                         train_to = "2019-10-01 00:00:00",\
                         valid_from = "2019-01-01 00:00:00",\

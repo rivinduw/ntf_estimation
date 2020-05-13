@@ -54,7 +54,7 @@ class NTFModel(FairseqEncoderDecoderModel):
             bidirectional=is_encoder_bidirectional, dropout_in=0.5, dropout_out=0.5, device=device)
 
         decoder = TrafficNTFDecoder(input_size=total_input_variables, hidden_size=decoder_hidden_size, max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
-            seq_len = output_seq_len, encoder_output_units=encoder_hidden_size, dropout_in=0.5, dropout_out=0.5,\
+            seq_len=output_seq_len, encoder_output_units=encoder_hidden_size, dropout_in=0.5, dropout_out=0.5,\
             active_onramps=active_onramps, active_offramps=active_offramps, device=device)
         return cls(encoder, decoder)
 
@@ -288,7 +288,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # B x T x C -> T x B x C 10,32,16
         x = x.transpose(0, 1)
 
-        if self.encoder_hidden_proj!=None:
+        if self.encoder_hidden_proj != None:
             prev_hiddens = self.encoder_hidden_proj(encoder_hiddens[0,:,:])
             prev_cells = self.encoder_cell_proj(encoder_cells[0,:,:])
         else:
@@ -296,8 +296,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             prev_cells = encoder_cells[0,:,:]
 
         # input_feed = torch.sigmoid(self.encoder_hidden_to_input_feed_proj(prev_hiddens))
-        if self.encoder_hidden_to_input_feed_proj!=None:
-            if self.input_feed_activation!=None:
+        if self.encoder_hidden_to_input_feed_proj != None:
+            if self.input_feed_activation != None:
                 input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:]))
             else:
                 if self.extra_hidden_layer:
@@ -307,7 +307,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 input_feed = self.encoder_hidden_to_input_feed_proj(extra_hidden)
                 # input_feed = self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:])
         else:
-            if self.input_feed_activation!=None:
+            if self.input_feed_activation != None:
                 input_feed = self.input_feed_activation(encoder_hiddens[0,:,:])
             else:
                 input_feed = encoder_hiddens[0,:,:]
@@ -346,19 +346,19 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             common_params = self.common_param_activation(common_params)
             common_params = (self.common_param_multipliers*common_params)+self.common_param_additions
             v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(common_params, dim=1)
-            vf = vf.detach() #* 0.0 +120.0
-            a_var = a_var.detach() #* 0.0 + 1.4
-            rhocr = rhocr.detach() #* 0.0 + 30.
-            g_var = g_var.detach() #*0.0 + 1.0
+            # vf = vf.detach() #* 0.0 +120.0
+            # a_var = a_var.detach() #* 0.0 + 1.4
+            # rhocr = rhocr.detach() #* 0.0 + 30.
+            # g_var = g_var.detach() #*0.0 + 1.0
 
             
-            if self.segment_param_activation!=None:
+            if self.segment_param_activation != None:
                 segment_params = self.segment_param_activation(segment_params)
             else:
                 segment_params = segment_params
             segment_params = segment_params.view((-1, self.num_segment_specific_params, self.num_segments))
             segment_params = segment_params*self.segment_param_multipliers + self.segment_param_additions
-            future_r, future_s = torch.unbind(segment_params,dim=1)
+            future_r, future_s = torch.unbind(segment_params, dim=1)
             
             real_size_input = blended_input*self.max_vals
             model_steps = []
@@ -374,9 +374,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 #     print(real_size_input.view(-1,4,4)[0,:,:])
                 model_steps.append(one_ntf_output)
 
-            # mean_ntf_output = torch.stack(model_steps,dim=0).mean(dim=0)
+            mean_ntf_output = torch.stack(model_steps, dim=0).mean(dim=0)
             
-            mean_ntf_output = real_size_input
+            # mean_ntf_output = real_size_input
             scaled_output = mean_ntf_output/(self.max_vals+1e-6)
 
             common_params_list.append(common_params)
@@ -391,7 +391,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.all_common_params = torch.stack(common_params_list, dim=1)
         self.all_segment_params = torch.stack(segment_params_list, dim=1)
 
-        self.mean_flow_res = torch.stack(flow_res_list,dim=2).sum(axis=1).abs().mean(axis=1)
+        self.mean_flow_res = torch.stack(flow_res_list, dim=2).sum(axis=1).abs().mean(axis=1)
 
         return returned_out, self.all_common_params, self.all_segment_params
     

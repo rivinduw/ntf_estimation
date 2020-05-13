@@ -22,17 +22,17 @@ from itertools import cycle, islice
 
 class TrafficDataset(FairseqDataset):
     def __init__(self, csv_file, output_seq_len=360,
-                scale_input = True, scale_output = True, input_seq_len=1440,
-                num_segments = 12, variables_per_segment = 4,
-                max_vals = [10000,100,5000,5000],
-                train_from = "2018-08-01 00:00:00",
-                train_to = "2018-09-01 00:00:00",
-                valid_from = "2018-07-01 00:00:00",
-                valid_to = "2018-08-01 00:00:00",
-                test_from = "2018-09-01 00:00:00",
-                test_to = "2018-10-01 00:00:00",
-                mainlines_to_include_in_input = None,
-                mainlines_to_include_in_output = None,
+                scale_input=True, scale_output=True, input_seq_len=1440,
+                num_segments=12, variables_per_segment=4,
+                max_vals=[10000,100,5000,5000],
+                train_from="2018-08-01 00:00:00",
+                train_to="2018-09-01 00:00:00",
+                valid_from="2018-07-01 00:00:00",
+                valid_to="2018-08-01 00:00:00",
+                test_from="2018-09-01 00:00:00",
+                test_to="2018-10-01 00:00:00",
+                mainlines_to_include_in_input=None,
+                mainlines_to_include_in_output=None,
                 active_onramps=None,
                 active_offramps=None,
                 shuffle=True, input_feeding=True, 
@@ -81,7 +81,7 @@ class TrafficDataset(FairseqDataset):
             self.shuffle = False
 
 
-        if mainlines_to_include_in_input==None:
+        if mainlines_to_include_in_input == None:
             mainlines_to_include_in_input = [1.0]*self.num_segments
             mainlines_to_include_in_input[1:-1] = [0.0]*len(mainlines_to_include_in_input[1:-1])
             # mainlines_to_include_in_input[15] = 0.0
@@ -93,7 +93,7 @@ class TrafficDataset(FairseqDataset):
         else:
             self.mainlines_to_include_in_input = np.array(mainlines_to_include_in_input)
         
-        if mainlines_to_include_in_output==None:
+        if mainlines_to_include_in_output == None:
             mainlines_to_include_in_output = [1.0]*self.num_segments
             mainlines_to_include_in_output[1:-1] = [0.0]*len(mainlines_to_include_in_output[1:-1])
             mainlines_to_include_in_output[0] = 1.0

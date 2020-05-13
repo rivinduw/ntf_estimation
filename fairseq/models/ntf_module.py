@@ -50,13 +50,13 @@ class NTF_Module(nn.Module):
         
         self.num_segments = num_segments
 
-        if active_onramps!=None:
+        if active_onramps != None:
             self.active_onramps = torch.Tensor(active_onramps)
         else:
             # self.active_onramps = torch.ones(self.num_segments)
             self.active_onramps = torch.zeros(self.num_segments)
         
-        if active_offramps!=None:
+        if active_offramps != None:
             self.active_offramps = torch.Tensor(active_offramps)
         else:
             # self.active_offramps = torch.ones(self.num_segments)
@@ -65,15 +65,15 @@ class NTF_Module(nn.Module):
         self.vmin = 10
         self.vmax = 120
 
-        self.inputs_per_segment = 4
+        self.inputs_per_segment = 5#4
 
         self.TINY = 1e-6
 
         self.q_index = 0
         self.rho_index = 1
-        self.v_index = -1
-        self.r_index = 2
-        self.s_index = 3
+        self.v_index = 2
+        self.r_index = 3
+        self.s_index = 4
 
         self.print_count = 0
         self.print_every = print_every
@@ -168,13 +168,14 @@ class NTF_Module(nn.Module):
             
         x = x.view(-1, self.num_segments, self.inputs_per_segment)
 
-        self.current_densities = x[:, :, self.rho_index] * (self.g_var+1e-6)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
-        self.current_flows = x[:, :, self.q_index] + self.epsq #########
+        self.current_densities = x[:, :, self.rho_index] #* (self.g_var+1e-6)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
+        self.current_flows = x[:, :, self.q_index] #+ self.epsq #########
         self.current_onramp = self.active_onramps.float() * x[:, :, self.r_index]
         self.current_offramp = self.active_offramps.float() * x[:, :, self.s_index]
         
-        self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
-        self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
+        self.current_velocities = x[:, :, self.v_index]
+        # self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
+        # self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
         self.current_densities = torch.clamp(self.current_densities, min=0., max=100.)
         self.current_flows = torch.clamp(self.current_flows, min=0., max=10000.)
         self.current_onramp = torch.clamp(self.current_onramp, min=0., max=5000.)
@@ -226,11 +227,13 @@ class NTF_Module(nn.Module):
 
         future_velocities = torch.clamp(future_velocities, min=10, max=120)
         future_densities = torch.clamp(future_densities, min=0, max=100)
-        future_occupancies = torch.clamp(future_occupancies, min=0, max=100)
+        # future_occupancies = torch.clamp(future_occupancies, min=0, max=100)
         future_flows = torch.clamp(future_flows, min=0, max=10000)
         future_r = torch.clamp(future_r, min=0, max=10000)
         future_s = torch.clamp(future_s, min=0, max=10000)
 
-        one_stack =  torch.stack((future_flows,future_occupancies,future_r,future_s),dim=2)
+        # one_stack =  torch.stack((future_flows,future_occupancies,future_r,future_s),dim=2)
+
+        one_stack =  torch.stack((future_flows,future_densities,future_velocities,future_r,future_s),dim=2)
 
         return one_stack.view(-1,self.num_segments*self.inputs_per_segment), self.flow_residual
