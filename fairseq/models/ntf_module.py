@@ -169,7 +169,7 @@ class NTF_Module(nn.Module):
         x = x.view(-1, self.num_segments, self.inputs_per_segment)
 
         self.current_densities = x[:, :, self.rho_index] #/ self.lambda_var#* (self.g_var+1e-6)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
-        self.current_flows = x[:, :, self.q_index] #+ self.epsq #########
+        self.current_flows = x[:, :, self.q_index] #/ self.lambda_var#+ self.epsq #########
         # density = veh/km
         # flow = veh/h
         # vel = km/h
@@ -179,7 +179,7 @@ class NTF_Module(nn.Module):
         self.current_velocities = x[:, :, self.v_index]
         # self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
         self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
-        self.current_densities = torch.clamp(self.current_densities, min=0., max=200.)
+        self.current_densities = torch.clamp(self.current_densities, min=0., max=1000.)
         self.current_flows = torch.clamp(self.current_flows, min=0., max=10000.)
         self.current_onramp = torch.clamp(self.current_onramp, min=0., max=5000.)
         self.current_offramp = torch.clamp(self.current_offramp, min=0., max=5000.)
@@ -230,7 +230,7 @@ class NTF_Module(nn.Module):
 
         future_densities = future_densities #* self.lambda_var
         future_velocities = torch.clamp(future_velocities, min=10, max=120)
-        future_densities = torch.clamp(future_densities, min=0, max=200)
+        future_densities = torch.clamp(future_densities, min=0, max=1000)
         # future_occupancies = torch.clamp(future_occupancies, min=0, max=100)
         future_flows = torch.clamp(future_flows, min=0, max=10000)
         future_r = torch.clamp(future_r, min=0, max=10000)
