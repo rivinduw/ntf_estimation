@@ -92,6 +92,17 @@ class NTF_Module(nn.Module):
                 wandb.log({"q0": wandb.Histogram(self.q0.cpu().detach().numpy())})
                 wandb.log({"rhoNp1": wandb.Histogram(self.rhoNp1.cpu().detach().numpy())})
                 wandb.log({"current_velocities": wandb.Histogram(self.current_velocities.cpu().detach().numpy())})
+                wandb.log(
+                    {'mean_current_velocities': self.current_velocities.cpu().detach().numpy().mean(),
+                    'mean_current_densities': self.current_densities.cpu().detach().numpy().mean(),
+                    'mean_current_flows': self.current_flows.cpu().detach().numpy().mean(),
+                    'mean_current_onramp': self.current_onramp.cpu().detach().numpy().mean(),
+                    'mean_current_offramp': self.current_offramp.cpu().detach().numpy().mean(),
+                    'mean_v0': self.v0.cpu().detach().numpy().mean(),
+                    'mean_q0': self.q0.cpu().detach().numpy().mean(),
+                    'mean_rhoNp1': self.rhoNp1.cpu().detach().numpy().mean()
+                    }
+                )
                 wandb.log({"current_densities": wandb.Histogram(self.current_densities.cpu().detach().numpy())})
                 wandb.log({"current_flows": wandb.Histogram(self.current_flows.cpu().detach().numpy())})
                 wandb.log({"current_onramp": wandb.Histogram(self.current_onramp.cpu().detach().numpy())})
@@ -210,7 +221,12 @@ class NTF_Module(nn.Module):
                 wandb.log({"future_flows": wandb.Histogram(future_flows.cpu().detach().numpy())})
                 wandb.log({"future_r": wandb.Histogram(future_r.cpu().detach().numpy())})
                 wandb.log({"future_s": wandb.Histogram(future_s.cpu().detach().numpy())})
-                
+                wandb.log(
+                    {'mean_future_velocities': future_velocities.cpu().detach().numpy().mean(),
+                    'mean_future_densities': future_densities.cpu().detach().numpy().mean(),
+                    'mean_future_flows': future_flows.cpu().detach().numpy().mean()
+                    }
+                )
                 wandb.log({"future_r_4": wandb.Histogram(future_r[:, 3].cpu().detach().numpy())})
                 wandb.log({"future_s_2": wandb.Histogram(future_s[:, 1].cpu().detach().numpy())})
                 wandb.log({"future_flows_1": wandb.Histogram(future_flows[:, 0].cpu().detach().numpy())})

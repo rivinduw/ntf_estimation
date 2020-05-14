@@ -288,6 +288,15 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # B x T x C -> T x B x C 10,32,16
         x = x.transpose(0, 1)
 
+        wandb.log(
+                    {'mean_input_velocities': 120*x[:,:,2::self.num_var_per_segment].cpu().detach().numpy().mean(),
+                    'mean_input_densities': 100*x[:,:,1::self.num_var_per_segment].cpu().detach().numpy().mean(),
+                    'mean_input_flows': 10000*x[:,:,::self.num_var_per_segment].cpu().detach().numpy().mean(),
+                    'mean_onramp_flows': 3000*x[:,:,::self.num_var_per_segment].cpu().detach().numpy().mean(),
+                    'mean_offramp_flows': 3000*x[:,:,::self.num_var_per_segment].cpu().detach().numpy().mean()
+                    }
+                )
+
         if self.encoder_hidden_proj != None:
             prev_hiddens = self.encoder_hidden_proj(encoder_hiddens[0,:,:])
             prev_cells = self.encoder_cell_proj(encoder_cells[0,:,:])
