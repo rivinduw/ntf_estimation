@@ -14,7 +14,7 @@ except Exception as e:
 class NTF_Module(nn.Module):
     def __init__(self, num_segments=18,\
                  t_var=None, tau=None, nu=None, delta=None, kappa=None,\
-                 cap_delta=None, lambda_var=None,\
+                 cap_delta=None, lambda_var=None, num_var_per_segment=5,\
                  active_onramps=None, active_offramps=None, \
                  v0=None, q0=None, rhoNp1=None, vf=None, a_var=None, rhocr=None,\
                  g_var=None, future_r=None, future_s=None,\
@@ -65,7 +65,7 @@ class NTF_Module(nn.Module):
         self.vmin = 10
         self.vmax = 120
 
-        self.inputs_per_segment = 5#4
+        self.inputs_per_segment = num_var_per_segment#4
 
         self.TINY = 1e-6
 
@@ -175,7 +175,7 @@ class NTF_Module(nn.Module):
         
         self.current_velocities = x[:, :, self.v_index]
         # self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
-        # self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
+        self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
         self.current_densities = torch.clamp(self.current_densities, min=0., max=200.)
         self.current_flows = torch.clamp(self.current_flows, min=0., max=10000.)
         self.current_onramp = torch.clamp(self.current_onramp, min=0., max=5000.)
@@ -189,7 +189,7 @@ class NTF_Module(nn.Module):
         future_velocities = self.future_v()
         future_velocities = torch.clamp(future_velocities, min=self.vmin, max=self.vmax)
         future_densities = self.future_rho()
-        future_occupancies = (future_densities) / (self.g_var+1e-6)#* (100*self.g_var/1000) #* self.lambda_var
+        #future_occupancies = (future_densities) / (self.g_var+1e-6)#* (100*self.g_var/1000) #* self.lambda_var
         # future_occupancies = (future_densities / self.lambda_var) / (self.g_var+1e-6)
 
         future_flows = future_densities * future_velocities * self.lambda_var - self.epsq
@@ -204,7 +204,7 @@ class NTF_Module(nn.Module):
             if self.print_count%self.print_every==0:
                 wandb.log({"future_velocities": wandb.Histogram(future_velocities.cpu().detach().numpy())})
                 wandb.log({"future_densities": wandb.Histogram(future_densities.cpu().detach().numpy())})
-                wandb.log({"future_occupancies": wandb.Histogram(future_occupancies.cpu().detach().numpy())})
+                #wandb.log({"future_occupancies": wandb.Histogram(future_occupancies.cpu().detach().numpy())})
                 wandb.log({"future_flows": wandb.Histogram(future_flows.cpu().detach().numpy())})
                 wandb.log({"future_r": wandb.Histogram(future_r.cpu().detach().numpy())})
                 wandb.log({"future_s": wandb.Histogram(future_s.cpu().detach().numpy())})

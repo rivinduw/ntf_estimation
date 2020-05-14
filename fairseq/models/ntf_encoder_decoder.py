@@ -54,7 +54,7 @@ class NTFModel(FairseqEncoderDecoderModel):
             bidirectional=is_encoder_bidirectional, dropout_in=0.5, dropout_out=0.5, device=device)
 
         decoder = TrafficNTFDecoder(input_size=total_input_variables, hidden_size=decoder_hidden_size, max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
-            seq_len=output_seq_len, encoder_output_units=encoder_hidden_size, dropout_in=0.5, dropout_out=0.5,\
+            seq_len=output_seq_len, encoder_output_units=encoder_hidden_size, dropout_in=0.5, dropout_out=0.5, num_var_per_segment=num_var_per_segment,\
             active_onramps=active_onramps, active_offramps=active_offramps, device=device)
         return cls(encoder, decoder)
 
@@ -164,7 +164,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         num_var_per_segment=4, seq_len=360,
         active_onramps=None, active_offramps=None,
         num_layers=1, dropout_in=0.1, dropout_out=0.1,
-        encoder_output_units=None, device=None,
+        encoder_output_units=None, device=None, 
         share_input_output_embed=False, adaptive_softmax_cutoff=None, max_vals = None
     ):
         super().__init__(dictionary=None)
@@ -266,7 +266,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # self.ntf_projection = Custom_Linear(self.hidden_size, self.total_ntf_parameters, min_val=-5.0, max_val=5.0, bias=True)
 
         self.ntf_module = NTF_Module(num_segments=self.num_segments, cap_delta=self.segment_lengths, \
-                lambda_var=self.num_lanes, t_var=self.t_var, \
+                lambda_var=self.num_lanes, t_var=self.t_var, num_var_per_segment=self.num_var_per_segment, \
                 active_onramps=self.active_onramps, active_offramps=self.active_offramps, \
                 epsq=self.epsq,epsv=self.epsv, tau=self.tau, nu=self.nu, delta=self.delta, kappa=self.kappa,\
                 device=self.device)
@@ -376,7 +376,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
             # mean_ntf_output = torch.stack(model_steps, dim=0).mean(dim=0)
             mean_ntf_output = real_size_input
-            
+
             scaled_output = mean_ntf_output/(self.max_vals+1e-6)
 
             common_params_list.append(common_params)
