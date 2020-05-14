@@ -85,11 +85,11 @@ class TrafficPredictionTask(FairseqTask):
                         num_segments=self.num_segments, variables_per_segment=self.variables_per_segment, \
                         max_vals=max_vals,\
                         train_from = "2019-02-01 00:00:00",\
-                        train_to = "2019-10-01 00:00:00",\
+                        train_to = "2019-05-01 00:00:00",\
                         valid_from = "2019-01-01 00:00:00",\
                         valid_to = "2019-02-01 00:00:00",\
-                        test_from = "2019-10-01 00:00:00",\
-                        test_to = "2019-11-01 00:00:00",\
+                        test_from = "2019-05-01 00:00:00",\
+                        test_to = "2019-06-01 00:00:00",\
                         mainlines_to_include_in_input = None,\
                         mainlines_to_include_in_output = None,\
                         active_onramps = self.active_onramps,\
