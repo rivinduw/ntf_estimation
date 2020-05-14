@@ -110,8 +110,9 @@ class TrafficDataset(FairseqDataset):
         all_active_vars = np.zeros(total_input_variables)
         all_active_vars[::self.variables_per_segment] = self.mainlines_to_include_in_input
         all_active_vars[1::self.variables_per_segment] = self.mainlines_to_include_in_input
-        all_active_vars[2::self.variables_per_segment] = np.array(active_onramps)
-        all_active_vars[3::self.variables_per_segment] = np.array(active_offramps)
+        all_active_vars[2::self.variables_per_segment] = self.mainlines_to_include_in_input
+        all_active_vars[3::self.variables_per_segment] = np.array(active_onramps)
+        all_active_vars[4::self.variables_per_segment] = np.array(active_offramps)
         all_active_vars = all_active_vars.astype(bool).tolist()
         
         # broken_detector_id = self.variables_per_segment*10
@@ -142,16 +143,16 @@ class TrafficDataset(FairseqDataset):
         # self.all_data      = self.all_data_5min#self.all_data.iloc[10:,:]
 
 
-        #add context
+        # add context
         # all_dates = pd.to_datetime(self.all_data.index)
         # all_context = pd.DataFrame(all_dates.dayofweek.values/6.0,columns=['dow'])
         # all_context['tod'] = (all_dates.hour * 60. + all_dates.minute) / 1440.
         # all_context.index = self.all_data.index
-        # input_cols_to_include = np.arange(len(all_active_vars))[all_active_vars]
-        # self.all_input_data = self.all_data/self.max_vals
-        # self.all_input_data = self.all_input_data.iloc[:,input_cols_to_include]
+        input_cols_to_include = np.arange(len(all_active_vars))[all_active_vars]
+        self.all_input_data = self.all_data/self.max_vals
+        self.all_input_data = self.all_input_data.iloc[:,input_cols_to_include]
         # self.all_input_data = pd.concat([self.all_input_data,all_context],axis=1)
-        self.all_input_data = self.all_data
+        # self.all_input_data = self.all_data
         
         self.shuffle = shuffle
     

@@ -62,7 +62,7 @@ class TrafficPredictionTask(FairseqTask):
 
         self.mainlines_to_include_in_input = [1., 0., 0., 1.]
 
-        self.encoder_input_variables = np.array(self.mainlines_to_include_in_input).sum()*2 + np.array(self.active_onramps).sum() + np.array(self.active_offramps).sum() + 2
+        self.encoder_input_variables = np.array(self.mainlines_to_include_in_input).sum()*3 + np.array(self.active_onramps).sum() + np.array(self.active_offramps).sum() #+ 2
         self.encoder_input_variables = int(self.encoder_input_variables)
         
         self.output_seq_len = 30
