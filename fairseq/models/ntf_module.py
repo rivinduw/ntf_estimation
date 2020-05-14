@@ -136,8 +136,7 @@ class NTF_Module(nn.Module):
         self.flow_residual = (self.prev_flows - self.current_flows + self.current_onramp - self.current_offramp)
         #flow_residual = torch.clamp(flow_residual, min=0, max=10000)
         return self.current_densities + \
-            torch.mul(torch.div(self.t_var,torch.mul(self.cap_delta,self.lambda_var)),\
-                      (self.flow_residual))
+            torch.mul(torch.div(self.t_var,torch.mul(self.cap_delta,self.lambda_var)),self.flow_residual)
 
     def forward(self,x=None, v0=None, q0=None, rhoNp1=None, \
                 vf=None, a_var=None, rhocr=None, g_var=None, future_r=None, future_s=None,\
@@ -195,7 +194,7 @@ class NTF_Module(nn.Module):
         #future_occupancies = (future_densities) / (self.g_var+1e-6)#* (100*self.g_var/1000) #* self.lambda_var
         # future_occupancies = (future_densities / self.lambda_var) / (self.g_var+1e-6)
 
-        future_flows = future_densities * future_velocities * self.lambda_var - self.epsq
+        future_flows = future_densities * future_velocities * self.lambda_var #- self.epsq
 
         #old future_s = self.active_offramps * (self.offramp_prop*self.current_flows) #active_offramps.float() * 
         # future_s = self.active_offramps * (self.offramp_prop*self.prev_flows) #active_offramps.float() * 
