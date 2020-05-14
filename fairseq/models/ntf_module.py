@@ -195,7 +195,7 @@ class NTF_Module(nn.Module):
         #future_occupancies = (future_densities) / (self.g_var+1e-6)#* (100*self.g_var/1000) #* self.lambda_var
         # future_occupancies = (future_densities / self.lambda_var) / (self.g_var+1e-6)
 
-        future_flows = future_densities * future_velocities * self.lambda_var - self.epsq
+        future_flows = future_densities * future_velocities #* self.lambda_var - self.epsq
 
         #old future_s = self.active_offramps * (self.offramp_prop*self.current_flows) #active_offramps.float() * 
         # future_s = self.active_offramps * (self.offramp_prop*self.prev_flows) #active_offramps.float() * 
