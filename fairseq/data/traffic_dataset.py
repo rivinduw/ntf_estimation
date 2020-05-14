@@ -23,8 +23,8 @@ from itertools import cycle, islice
 class TrafficDataset(FairseqDataset):
     def __init__(self, csv_file, output_seq_len=360,
                 scale_input=True, scale_output=True, input_seq_len=1440,
-                num_segments=12, variables_per_segment=4,
-                max_vals=[10000,100,5000,5000],
+                num_segments=12, variables_per_segment=0,
+                max_vals=None,
                 train_from="2018-08-01 00:00:00",
                 train_to="2018-09-01 00:00:00",
                 valid_from="2018-07-01 00:00:00",
@@ -193,10 +193,10 @@ class TrafficDataset(FairseqDataset):
 
         one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
         one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
-        one_label[:,2::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
+        one_label[:,2::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,2::self.variables_per_segment]
         one_label[one_label==0] = NEG
-        one_label[:,3::self.variables_per_segment] = one_label[:,2::self.variables_per_segment] #+ 1e-3
-        one_label[:,4::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] #+ 1e-3
+        one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] #+ 1e-3
+        one_label[:,4::self.variables_per_segment] = one_label[:,4::self.variables_per_segment] #+ 1e-3
         
         if self.scale_output:
           one_label = one_label/self.max_vals
