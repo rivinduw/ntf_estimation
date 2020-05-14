@@ -168,7 +168,7 @@ class NTF_Module(nn.Module):
             
         x = x.view(-1, self.num_segments, self.inputs_per_segment)
 
-        self.current_densities = x[:, :, self.rho_index] / self.lambda_var#* (self.g_var+1e-6)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
+        self.current_densities = x[:, :, self.rho_index] #/ self.lambda_var#* (self.g_var+1e-6)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
         self.current_flows = x[:, :, self.q_index] #+ self.epsq #########
         self.current_onramp = self.active_onramps.float() * x[:, :, self.r_index]
         self.current_offramp = self.active_offramps.float() * x[:, :, self.s_index]
@@ -225,7 +225,7 @@ class NTF_Module(nn.Module):
         except Exception as e:
             print(e)
 
-        future_densities = future_densities * self.lambda_var
+        future_densities = future_densities #* self.lambda_var
         future_velocities = torch.clamp(future_velocities, min=10, max=120)
         future_densities = torch.clamp(future_densities, min=0, max=200)
         # future_occupancies = torch.clamp(future_occupancies, min=0, max=100)
