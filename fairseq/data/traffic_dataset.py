@@ -153,6 +153,15 @@ class TrafficDataset(FairseqDataset):
         self.all_input_data = self.all_input_data.iloc[:,input_cols_to_include]
         # self.all_input_data = pd.concat([self.all_input_data,all_context],axis=1)
         # self.all_input_data = self.all_data
+
+
+        ##print 
+        mean_vol = self.all_data[:,::self.variables_per_segment].quantile(0.7)
+        mean_density = self.all_data[:,::self.variables_per_segment].quantile(0.7)
+        mean_speed = self.all_data[:,::self.variables_per_segment].quantile(0.7)
+        mean_onramp = self.all_data[:,::self.variables_per_segment].quantile(0.7)
+        mean_offramp = self.all_data[:,::self.variables_per_segment].quantile(0.7)
+        print("means:",mean_vol,mean_density,mean_speed,mean_onramp,mean_offramp)
         
         self.shuffle = shuffle
     
@@ -195,8 +204,8 @@ class TrafficDataset(FairseqDataset):
         one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
         one_label[:,2::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,2::self.variables_per_segment]
         one_label[one_label==0] = NEG
-        one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] #+ 1e-3
-        one_label[:,4::self.variables_per_segment] = one_label[:,4::self.variables_per_segment] #+ 1e-3
+        # one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] #+ 1e-3
+        # one_label[:,4::self.variables_per_segment] = one_label[:,4::self.variables_per_segment] #+ 1e-3
         
         if self.scale_output:
           one_label = one_label/self.max_vals
