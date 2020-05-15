@@ -255,8 +255,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.segment_param_additions = torch.Tensor([[self.flow_min],[self.flow_min]]).to(self.device)
 
         self.common_param_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
-        self.segment_param_activation = nn.Sigmoid()#nn.ReLU()#nn.Hardtanh(min_val=0.0, max_val=1.0)
-        self.input_feed_activation = nn.Sigmoid()#nn.ReLU()#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
+        self.segment_param_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Hardtanh(min_val=0.0, max_val=1.0)
+        self.input_feed_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
 
         self.total_segment_specific_params = self.num_segment_specific_params*self.num_segments
 
@@ -290,6 +290,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         wandb.log(
                     {'mean_input_velocities': 120*x[:,:,2::self.num_var_per_segment].cpu().detach().numpy().mean(),
+                    'mean_input_velocities_1': 120*x[:,:,2].cpu().detach().numpy().mean(),
+                    'mean_input_velocities_4': 120*x[:,:,-3].cpu().detach().numpy().mean(),
                     'mean_input_densities': 100*x[:,:,1::self.num_var_per_segment].cpu().detach().numpy().mean(),
                     'mean_input_flows': 10000*x[:,:,::self.num_var_per_segment].cpu().detach().numpy().mean(),
                     'mean_onramp_flows': 3000*x[:,:,::self.num_var_per_segment].cpu().detach().numpy().mean(),
