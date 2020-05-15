@@ -156,11 +156,11 @@ class TrafficDataset(FairseqDataset):
 
 
         ##print 
-        mean_vol = self.all_data[:,::self.variables_per_segment].mean()
-        mean_density = self.all_data[:,::self.variables_per_segment].mean()
-        mean_speed = self.all_data[:,::self.variables_per_segment].mean()
-        mean_onramp = self.all_data[:,::self.variables_per_segment].mean()
-        mean_offramp = self.all_data[:,::self.variables_per_segment].mean()
+        mean_vol = self.all_data.iloc[:,::self.variables_per_segment].mean()
+        mean_density = self.all_data.iloc[:,1::self.variables_per_segment].mean()
+        mean_speed = self.all_data.iloc[:,2::self.variables_per_segment].mean()
+        mean_onramp = self.all_data.iloc[:,3::self.variables_per_segment].mean()
+        mean_offramp = self.all_data.iloc[:,4::self.variables_per_segment].mean()
         print("means:",mean_vol,mean_density,mean_speed,mean_onramp,mean_offramp)
         
         self.shuffle = shuffle
