@@ -99,8 +99,12 @@ class TrafficPredictionTask(FairseqTask):
                         input_feeding=True)
         #if split=='train':
         self.max_vals = self.datasets[split].get_max_vals()
+        if split=='train':
+            self.all_means, self.all_stds = self.datasets['train'].get_means_stds()
 
         print('| {} {} {} examples'.format(self.args.data, split, len(self.datasets[split])))
+    def get_means_stds(self):
+        return (self.all_means, self.all_stds)
     
     def get_active_onramps(self):
         print("onramps",self.active_onramps)

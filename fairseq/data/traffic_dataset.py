@@ -142,6 +142,38 @@ class TrafficDataset(FairseqDataset):
         # self.all_data_5min = self.all_data_5min.fillna(0.0)
         # self.all_data      = self.all_data_5min#self.all_data.iloc[10:,:]
 
+        ##print 
+        all_flows = self.all_data.iloc[:,::self.variables_per_segment]
+        all_flows = all_flows[all_flows>0]
+        self.mean_flow = all_flows.mean()
+        self.std_flow = all_flows.std()
+        
+        all_densities = self.all_data.iloc[:,1::self.variables_per_segment]
+        all_densities = all_densities[all_densities>0]
+        self.mean_density = all_densities.mean()
+        self.std_density = all_densities.std()
+
+        all_speeds = self.all_data.iloc[:,2::self.variables_per_segment]
+        all_speeds = all_speeds[all_speeds>0]
+        self.mean_speed = all_speeds.mean()
+        self.std_speed = all_speeds.std()
+
+        all_onramps = self.all_data.iloc[:,3::self.variables_per_segment]
+        all_onramps = all_onramps[all_onramps>0]
+        self.mean_onramp = all_onramps.mean()
+        self.std_onramp = all_onramps.std()
+
+        all_offramps = self.all_data.iloc[:,4::self.variables_per_segment]
+        all_offramps = all_offramps[all_offramps>0]
+        self.mean_offramp = all_offramps.mean()
+        self.std_offramp = all_offramps.std()
+
+        self.all_means = [self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp]*self.num_segments 
+        self.all_stds = [self.std_flow,self.std_density,self.std_speed,self.std_onramp,self.std_offramp]*self.num_segments 
+
+        print("means:",self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp)
+        print("stds:",self.std_flow,self.std_density,self.std_speed,self.std_onramp,self.std_offramp)
+
 
         # add context
         # all_dates = pd.to_datetime(self.all_data.index)
@@ -149,21 +181,16 @@ class TrafficDataset(FairseqDataset):
         # all_context['tod'] = (all_dates.hour * 60. + all_dates.minute) / 1440.
         # all_context.index = self.all_data.index
         input_cols_to_include = np.arange(len(all_active_vars))[all_active_vars]
-        self.all_input_data = self.all_data/self.max_vals
+        # self.all_input_data = self.all_data/self.max_vals
+        self.all_input_data = (self.all_data-self.all_means)/self.all_stds
         self.all_input_data = self.all_input_data.iloc[:,input_cols_to_include]
         # self.all_input_data = pd.concat([self.all_input_data,all_context],axis=1)
         # self.all_input_data = self.all_data
-
-
-        ##print 
-        mean_vol = self.all_data.iloc[:,::self.variables_per_segment].mean()
-        mean_density = self.all_data.iloc[:,1::self.variables_per_segment].mean()
-        mean_speed = self.all_data.iloc[:,2::self.variables_per_segment].mean()
-        mean_onramp = self.all_data.iloc[:,3::self.variables_per_segment].mean()
-        mean_offramp = self.all_data.iloc[:,4::self.variables_per_segment].mean()
-        print("means:",mean_vol,mean_density,mean_speed,mean_onramp,mean_offramp)
         
         self.shuffle = shuffle
+    
+    def get_means_stds(self):
+        return (torch.Tensor(self.all_means),torch.Tensor(self.all_stds))
     
     def get_max_vals(self):
         return torch.Tensor(self.max_vals)

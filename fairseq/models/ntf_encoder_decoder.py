@@ -38,6 +38,8 @@ class NTFModel(FairseqEncoderDecoderModel):
         num_segments = task.get_num_segments()
         segment_lengths = task.get_segment_lengths()
         num_lanes = task.get_num_lanes()
+
+        all_means, all_stds = task.get_means_stds()
         
         active_onramps = torch.Tensor(task.get_active_onramps()).to(device)
         active_offramps = torch.Tensor(task.get_active_offramps()).to(device)
@@ -53,7 +55,7 @@ class NTFModel(FairseqEncoderDecoderModel):
         encoder = TrafficNTFEncoder(input_size=encoder_input_variables, seq_len=input_seq_len, num_segments=num_segments, hidden_size=encoder_hidden_size, \
             bidirectional=is_encoder_bidirectional, dropout_in=0.5, dropout_out=0.5, device=device)
 
-        decoder = TrafficNTFDecoder(input_size=total_input_variables, hidden_size=decoder_hidden_size, max_vals=max_vals, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
+        decoder = TrafficNTFDecoder(input_size=total_input_variables, hidden_size=decoder_hidden_size, max_vals=max_vals,all_means=all_means,all_stds=all_stds, segment_lengths=segment_lengths, num_lanes=num_lanes, num_segments=num_segments, \
             seq_len=output_seq_len, encoder_output_units=encoder_hidden_size, dropout_in=0.5, dropout_out=0.5, num_var_per_segment=num_var_per_segment,\
             active_onramps=active_onramps, active_offramps=active_offramps, device=device)
         return cls(encoder, decoder)
@@ -165,7 +167,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         active_onramps=None, active_offramps=None,
         num_layers=1, dropout_in=0.1, dropout_out=0.1,
         encoder_output_units=None, device=None, 
-        share_input_output_embed=False, adaptive_softmax_cutoff=None, max_vals = None
+        share_input_output_embed=False, adaptive_softmax_cutoff=None, 
+        max_vals = None, all_means=None,all_stds=None,
     ):
         super().__init__(dictionary=None)
         if device == None:
@@ -209,6 +212,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         
         self.num_segments = num_segments
         self.max_vals = max_vals
+
+        self.all_means = all_means
+        self.all_stds = all_stds
 
         self.print_count = 0
                 
@@ -371,7 +377,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             segment_params = segment_params*self.segment_param_multipliers + self.segment_param_additions
             future_r, future_s = torch.unbind(segment_params, dim=1)
             
-            real_size_input = blended_input*self.max_vals
+            # real_size_input = blended_input*self.max_vals
+            real_size_input = (blended_input * self.all_stds) + self.all_means
             model_steps = []
             
             for _ in range(self.num_ntf_steps):
