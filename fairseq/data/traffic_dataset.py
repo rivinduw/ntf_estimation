@@ -150,23 +150,23 @@ class TrafficDataset(FairseqDataset):
         
         all_densities = self.all_data.iloc[:,1::self.variables_per_segment]
         all_densities = all_densities[all_densities>0]
-        self.mean_density = all_densities.mean()
-        self.std_density = all_densities.std()
+        self.mean_density = all_densities.mean().mean()
+        self.std_density = all_densities.std().mean()
 
         all_speeds = self.all_data.iloc[:,2::self.variables_per_segment]
         all_speeds = all_speeds[all_speeds>0]
-        self.mean_speed = all_speeds.mean()
-        self.std_speed = all_speeds.std()
+        self.mean_speed = all_speeds.mean().mean()
+        self.std_speed = all_speeds.std().mean()
 
         all_onramps = self.all_data.iloc[:,3::self.variables_per_segment]
         all_onramps = all_onramps[all_onramps>0]
-        self.mean_onramp = all_onramps.mean()
-        self.std_onramp = all_onramps.std()
+        self.mean_onramp = all_onramps.mean().mean()
+        self.std_onramp = all_onramps.std().mean()
 
         all_offramps = self.all_data.iloc[:,4::self.variables_per_segment]
         all_offramps = all_offramps[all_offramps>0]
-        self.mean_offramp = all_offramps.mean()
-        self.std_offramp = all_offramps.std()
+        self.mean_offramp = all_offramps.mean().mean()
+        self.std_offramp = all_offramps.std().mean()
 
         self.all_means = [self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp]*self.num_segments 
         self.all_stds = [self.std_flow,self.std_density,self.std_speed,self.std_onramp,self.std_offramp]*self.num_segments 
