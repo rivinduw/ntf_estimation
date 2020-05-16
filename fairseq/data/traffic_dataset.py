@@ -145,8 +145,8 @@ class TrafficDataset(FairseqDataset):
         ##print 
         all_flows = self.all_data.iloc[:,::self.variables_per_segment]
         all_flows = all_flows[all_flows>0]
-        self.mean_flow = all_flows.mean()
-        self.std_flow = all_flows.std()
+        self.mean_flow = all_flows.mean().mean()
+        self.std_flow = all_flows.std().mean()
         
         all_densities = self.all_data.iloc[:,1::self.variables_per_segment]
         all_densities = all_densities[all_densities>0]
