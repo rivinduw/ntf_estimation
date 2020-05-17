@@ -56,6 +56,7 @@ class TrafficDataset(FairseqDataset):
 
         #get only num_segments
         total_input_variables = self.num_segments*self.variables_per_segment
+        self.all_data = self.all_data.loc[:,[x for x in self.all_data.columns if ~x.contains('_q')]]
         self.all_data = self.all_data.iloc[:,:total_input_variables]
         #make the extreme values equal to not found 
         #self.all_data[self.all_data.quantile(0.99)<=self.all_data] = -1e-6
@@ -110,9 +111,11 @@ class TrafficDataset(FairseqDataset):
         all_active_vars = np.zeros(total_input_variables)
         all_active_vars[::self.variables_per_segment] = self.mainlines_to_include_in_input
         all_active_vars[1::self.variables_per_segment] = self.mainlines_to_include_in_input
-        all_active_vars[2::self.variables_per_segment] = self.mainlines_to_include_in_input
-        all_active_vars[3::self.variables_per_segment] = np.array(active_onramps)
-        all_active_vars[4::self.variables_per_segment] = np.array(active_offramps)
+        all_active_vars[2::self.variables_per_segment] = np.array(active_onramps)
+        all_active_vars[3::self.variables_per_segment] = np.array(active_offramps)
+        # all_active_vars[2::self.variables_per_segment] = self.mainlines_to_include_in_input
+        # all_active_vars[3::self.variables_per_segment] = np.array(active_onramps)
+        # all_active_vars[4::self.variables_per_segment] = np.array(active_offramps)
         all_active_vars = all_active_vars.astype(bool).tolist()
         
         # broken_detector_id = self.variables_per_segment*10
@@ -163,10 +166,10 @@ class TrafficDataset(FairseqDataset):
         self.mean_onramp = all_onramps.mean().mean()
         self.std_onramp = all_onramps.std().mean()
 
-        all_offramps = self.all_data.iloc[:,4::self.variables_per_segment]
-        all_offramps = all_offramps[all_offramps>0]
-        self.mean_offramp = all_offramps.mean().mean()
-        self.std_offramp = all_offramps.std().mean()
+        # all_offramps = self.all_data.iloc[:,4::self.variables_per_segment]
+        # all_offramps = all_offramps[all_offramps>0]
+        # self.mean_offramp = all_offramps.mean().mean()
+        # self.std_offramp = all_offramps.std().mean()
 
         self.all_means = [self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp]*self.num_segments 
         self.all_stds = [self.std_flow,self.std_density,self.std_speed,self.std_onramp,self.std_offramp]*self.num_segments 
@@ -231,7 +234,7 @@ class TrafficDataset(FairseqDataset):
 
         one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
         one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
-        one_label[:,2::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,2::self.variables_per_segment]
+        # one_label[:,2::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,2::self.variables_per_segment]
         one_label[one_label==0] = NEG
         # one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] #+ 1e-3
         # one_label[:,4::self.variables_per_segment] = one_label[:,4::self.variables_per_segment] #+ 1e-3

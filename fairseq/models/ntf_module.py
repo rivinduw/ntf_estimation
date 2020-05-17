@@ -69,11 +69,17 @@ class NTF_Module(nn.Module):
 
         self.TINY = 1e-6
 
-        self.q_index = 0
-        self.rho_index = 1
-        self.v_index = 2
-        self.r_index = 3
-        self.s_index = 4
+        self.q_index = 10
+        self.rho_index = 0
+        self.v_index = 1
+        self.r_index = 2
+        self.s_index = 3
+        
+        # self.q_index = 0
+        # self.rho_index = 1
+        # self.v_index = 2
+        # self.r_index = 3
+        # self.s_index = 4
 
         self.print_count = 0
         self.print_every = print_every
@@ -179,7 +185,7 @@ class NTF_Module(nn.Module):
         x = x.view(-1, self.num_segments, self.inputs_per_segment)
 
         self.current_densities = x[:, :, self.rho_index] #/ self.lambda_var #* (self.g_var+1e-6)#/ (((100.*self.g_var/1000.))))#*self.lambda_var+self.TINY))
-        self.current_flows = x[:, :, self.q_index] #/ self.lambda_var #+ self.epsq #########
+        # self.current_flows = x[:, :, self.q_index] #/ self.lambda_var #+ self.epsq #########
         # density = veh/km
         # flow = veh/h
         # vel = km/h
@@ -190,6 +196,9 @@ class NTF_Module(nn.Module):
         # self.current_velocities = self.current_flows / (self.current_densities*self.lambda_var+self.TINY)
         self.current_velocities = torch.clamp(self.current_velocities, min=self.vmin, max=self.vmax)
         self.current_densities = torch.clamp(self.current_densities, min=0., max=1000.)
+
+        self.current_flows = self.current_velocities * (self.current_densities*self.lambda_var)
+
         self.current_flows = torch.clamp(self.current_flows, min=0., max=10000.)
         self.current_onramp = torch.clamp(self.current_onramp, min=0., max=5000.)
         self.current_offramp = torch.clamp(self.current_offramp, min=0., max=5000.)
@@ -253,6 +262,7 @@ class NTF_Module(nn.Module):
 
         # one_stack =  torch.stack((future_flows,future_occupancies,future_r,future_s),dim=2)
 
-        one_stack =  torch.stack((future_flows,future_densities,future_velocities,future_r,future_s),dim=2)
+        # one_stack =  torch.stack((future_flows,future_densities,future_velocities,future_r,future_s),dim=2)
+        one_stack =  torch.stack((future_densities,future_velocities,future_r,future_s),dim=2)
 
         return one_stack.view(-1,self.num_segments*self.inputs_per_segment), self.flow_residual

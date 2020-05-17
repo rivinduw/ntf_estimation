@@ -231,7 +231,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.t_var = torch.Tensor([[10./3600.]])
     
-        self.num_common_params = 7
+        self.num_common_params = 6#7
         self.num_segment_specific_params = 2
 
         self.active_onramps = active_onramps
@@ -254,8 +254,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.flow_min = 0.0
         self.ramp_max = 3000.0
 
-        self.common_param_multipliers = torch.Tensor([self.vmax-(self.vmin+40), self.flow_max-self.flow_min, self.rhoNp1_max-self.rhoNp1_min, self.vmax-self.vmin, self.amax-self.amin, self.rhocr_max-self.rhocr_min, self.gmax-self.gmin]).to(self.device)
-        self.common_param_additions = torch.Tensor([self.vmin+40, self.flow_min, self.rhoNp1_min, self.vmin, self.amin, self.rhocr_min, self.gmin]).to(self.device)
+        self.common_param_multipliers = torch.Tensor([self.vmax-(self.vmin+40), self.flow_max-self.flow_min, self.rhoNp1_max-self.rhoNp1_min, self.vmax-self.vmin, self.amax-self.amin, self.rhocr_max-self.rhocr_min]).to(self.device) #, self.gmax-self.gmin
+        self.common_param_additions = torch.Tensor([self.vmin+40, self.flow_min, self.rhoNp1_min, self.vmin, self.amin, self.rhocr_min]).to(self.device)#, self.gmin
 
         self.segment_param_multipliers = torch.Tensor([[self.ramp_max],[self.ramp_max]]).to(self.device)
         self.segment_param_additions = torch.Tensor([[self.flow_min],[self.flow_min]]).to(self.device)
@@ -364,7 +364,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
             common_params = self.common_param_activation(common_params)
             common_params = (self.common_param_multipliers*common_params)+self.common_param_additions
-            v0, q0, rhoNp1, vf, a_var, rhocr, g_var = torch.unbind(common_params, dim=1)
+            v0, q0, rhoNp1, vf, a_var, rhocr = torch.unbind(common_params, dim=1) #, g_var
+            g_var = 1.0
             # vf = vf.detach() #* 0.0 +120.0
             # a_var = a_var.detach() #* 0.0 + 1.4
             # rhocr = rhocr.detach() #* 0.0 + 30.

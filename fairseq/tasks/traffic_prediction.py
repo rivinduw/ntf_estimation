@@ -69,7 +69,7 @@ class TrafficPredictionTask(FairseqTask):
         self.input_seq_len = 120#288
         print("self.input_seq_len:",self.input_seq_len," self.output_seq_len:",self.output_seq_len)
         
-        self.variables_per_segment = 5#4
+        self.variables_per_segment = 4#5#4
         self.total_input_variables = self.num_segments*self.variables_per_segment
 
         # self.max_vals = [10000,100,5000,5000]
@@ -79,7 +79,8 @@ class TrafficPredictionTask(FairseqTask):
         """Load a given dataset split (e.g., train, valid, test)."""
 
         data_file = self.args.data#os.path.join(self.args.data, '{}.csv'.format('valid_data_109'))#split))
-        max_vals = [10000, 100, 120, 3000, 3000]
+        # max_vals = [10000, 100, 120, 3000, 3000]
+        max_vals = [100, 120, 3000, 3000]
         self.datasets[split] = TrafficDataset(data_file, output_seq_len=self.output_seq_len, split=split, \
                         input_seq_len=self.input_seq_len, \
                         num_segments=self.num_segments, variables_per_segment=self.variables_per_segment, \
@@ -203,15 +204,15 @@ class TrafficPredictionTask(FairseqTask):
                             plt.close('all')
                         except Exception as e:
                             print(e)
-                        try:
-                            ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment+2]).plot()
-                            pd.DataFrame(1*preds[0,:,i*self.variables_per_segment+2]).plot(ax=ax)
-                            #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
-                            ax.legend(['target','pred'])
-                            wandb.log({"velocity_"+str(i+1): ax})
-                            plt.close('all')
-                        except Exception as e:
-                            print(e)
+                        # try:
+                        #     ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment+2]).plot()
+                        #     pd.DataFrame(1*preds[0,:,i*self.variables_per_segment+2]).plot(ax=ax)
+                        #     #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
+                        #     ax.legend(['target','pred'])
+                        #     wandb.log({"velocity_"+str(i+1): ax})
+                        #     plt.close('all')
+                        # except Exception as e:
+                        #     print(e)
                     try:
                         # for i in range(4):
                         #     ax = pd.DataFrame(5000*target[0,:,i*4+2]).fillna(0.0).plot()
@@ -225,13 +226,13 @@ class TrafficPredictionTask(FairseqTask):
                         #     plt.show()
                         #     wandb.log({"offramp"+str(i+1): ax2})
 
-                        ax = pd.DataFrame(3000*target[0,:,self.variables_per_segment+4]).fillna(0.0).plot()
-                        pd.DataFrame(3000*preds[0,:,self.variables_per_segment+4]).fillna(0.0).plot(ax=ax)
+                        ax = pd.DataFrame(1*target[0,:,self.variables_per_segment+4]).fillna(0.0).plot()
+                        pd.DataFrame(1*preds[0,:,self.variables_per_segment+4]).fillna(0.0).plot(ax=ax)
                         #pd.DataFrame(5000*src[0,:,self.variables_per_segment+4]).fillna(0.0).plot(ax=ax)
                         ax.legend(['target','pred'])
                         wandb.log({"offramp": ax})
-                        ax2 = pd.DataFrame(3000*target[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot()
-                        pd.DataFrame(3000*preds[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot(ax=ax2)
+                        ax2 = pd.DataFrame(1*target[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot()
+                        pd.DataFrame(1*preds[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot(ax=ax2)
                         #pd.DataFrame(5000*src[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot(ax=ax2)
                         ax.legend(['target','pred'])
                         wandb.log({"onramp": ax2})
