@@ -400,7 +400,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
             common_params_list.append(common_params)
             segment_params_list.append(segment_params)
-            outs.append(scaled_output)
+            # outs.append(scaled_output)
+            outs.append(normed_output)
 
             input_feed = normed_output #- torch.Tensor([0.5]).float()
             

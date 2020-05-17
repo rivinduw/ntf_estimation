@@ -175,15 +175,19 @@ class TrafficPredictionTask(FairseqTask):
                 #     print(net_output[0].size())
                     
                     preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
+                    
                     #src = sample['net_input']['src_tokens'].view(-1,self.input_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
                     target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
+
+                    preds = (preds*self.all_stds) + self.all_means
+                    target = (target*self.all_stds) + self.all_means
                     for i in range(4):
                         #pd.DataFrame(preds[i,:,:]).to_csv('preds_'+str(i)+'_.csv')
                         #pd.DataFrame(src[i,:,:]).to_csv('src_'+str(i)+'_.csv')
                         #pd.DataFrame(target[i,:,:]).to_csv('target_'+str(i)+'_.csv')
                         try:
-                            ax = pd.DataFrame(10000*target[0,:,i*self.variables_per_segment]).plot()
-                            pd.DataFrame(10000*preds[0,:,i*self.variables_per_segment]).plot(ax=ax)
+                            ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment]).plot()
+                            pd.DataFrame(1*preds[0,:,i*self.variables_per_segment]).plot(ax=ax)
                             #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
                             ax.legend(['target','pred'])
                             wandb.log({"mainline"+str(i+1): ax})
@@ -191,8 +195,8 @@ class TrafficPredictionTask(FairseqTask):
                         except Exception as e:
                             print(e)
                         try:
-                            ax = pd.DataFrame(100*target[0,:,i*self.variables_per_segment+1]).plot()
-                            pd.DataFrame(100*preds[0,:,i*self.variables_per_segment+1]).plot(ax=ax)
+                            ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment+1]).plot()
+                            pd.DataFrame(1*preds[0,:,i*self.variables_per_segment+1]).plot(ax=ax)
                             #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
                             ax.legend(['target','pred'])
                             wandb.log({"density_"+str(i+1): ax})
@@ -200,8 +204,8 @@ class TrafficPredictionTask(FairseqTask):
                         except Exception as e:
                             print(e)
                         try:
-                            ax = pd.DataFrame(120*target[0,:,i*self.variables_per_segment+2]).plot()
-                            pd.DataFrame(120*preds[0,:,i*self.variables_per_segment+2]).plot(ax=ax)
+                            ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment+2]).plot()
+                            pd.DataFrame(1*preds[0,:,i*self.variables_per_segment+2]).plot(ax=ax)
                             #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
                             ax.legend(['target','pred'])
                             wandb.log({"velocity_"+str(i+1): ax})

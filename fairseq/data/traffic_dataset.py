@@ -186,6 +186,8 @@ class TrafficDataset(FairseqDataset):
         self.all_input_data = self.all_input_data.iloc[:,input_cols_to_include]
         # self.all_input_data = pd.concat([self.all_input_data,all_context],axis=1)
         # self.all_input_data = self.all_data
+
+        self.all_data = (self.all_data-self.all_means)/self.all_stds
         
         self.shuffle = shuffle
     
@@ -234,8 +236,8 @@ class TrafficDataset(FairseqDataset):
         # one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] #+ 1e-3
         # one_label[:,4::self.variables_per_segment] = one_label[:,4::self.variables_per_segment] #+ 1e-3
         
-        if self.scale_output:
-          one_label = one_label/self.max_vals
+        # if self.scale_output:
+        #   one_label = one_label/self.max_vals
         
         one_label = one_label.transpose(0,1)
 
