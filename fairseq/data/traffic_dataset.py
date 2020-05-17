@@ -197,7 +197,7 @@ class TrafficDataset(FairseqDataset):
     
     def __getitem__(self, index):
         
-        if False:#not self.split=='test':
+        if not self.split=='test':
             rand = np.random.randint(self.output_seq_len, size=1)[0]
             idx = (index * (self.output_seq_len-1)) + rand
         else:

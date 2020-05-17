@@ -48,9 +48,9 @@ class NTFModel(FairseqEncoderDecoderModel):
         total_input_variables = task.get_total_input_variables()
         encoder_input_variables = task.get_encoder_input_variables()
         
-        encoder_hidden_size = total_input_variables * 16 #// 2
+        encoder_hidden_size = 128#total_input_variables * 16 #// 2
         is_encoder_bidirectional = True
-        decoder_hidden_size = total_input_variables * 16 #// 2
+        decoder_hidden_size = 128#total_input_variables * 16 #// 2
 
         encoder = TrafficNTFEncoder(input_size=encoder_input_variables, seq_len=input_seq_len, num_segments=num_segments, hidden_size=encoder_hidden_size, \
             bidirectional=is_encoder_bidirectional, dropout_in=0.5, dropout_out=0.5, device=device)
