@@ -365,7 +365,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             common_params = self.common_param_activation(common_params)
             common_params = (self.common_param_multipliers*common_params)+self.common_param_additions
             v0, q0, rhoNp1, vf, a_var, rhocr = torch.unbind(common_params, dim=1) #, g_var
-            g_var = 1.0
+            g_var = torch.Tensor([[1.0]])
             # vf = vf.detach() #* 0.0 +120.0
             # a_var = a_var.detach() #* 0.0 + 1.4
             # rhocr = rhocr.detach() #* 0.0 + 30.

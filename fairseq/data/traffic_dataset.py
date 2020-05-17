@@ -56,7 +56,7 @@ class TrafficDataset(FairseqDataset):
 
         #get only num_segments
         total_input_variables = self.num_segments*self.variables_per_segment
-        self.all_data = self.all_data.loc[:,[x for x in self.all_data.columns if ~x.contains('_q')]]
+        self.all_data = self.all_data.loc[:,[x for x in self.all_data.columns if ~('_q' in x)]]
         self.all_data = self.all_data.iloc[:,:total_input_variables]
         #make the extreme values equal to not found 
         #self.all_data[self.all_data.quantile(0.99)<=self.all_data] = -1e-6
@@ -171,11 +171,17 @@ class TrafficDataset(FairseqDataset):
         # self.mean_offramp = all_offramps.mean().mean()
         # self.std_offramp = all_offramps.std().mean()
 
-        self.all_means = [self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp]*self.num_segments 
-        self.all_stds = [self.std_flow,self.std_density,self.std_speed,self.std_onramp,self.std_offramp]*self.num_segments 
+        # self.all_means = [self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp]*self.num_segments 
+        # self.all_stds = [self.std_flow,self.std_density,self.std_speed,self.std_onramp,self.std_offramp]*self.num_segments 
 
-        print("means:",self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp)
-        print("stds:",self.std_flow,self.std_density,self.std_speed,self.std_onramp,self.std_offramp)
+        # print("means:",self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp)
+        # print("stds:",self.std_flow,self.std_density,self.std_speed,self.std_onramp,self.std_offramp)
+
+        self.all_means = [self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp]*self.num_segments 
+        self.all_stds = [self.std_flow,self.std_density,self.std_speed,self.std_onramp]*self.num_segments 
+
+        print("means:",self.mean_flow,self.mean_density,self.mean_speed,self.mean_onramp)
+        print("stds:",self.std_flow,self.std_density,self.std_speed,self.std_onramp)
 
 
         # add context
