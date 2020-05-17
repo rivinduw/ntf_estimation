@@ -48,7 +48,7 @@ class TrafficPredictionTask(FairseqTask):
         super().__init__(args)
         self.valid_step_num = 0
         # self.segment_lengths = segment_lengths
-        metadata = pd.read_csv('data/estimation_sites5.csv')
+        metadata = pd.read_csv('data/estimation_sites6.csv')
         self.segment_lengths = list(metadata.loc[metadata['type']=='q','distance']/1000.)
         self.num_lanes = list(metadata.loc[metadata['type']=='q','num_lanes'])
         self.num_segments = 4#len(self.num_lanes)#12
@@ -278,7 +278,7 @@ class TrafficPredictionTask(FairseqTask):
                 - logging outputs to display while training
         """
 
-        clip_value = 5.0#0.04
+        clip_value = 1.0#5.0#
         for p in model.parameters():
             p.register_hook(lambda grad: torch.clamp(grad, -clip_value, clip_value))
         
