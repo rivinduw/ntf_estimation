@@ -250,7 +250,7 @@ class TrafficDataset(FairseqDataset):
 
     def __len__(self):
         if not self.split=='test':
-            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)#//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)//self.output_seq_len#self.output_seq_len#- self.output_seq_len# - 1 #- 4* self.output_seq_len# - 2 * self.output_seq_len - 1
         else:
             data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)
         return data_len
