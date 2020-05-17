@@ -395,14 +395,14 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             # mean_ntf_output = torch.stack(model_steps, dim=0).mean(dim=0)
             mean_ntf_output = real_size_input
 
-            # scaled_output = mean_ntf_output/(self.max_vals+1e-6)
-            scaled_output = (mean_ntf_output-self.all_means)/(self.all_stds)
+            scaled_output = mean_ntf_output/(self.max_vals+1e-6)
+            normed_output = (mean_ntf_output-self.all_means)/(self.all_stds)
 
             common_params_list.append(common_params)
             segment_params_list.append(segment_params)
             outs.append(scaled_output)
 
-            input_feed = scaled_output #- torch.Tensor([0.5]).float()
+            input_feed = normed_output #- torch.Tensor([0.5]).float()
             
         # collect outputs across time steps
         # dim=1 to go from T x B x C -> B x T x C
