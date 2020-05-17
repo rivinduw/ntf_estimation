@@ -179,8 +179,8 @@ class TrafficPredictionTask(FairseqTask):
                     #src = sample['net_input']['src_tokens'].view(-1,self.input_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
                     target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
 
-                    preds = (preds*self.all_stds) + self.all_means
-                    target = (target*self.all_stds) + self.all_means
+                    preds = (preds*self.all_stds.cpu().numpy()) + self.all_means.cpu().numpy()
+                    target = (target*self.all_stds.cpu().numpy()) + self.all_means.cpu().numpy()
                     for i in range(4):
                         #pd.DataFrame(preds[i,:,:]).to_csv('preds_'+str(i)+'_.csv')
                         #pd.DataFrame(src[i,:,:]).to_csv('src_'+str(i)+'_.csv')
