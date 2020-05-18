@@ -294,16 +294,17 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # B x T x C -> T x B x C 10,32,16
         x = x.transpose(0, 1)
 
-        # wandb.log(
-        #             {'mean_input_velocities': 120*x[:,:,2::self.num_var_per_segment].cpu().detach().numpy().mean(),
-        #             'mean_input_velocities_1': 120*x[:,:,2].cpu().detach().numpy().mean(),
-        #             'mean_input_velocities_4': 120*x[:,:,-3].cpu().detach().numpy().mean(),
-        #             'mean_input_densities': 100*x[:,:,1::self.num_var_per_segment].cpu().detach().numpy().mean(),
-        #             'mean_input_flows': 10000*x[:,:,::self.num_var_per_segment].cpu().detach().numpy().mean(),
-        #             'mean_onramp_flows': 3000*x[:,:,::self.num_var_per_segment].cpu().detach().numpy().mean(),
-        #             'mean_offramp_flows': 3000*x[:,:,::self.num_var_per_segment].cpu().detach().numpy().mean()
-        #             }
-        #         )
+        for_logging = (x.cpu().detach().numpy()*self.all_stds)+self.all_means
+        wandb.log(
+                    {'mean_input_velocities': for_logging[:,:,2::self.num_var_per_segment].mean(),
+                    'mean_input_velocities_1': for_logging[:,:,2].mean(),
+                    'mean_input_velocities_4': for_logging[:,:,-3].mean(),
+                    'mean_input_densities': for_logging[:,:,1::self.num_var_per_segment].mean(),
+                    'mean_input_flows': for_logging[:,:,::self.num_var_per_segment].mean(),
+                    'mean_onramp_flows': for_logging[:,:,::self.num_var_per_segment].mean(),
+                    'mean_offramp_flows': for_logging[:,:,::self.num_var_per_segment].mean()
+                    }
+                )
 
         if self.encoder_hidden_proj != None:
             prev_hiddens = self.encoder_hidden_proj(encoder_hiddens[0,:,:])
