@@ -295,7 +295,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         x = x.transpose(0, 1)
 
         for_logging = ((x*self.all_stds)+self.all_means).cpu().detach().numpy()
-        from fairseq import pdb; pdb.set_trace();
+        #from fairseq import pdb; pdb.set_trace();
         wandb.log(
                     {'mean_input_velocities': for_logging[:,:,1::self.num_var_per_segment].mean(),
                     'mean_input_velocities_1': for_logging[:,:,1].mean(),
