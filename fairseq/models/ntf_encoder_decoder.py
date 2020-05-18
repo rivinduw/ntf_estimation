@@ -289,20 +289,21 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         # srclen = encoder_outs.size(0)
 
         x = prev_output_tokens
-        x = F.dropout(x, p=self.dropout_in, training=self.training)
+        #x = F.dropout(x, p=self.dropout_in, training=self.training)
         
         # B x T x C -> T x B x C 10,32,16
         x = x.transpose(0, 1)
 
-        for_logging = (x.cpu().detach().numpy()*self.all_stds)+self.all_means
+        for_logging = ((x*self.all_stds)+self.all_means).cpu().detach().numpy()
+        from fairseq import pdb; pdb.set_trace();
         wandb.log(
-                    {'mean_input_velocities': for_logging[:,:,2::self.num_var_per_segment].mean(),
-                    'mean_input_velocities_1': for_logging[:,:,2].mean(),
+                    {'mean_input_velocities': for_logging[:,:,1::self.num_var_per_segment].mean(),
+                    'mean_input_velocities_1': for_logging[:,:,1].mean(),
                     'mean_input_velocities_4': for_logging[:,:,-3].mean(),
-                    'mean_input_densities': for_logging[:,:,1::self.num_var_per_segment].mean(),
-                    'mean_input_flows': for_logging[:,:,::self.num_var_per_segment].mean(),
-                    'mean_onramp_flows': for_logging[:,:,::self.num_var_per_segment].mean(),
-                    'mean_offramp_flows': for_logging[:,:,::self.num_var_per_segment].mean()
+                    'mean_input_densities': for_logging[:,:,0::self.num_var_per_segment].mean(),
+                    'mean_input_density_1': for_logging[:,:,0].mean()#,
+                    # 'mean_onramp_flows': for_logging[:,:,::self.num_var_per_segment].mean(),
+                    # 'mean_offramp_flows': for_logging[:,:,::self.num_var_per_segment].mean()
                     }
                 )
 
@@ -344,7 +345,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             # hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
 
             input_x = x[j, :,:]  #+ torch.Tensor([0.5]).float()
-            input_x = F.dropout(input_x, p=self.dropout_in, training=self.training)
+            #input_x = F.dropout(input_x, p=self.dropout_in, training=self.training)
             #input_feed = input_feed #+ torch.Tensor([0.5]).float()
             # input_mask = (input_x*self.max_vals) > 0.0
             input_mask = ((input_x*self.all_stds)+self.all_means) > 0.0
