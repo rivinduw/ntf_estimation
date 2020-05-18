@@ -193,7 +193,7 @@ class TrafficPredictionTask(FairseqTask):
                             pd.DataFrame(1*preds[0,:,i*self.variables_per_segment]).plot(ax=ax)
                             #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
                             ax.legend(['target','pred'])
-                            wandb.log({"mainline"+str(i+1): ax})
+                            wandb.log({"density_"+str(i+1): ax})
                             plt.close('all')
                         except Exception as e:
                             print(e)
@@ -202,7 +202,7 @@ class TrafficPredictionTask(FairseqTask):
                             pd.DataFrame(1*preds[0,:,i*self.variables_per_segment+1]).plot(ax=ax)
                             #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
                             ax.legend(['target','pred'])
-                            wandb.log({"density_"+str(i+1): ax})
+                            wandb.log({"speed_"+str(i+1): ax})
                             plt.close('all')
                         except Exception as e:
                             print(e)

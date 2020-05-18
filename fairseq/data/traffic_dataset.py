@@ -192,12 +192,16 @@ class TrafficDataset(FairseqDataset):
         # all_context.index = self.all_data.index
         input_cols_to_include = np.arange(len(all_active_vars))[all_active_vars]
         # self.all_input_data = self.all_data/self.max_vals
-        self.all_input_data = (self.all_data-self.all_means)/self.all_stds
+        self.all_data = (self.all_data-self.all_means)/self.all_stds
+        self.all_input_data = self.all_data#(self.all_data-self.all_means)/self.all_stds
         self.all_input_data = self.all_input_data.iloc[:,input_cols_to_include]
         # self.all_input_data = pd.concat([self.all_input_data,all_context],axis=1)
         # self.all_input_data = self.all_data
 
-        self.all_data = (self.all_data-self.all_means)/self.all_stds
+        NEG = -1e-6
+        self.all_data[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data[:,::self.variables_per_segment]
+        self.all_data[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data[:,1::self.variables_per_segment]
+        self.all_data[self.all_data==0] = NEG
         
         self.shuffle = shuffle
     
@@ -239,12 +243,12 @@ class TrafficDataset(FairseqDataset):
         
         one_label = self.all_data.iloc[idx+input_len:idx+input_len+label_len, :].values
 
-        one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
-        one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
-        # one_label[:,2::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,2::self.variables_per_segment]
-        one_label[one_label==0] = NEG
-        # one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] #+ 1e-3
-        # one_label[:,4::self.variables_per_segment] = one_label[:,4::self.variables_per_segment] #+ 1e-3
+        # one_label[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,::self.variables_per_segment]
+        # one_label[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,1::self.variables_per_segment]
+        # # one_label[:,2::self.variables_per_segment] = self.mainlines_to_include_in_output * one_label[:,2::self.variables_per_segment]
+        # one_label[one_label==0] = NEG
+        # # one_label[:,3::self.variables_per_segment] = one_label[:,3::self.variables_per_segment] #+ 1e-3
+        # # one_label[:,4::self.variables_per_segment] = one_label[:,4::self.variables_per_segment] #+ 1e-3
         
         # if self.scale_output:
         #   one_label = one_label/self.max_vals
