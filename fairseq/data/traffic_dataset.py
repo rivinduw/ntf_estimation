@@ -145,6 +145,12 @@ class TrafficDataset(FairseqDataset):
         # self.all_data_5min = self.all_data_5min.fillna(0.0)
         # self.all_data      = self.all_data_5min#self.all_data.iloc[10:,:]
 
+
+        NEG = -1e-6
+        self.all_data[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data[:,::self.variables_per_segment]
+        self.all_data[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data[:,1::self.variables_per_segment]
+        self.all_data[self.all_data==0] = NEG
+
         ##print 
         print(self.all_data.columns)
         # all_flows = self.all_data.iloc[:,::self.variables_per_segment]
@@ -184,7 +190,6 @@ class TrafficDataset(FairseqDataset):
         print("means:",self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp)
         print("stds:",self.std_density,self.std_speed,self.std_onramp,self.std_offramp)
 
-
         # add context
         # all_dates = pd.to_datetime(self.all_data.index)
         # all_context = pd.DataFrame(all_dates.dayofweek.values/6.0,columns=['dow'])
@@ -197,11 +202,6 @@ class TrafficDataset(FairseqDataset):
         self.all_input_data = self.all_input_data.iloc[:,input_cols_to_include]
         # self.all_input_data = pd.concat([self.all_input_data,all_context],axis=1)
         # self.all_input_data = self.all_data
-
-        NEG = -1e-6
-        self.all_data[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data[:,::self.variables_per_segment]
-        self.all_data[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data[:,1::self.variables_per_segment]
-        self.all_data[self.all_data==0] = NEG
         
         self.shuffle = shuffle
     
