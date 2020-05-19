@@ -46,6 +46,9 @@ class MSECriterion(FairseqCriterion):
 
         self.max_vals = task.get_max_vals()
 
+        self.all_means, self.all_stds = task.get_means_stds()
+
+
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.
 
@@ -138,13 +141,19 @@ class MSECriterion(FairseqCriterion):
         vol_accuracy = 1. - vol_mape
         vol_accuracy = vol_accuracy.clamp(0,1)
 
-        y = target * self.max_vals
+        # y = target * self.max_vals
+        # target_mask = y > 1e-6
+        # y = y[target_mask]
+        # # y = target[target_mask]
+        # outs = lprobs * self.max_vals
+        # outputs = outs[target_mask]
+        # # outputs = lprobs[target_mask]
+
+        y = (target * self.all_stds) + self.all_means
         target_mask = y > 1e-6
         y = y[target_mask]
-        # y = target[target_mask]
-        outs = lprobs * self.max_vals
+        outs = (lprobs * self.all_stds) + self.all_means
         outputs = outs[target_mask]
-        # outputs = lprobs[target_mask]
 
         num_valid = target_mask.float().sum()
 
