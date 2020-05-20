@@ -67,7 +67,7 @@ class TrafficPredictionTask(FairseqTask):
         self.encoder_input_variables = np.array(self.mainlines_to_include_in_input).sum()*(self.variables_per_segment-2) + np.array(self.active_onramps).sum() + np.array(self.active_offramps).sum() #+ 2
         self.encoder_input_variables = int(self.encoder_input_variables)
         
-        self.output_seq_len = 10
+        self.output_seq_len = 30
         self.input_seq_len = 360#120#288
         print("self.input_seq_len:",self.input_seq_len," self.output_seq_len:",self.output_seq_len)
         
@@ -285,7 +285,7 @@ class TrafficPredictionTask(FairseqTask):
                 - logging outputs to display while training
         """
 
-        clip_value = 0.04#1.0#5.0#
+        clip_value = 1.0#5.0#
         for p in model.parameters():
             p.register_hook(lambda grad: torch.clamp(grad, -clip_value, clip_value))
         

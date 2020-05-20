@@ -24,9 +24,9 @@ class MSECriterion(FairseqCriterion):
         super().__init__(args, task)
         # wandb.init(job_type='mse_loss', config=args)
         # self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
-        # self.loss_fn = torch.nn.L1Loss()
+        self.loss_fn = torch.nn.L1Loss()
         # self.loss_fn = torch.nn.MSELoss()
-        self.loss_fn = torch.nn.SmoothL1Loss()
+        # self.loss_fn = torch.nn.SmoothL1Loss()
         #self.loss_fn = nn.KLDivLoss(reduction='batchmean')
 
         self.common_lambda = 1.0
