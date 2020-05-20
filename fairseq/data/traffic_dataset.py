@@ -149,7 +149,7 @@ class TrafficDataset(FairseqDataset):
         NEG = -1e-6
         self.all_data.iloc[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data.iloc[:,::self.variables_per_segment]
         self.all_data.iloc[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data.iloc[:,1::self.variables_per_segment]
-        self.all_data[self.all_data==0] = NEG
+        self.all_data[self.all_data<=1e-6] = NEG
 
         ##print 
         print(self.all_data.columns)
@@ -285,7 +285,7 @@ class TrafficDataset(FairseqDataset):
         ntokens = sum(len(s['target']) for s in samples)
 
         if self.scale_input and self.scale_output:
-            last_inputs = [s['target'][:1]*0-1e-6 for s in samples]
+            last_inputs = [s['target'][:1]*0 for s in samples]
             previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
 
         # # previous_output = [s['source'][-1:]+s['target'][:-1] for s in samples] # [samples[0]['target'][0]]

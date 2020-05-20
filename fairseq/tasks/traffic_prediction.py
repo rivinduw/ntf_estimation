@@ -177,13 +177,16 @@ class TrafficPredictionTask(FairseqTask):
                 #     # plt.pause(0.1)
                 #     print(net_output[0].size())
                     
-                    preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
+                    # preds = net_output[0].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]#model.get_normalized_probs(net_output, log_probs=True).float()
                     
-                    #src = sample['net_input']['src_tokens'].view(-1,self.input_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
-                    target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
 
-                    preds = (preds*self.all_stds.cpu().numpy()) + self.all_means.cpu().numpy()
-                    target = (target*self.all_stds.cpu().numpy()) + self.all_means.cpu().numpy()
+                    #src = sample['net_input']['src_tokens'].view(-1,self.input_seq_len,self.total_input_variables).detach().cpu().numpy()#[0,:,0]# model.get_targets(sample, net_output).float()
+                    # target = sample['target'].view(-1,self.output_seq_len,self.total_input_variables).detach().cpu().numpy()
+                    
+                    preds = (net_output[0]*self.all_stds) + self.all_means
+                    target = (sample['target']*self.all_stds) + self.all_means
+                    preds = preds.detach().cpu().numpy()
+                    target = target.detach().cpu().numpy()
                     for i in range(4):
                         #pd.DataFrame(preds[i,:,:]).to_csv('preds_'+str(i)+'_.csv')
                         #pd.DataFrame(src[i,:,:]).to_csv('src_'+str(i)+'_.csv')

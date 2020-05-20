@@ -149,9 +149,9 @@ class MSECriterion(FairseqCriterion):
         # outputs = outs[target_mask]
         # # outputs = lprobs[target_mask]
 
-        y = (target * self.all_stds) + self.all_means
-        target_mask = y > 1e-6
-        y = y[target_mask]
+        y_b = (target * self.all_stds) + self.all_means
+        target_mask = y_b > 1e-6
+        y = y_b[target_mask]
         outs = (lprobs * self.all_stds) + self.all_means
         outputs = outs[target_mask]
 
