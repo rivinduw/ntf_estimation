@@ -17,6 +17,15 @@ try:
 except Exception as e:
     print(e)
 
+
+class RMSLELoss(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.mse = torch.nn.MSELoss()
+        
+    def forward(self, pred, actual):
+        return torch.sqrt(self.mse(torch.log(pred + 1), torch.log(actual + 1)))
+
 @register_criterion('traffic_loss')
 class MSECriterion(FairseqCriterion):
 
@@ -24,8 +33,9 @@ class MSECriterion(FairseqCriterion):
         super().__init__(args, task)
         # wandb.init(job_type='mse_loss', config=args)
         # self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
-        self.loss_fn = torch.nn.L1Loss()
+        # self.loss_fn = torch.nn.L1Loss()
         # self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = RMSLELoss()
         # self.loss_fn = torch.nn.SmoothL1Loss()
         #self.loss_fn = nn.KLDivLoss(reduction='batchmean')
 
@@ -83,7 +93,7 @@ class MSECriterion(FairseqCriterion):
         internal_params['common_params'] = common_params
         internal_params['segment_params'] = segment
 
-        model.parameters()
+        #model.parameters()
         
         #bsz, ts, var
         # torch.Size([32, 10, 8])

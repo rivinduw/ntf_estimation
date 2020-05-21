@@ -350,11 +350,13 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             #input_feed = input_feed #+ torch.Tensor([0.5]).float()
             # input_mask = (input_x*self.max_vals) > 0.0
             
-            #input_mask = ((input_x*self.all_stds)+self.all_means) > 0.0
+            # input_mask = ((input_x*self.all_stds)+self.all_means) > 0.0
             
             # input_mask = input_mask*0.0
             # blended_input = (input_x*input_mask.float()) + ( (1-input_mask.float())*(input_feed))
-            blended_input = input_feed 
+
+            input_feed_mask = ((input_feed*self.all_stds)+self.all_means) > 0.0
+            blended_input = input_feed * input_feed_mask.float()
             
             # hidden, cell = self.rnn(blended_input, (prev_hiddens, prev_cells))
             hidden, cell = self.rnn(x[j, :,:], (prev_hiddens, prev_cells))
@@ -387,6 +389,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             
             # real_size_input = blended_input*self.max_vals
             real_size_input = (blended_input * self.all_stds) + self.all_means
+            real_size_input = real_size_input * input_feed_mask.float()
             model_steps = []
             
             for _ in range(self.num_ntf_steps):
