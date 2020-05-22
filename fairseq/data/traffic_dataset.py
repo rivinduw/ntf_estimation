@@ -186,6 +186,8 @@ class TrafficDataset(FairseqDataset):
 
         self.all_means = [self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp]*self.num_segments 
         self.all_stds = [self.std_density,self.std_speed,self.std_onramp,self.std_offramp]*self.num_segments 
+        self.all_means = np.array(self.all_means)
+        self.all_stds = np.array(self.all_stds)
 
         print("means:",self.mean_density,self.mean_speed,self.mean_onramp,self.mean_offramp)
         print("stds:",self.std_density,self.std_speed,self.std_onramp,self.std_offramp)
