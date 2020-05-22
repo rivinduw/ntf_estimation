@@ -165,6 +165,14 @@ class MSECriterion(FairseqCriterion):
         outs = (lprobs * self.all_stds) + self.all_means
         outputs = outs[target_mask]
 
+        try:
+          import pandas as pd
+          print(pd.DataFrame(y_b).median().T)
+          print(pd.DataFrame(outs).median().T)
+          print(target_mask.float().sum())
+        except Exception as e:
+          print(e)
+
         num_valid = target_mask.float().sum()
 
         wmape = 100. * torch.div( torch.div(torch.sum(torch.abs(torch.sub(outputs,y))),torch.sum(torch.abs(y))),num_valid)
@@ -206,6 +214,10 @@ class MSECriterion(FairseqCriterion):
                     'flow_res.mean': flow_res.mean(),
                     'input_feed_consistancy_loss' : input_feed_consistancy_loss,
                     'first_input_feed': wandb.Histogram(first_input_feed.detach()),
+                    'target_density' : wandb.Histogram(y_b[:,:,::4].detach()),
+                    'target_speed' : wandb.Histogram(y_b[:,:,1::4].detach()),
+                    'output_density' : wandb.Histogram(outs[:,:,::4].detach()),
+                    'output_speed' : wandb.Histogram(outs[:,:,1::4].detach()),
                     }
                 )
         except Exception as e:
