@@ -147,7 +147,7 @@ class TrafficDataset(FairseqDataset):
 
 
         
-        self.all_data.iloc[:,::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data.iloc[:,::self.variables_per_segment]
+        self.all_data.iloc[:,::self.variables_per_segment]  = self.mainlines_to_include_in_output * self.all_data.iloc[:,::self.variables_per_segment]
         self.all_data.iloc[:,1::self.variables_per_segment] = self.mainlines_to_include_in_output * self.all_data.iloc[:,1::self.variables_per_segment]
         NEG = -1e-6
         self.all_data[self.all_data<=1e-6] = NEG
