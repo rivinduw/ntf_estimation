@@ -359,20 +359,20 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             
 
             # ['Seg00_q', 'Seg00_speed','Seg04_q', 'Seg04_speed','Seg04_r', 'Seg02_s']
-            # T x B x C
-            q0_i,v0_i,q4_i,v4_i,r4_i,s2_i = torch.unbind(input_x, dim=2)
+            # T x (B x C)
+            q0_i,v0_i,q4_i,v4_i,r4_i,s2_i = torch.unbind(input_x, dim=1)
 
-            rho1, v1, r1, s1, rho2, v2, r2, s2, rho3, v3, r3, s3, rho4, v4, r4, s4 = torch.unbind(input_feed, dim=2)
+            rho1, v1, r1, s1, rho2, v2, r2, s2, rho3, v3, r3, s3, rho4, v4, r4, s4 = torch.unbind(input_feed, dim=1)
 
             # q4 = rho4*v4*3.0
             # q4 = q4_i if q4_i>0 else q4
 
-            rho4 = (q4_i/(v4_i*3.0)) if (q4_i/(v4_i*3.0))>0 else rho4
-            v4 = v4_i if v4_i>0 else v4
-            r4 = r4_i if r4_i>0 else r4
-            s2 = s2_i if s2_i>0 else s2
+            rho4 = (q4_i/(v4_i*3.0)) * ((q4_i/(v4_i*3.0))>0).float() +  rho4*((q4_i/(v4_i*3.0))<=0).float() #if (q4_i/(v4_i*3.0))>0 else rho4
+            v4 = v4_i * ((v4_i>0).float()) + v4*((v4_i<=0).float())#if v4_i>0 else v4
+            r4 = r4_i * ((r4_i>0).float()) + r4*((r4_i<=0).float())#if r4_i>0 else r4
+            s2 = s2_i * ((s2_i>0).float()) + s2*((s2_i<=0).float())#if s2_i>0 else s2
 
-            blended_input = torch.stack([rho1, v1, r1, s1, rho2, v2, r2, s2, rho3, v3, r3, s3, rho4, v4, r4, s4],dim=2)
+            blended_input = torch.stack([rho1, v1, r1, s1, rho2, v2, r2, s2, rho3, v3, r3, s3, rho4, v4, r4, s4],dim=1)
             real_size_input = (blended_input * self.all_stds) + self.all_means
 
             
@@ -404,8 +404,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             v0, q0, rhoNp1, vf, a_var, rhocr = torch.unbind(common_params, dim=1) #, g_var
             g_var = torch.Tensor([[1.0]])
 
-            v0 = v0_i if v0_i>0 else v0
-            q0 = q0_i if q0_i>0 else q0
+            v0 = v0_i#if v0_i>0 else v0
+            q0 = q0_i# if q0_i>0 else q0
 
             # vf = vf.detach() #* 0.0 +120.0
             # a_var = a_var.detach() #* 0.0 + 1.4
