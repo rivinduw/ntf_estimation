@@ -86,12 +86,12 @@ class MSECriterion(FairseqCriterion):
         first_input_feed = extra_params['first_input_feed']
 
         input_feed_consistancy_loss = self.loss_fn(first_input_feed[:,4::4],first_input_feed[:,:-5:4]) + self.loss_fn(first_input_feed[:,4+1::4],first_input_feed[:,1:(-5+1):4])
-        input_feed_consistancy_loss = input_feed_consistancy_loss
+        # input_feed_consistancy_loss = input_feed_consistancy_loss
 
-        lprobs = lprobs.float() #self.max_vals*
-        internal_params = {}
-        internal_params['common_params'] = common_params
-        internal_params['segment_params'] = segment
+        # lprobs = lprobs.float() #self.max_vals*
+        # internal_params = {}
+        # internal_params['common_params'] = common_params
+        # internal_params['segment_params'] = segment
 
         #model.parameters()
         
@@ -99,7 +99,7 @@ class MSECriterion(FairseqCriterion):
         # torch.Size([32, 10, 8])
         # v0, q0, rhoNp1, t_var, tau, nu, delta, kappa = torch.unbind(torch.Tensor([200.0, 10000.0, 100.0, 0.01, 0.01, 50.0, 5.0, 20.0]).to(self.device)*common_params, dim=1)      
         # common_loss = 0.0#self.loss_fn(common_params[:,1:,4], common_params[:,:-1,4]) + self.loss_fn(common_params[:,1:,6], common_params[:,:-1,6])
-        common_loss = self.loss_fn(common_params[:,1:,3:], common_params[:,:-1,3:])
+        # common_loss = self.loss_fn(common_params[:,1:,3:], common_params[:,:-1,3:])
         #NEv0, q0, rhoNp1, vf, a_var, rhocr, g_var
         
 
@@ -112,9 +112,9 @@ class MSECriterion(FairseqCriterion):
         #cap_delta, lambda_var, vf, a_var, rhocr, g_var, future_r, future_s, epsq, epsv =  torch.unbind(segment_params* torch.Tensor([[1.0],[10.0],[200.0],[5.0],[100.0],[10.0],[1000.0],[1000.0],[10.0],[10.0]]).to(self.device),dim=1)  
         #between segments
         #segment_loss = self.loss_fn(segment[:,:,:,1:],segment[:,:,:,:-1])
-        keep_ons_zero = self.loss_fn(segment[:,:,0,self.inactive_onramps]/5000.,0.0*segment[:,:,0,self.inactive_onramps])
-        keep_offs_zero = self.loss_fn(segment[:,:,1,self.inactive_offramps]/5000.,0.0*segment[:,:,1,self.inactive_offramps])
-        segment_loss = keep_ons_zero + keep_offs_zero
+        # keep_ons_zero = self.loss_fn(segment[:,:,0,self.inactive_onramps]/5000.,0.0*segment[:,:,0,self.inactive_onramps])
+        # keep_offs_zero = self.loss_fn(segment[:,:,1,self.inactive_offramps]/5000.,0.0*segment[:,:,1,self.inactive_offramps])
+        # segment_loss = keep_ons_zero + keep_offs_zero
         
         
         # segment_mean = torch.mean(segment,dim=2,keepdim=True) #[1,360,18,8]
@@ -123,7 +123,7 @@ class MSECriterion(FairseqCriterion):
 
         #import fairseq.pdb as pdb; pdb.set_trace()
 
-        segment_time_loss = self.loss_fn(segment[:,1:,:,:],segment[:,:-1,:,:])
+        # segment_time_loss = self.loss_fn(segment[:,1:,:,:],segment[:,:-1,:,:])
         
         # segment_time_mean = torch.mean(segment,dim=1,keepdim=True) #[1,360,18,8]
         # segment_time_loss = torch.mean((segment-segment_time_mean)**2,dim=1)
@@ -140,16 +140,16 @@ class MSECriterion(FairseqCriterion):
 
         # target_mask = (self.max_vals * target) > 1e-6
 
-        volume_target = target[:,:,::4] * 10000
-        volume_outputs = lprobs[:,:,::4] *10000
-        volume_mask = (10000* volume_target) > 1e-6
-        vol_y = volume_target[volume_mask]
-        vol_outs =  volume_outputs[volume_mask]#                    'volume_loss': volume_loss,                    'volume_acc': vol_acc,
-        # wandb.log({"flows_actual": wandb.Histogram(vol_y.detach().numpy())})
-        # wandb.log({"flows_predictions": wandb.Histogram(vol_outs.detach().numpy())})
-        vol_mape = torch.mean((torch.abs(torch.div(torch.sub(vol_outs,vol_y),(vol_y + 1e-6)))).clamp(0,1))
-        vol_accuracy = 1. - vol_mape
-        vol_accuracy = vol_accuracy.clamp(0,1)
+        # volume_target = target[:,:,::4] * 10000
+        # volume_outputs = lprobs[:,:,::4] *10000
+        # volume_mask = (10000* volume_target) > 1e-6
+        # vol_y = volume_target[volume_mask]
+        # vol_outs =  volume_outputs[volume_mask]#                    'volume_loss': volume_loss,                    'volume_acc': vol_acc,
+        # # wandb.log({"flows_actual": wandb.Histogram(vol_y.detach().numpy())})
+        # # wandb.log({"flows_predictions": wandb.Histogram(vol_outs.detach().numpy())})
+        # vol_mape = torch.mean((torch.abs(torch.div(torch.sub(vol_outs,vol_y),(vol_y + 1e-6)))).clamp(0,1))
+        # vol_accuracy = 1. - vol_mape
+        # vol_accuracy = vol_accuracy.clamp(0,1)
 
         # y = target * self.max_vals
         # target_mask = y > 1e-6
@@ -202,10 +202,10 @@ class MSECriterion(FairseqCriterion):
         try:
             wandb.log(
                     {'normal_loss':total_loss,
-                    'vol_accuracy':vol_accuracy,
-                    'common_loss':common_loss,
-                    'segment_loss':segment_loss,
-                    'segment_time_loss':segment_time_loss,
+                    # 'vol_accuracy':vol_accuracy,
+                    # 'common_loss':common_loss,
+                    # 'segment_loss':segment_loss,
+                    # 'segment_time_loss':segment_time_loss,
                     'mape_loss': mape_loss,
                     'target_loss': target_loss,
                     'accuracy': accuracy,
@@ -214,10 +214,10 @@ class MSECriterion(FairseqCriterion):
                     'flow_res.mean': flow_res.mean(),
                     'input_feed_consistancy_loss' : input_feed_consistancy_loss,
                     'first_input_feed': wandb.Histogram(first_input_feed.detach()),
-                    'target_density' : wandb.Histogram(y_b[:,:,::4].detach()),
-                    'target_speed' : wandb.Histogram(y_b[:,:,1::4].detach()),
-                    'output_density' : wandb.Histogram(outs[:,:,::4].detach()),
-                    'output_speed' : wandb.Histogram(outs[:,:,1::4].detach()),
+                    'target_v0' : wandb.Histogram(y_b[:,:,1].detach()),
+                    'target_q4' : wandb.Histogram(y_b[:,:,2].detach()),
+                    'output_v0' : wandb.Histogram(outs[:,:,1].detach()),
+                    'output_q4' : wandb.Histogram(outs[:,:,2].detach()),
                     }
                 )
         except Exception as e:
