@@ -224,8 +224,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.all_means = torch.Tensor(np.array(self.all_means))
         self.all_stds = torch.Tensor(np.array(self.all_stds))
 
-        self.input_means = torch.Tensor(np.arrray([3000., 90., 3000., 90., 500., 800.]))
-        self.input_stds  = torch.Tensor(np.arrray([2000., 20., 2000., 20., 300., 400.]))
+        self.input_means = torch.Tensor(np.array([3000., 90., 3000., 90., 500., 800.]))
+        self.input_stds  = torch.Tensor(np.array([2000., 20., 2000., 20., 300., 400.]))
 
         self.print_count = 0
                 
