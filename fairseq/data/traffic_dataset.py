@@ -59,7 +59,7 @@ class TrafficDataset(FairseqDataset):
         # self.all_data = self.all_data.loc[:,[x for x in self.all_data.columns if not ('_q' in x)]]
         # self.all_data = self.all_data.iloc[:,:total_input_variables]
 
-        input_cols = ['Seg00_q', 'Seg00_speed','Seg04_q', 'Seg04_speed','Seg04_r', 'Seg04_s']
+        input_cols = ['Seg00_q', 'Seg00_speed','Seg04_q', 'Seg04_speed','Seg04_r', 'Seg02_s']
         self.all_data = self.all_data.loc[:,input_cols]
         
         self.split = split
@@ -87,8 +87,12 @@ class TrafficDataset(FairseqDataset):
 
         print(self.all_data.columns)
 
-        self.all_means = [15., 90., 500., 800.]*self.num_segments 
-        self.all_stds  = [15., 20., 300., 400.]*self.num_segments 
+        # self.all_means = [15., 90., 500., 800.]*self.num_segments 
+        # self.all_stds  = [15., 20., 300., 400.]*self.num_segments 
+
+        # ['Seg00_q', 'Seg00_speed','Seg04_q', 'Seg04_speed','Seg04_r', 'Seg02_s']
+        self.all_means = [3000., 90., 3000., 90., 500., 800.]
+        self.all_stds  = [2000., 20., 2000., 20., 300., 400.]
         
         self.all_means = np.array(self.all_means)
         self.all_stds = np.array(self.all_stds)
@@ -152,7 +156,7 @@ class TrafficDataset(FairseqDataset):
         ntokens = sum(len(s['target']) for s in samples)
 
         if self.scale_input and self.scale_output:
-            last_inputs = [s['target'][:1]*0-1e-6 for s in samples]
+            last_inputs = [s['source'][-1:] for s in samples]
             previous_output = [np.concatenate([l,s['target'][:-1]]) for s,l in zip(samples,last_inputs)]
 
         if self.input_feeding:

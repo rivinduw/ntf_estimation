@@ -89,9 +89,9 @@ class MSECriterion(FairseqCriterion):
         # input_feed_consistancy_loss = input_feed_consistancy_loss
 
         # lprobs = lprobs.float() #self.max_vals*
-        # internal_params = {}
-        # internal_params['common_params'] = common_params
-        # internal_params['segment_params'] = segment
+        internal_params = {}
+        internal_params['common_params'] = common_params
+        internal_params['segment_params'] = segment
 
         #model.parameters()
         
