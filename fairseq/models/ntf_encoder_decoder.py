@@ -404,8 +404,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             v0, q0, rhoNp1, vf, a_var, rhocr = torch.unbind(common_params, dim=1) #, g_var
             g_var = torch.Tensor([[1.0]])
 
-            v0 = v0_i#if v0_i>0 else v0
-            q0 = q0_i# if q0_i>0 else q0
+            v0 = v0_i * ((v0_i>0).float()) + v0*((v0_i<=0).float()) #if v0_i>0 else v0
+            q0 = q0_i* ((q0_i>0).float()) + q0*((q0_i<=0).float()) # if q0_i>0 else q0
 
             # vf = vf.detach() #* 0.0 +120.0
             # a_var = a_var.detach() #* 0.0 + 1.4
