@@ -219,6 +219,14 @@ class MSECriterion(FairseqCriterion):
                     'target_q4' : wandb.Histogram(y_b[:,:,2].detach()),
                     'output_v0' : wandb.Histogram(outs[:,:,1].detach()),
                     'output_q4' : wandb.Histogram(outs[:,:,2].detach()),
+                    'target_q0' : wandb.Histogram(y_b[:,:,0].detach()),
+                    'target_v4' : wandb.Histogram(y_b[:,:,3].detach()),
+                    'output_q0' : wandb.Histogram(outs[:,:,0].detach()),
+                    'output_v4' : wandb.Histogram(outs[:,:,3].detach()),
+                    'target_s2' : wandb.Histogram(y_b[:,:,5].detach()),
+                    'target_r4' : wandb.Histogram(y_b[:,:,4].detach()),
+                    'output_s2' : wandb.Histogram(outs[:,:,5].detach()),
+                    'output_r4' : wandb.Histogram(outs[:,:,4].detach()),
                     }
                 )
         except Exception as e:
