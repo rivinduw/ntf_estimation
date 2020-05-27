@@ -356,6 +356,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             # hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
 
             input_x =  ((x[j, :,:]*self.input_stds)+self.input_means) #+ torch.Tensor([0.5]).float()
+            input_x = F.dropout(input_x, p=self.dropout_in, training=self.training)
             
 
             # ['Seg00_q', 'Seg00_speed','Seg04_q', 'Seg04_speed','Seg04_r', 'Seg02_s']
