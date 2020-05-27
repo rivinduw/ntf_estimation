@@ -271,8 +271,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.segment_param_multipliers = torch.Tensor([[self.ramp_max],[self.ramp_max]]).to(self.device)
         self.segment_param_additions = torch.Tensor([[self.flow_min],[self.flow_min]]).to(self.device)
 
-        self.common_param_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
-        self.segment_param_activation = nn.Sigmoid()#nn.ReLU()#nn.Hardtanh(min_val=0.0, max_val=1.0)
+        self.common_param_activation = None#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
+        self.segment_param_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Hardtanh(min_val=0.0, max_val=1.0)
         self.input_feed_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
 
         self.total_segment_specific_params = self.num_segment_specific_params*self.num_segments
@@ -356,8 +356,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             # hidden, cell = self.rnn(input_to_rnn, (prev_hiddens, prev_cells))
 
             input_x =  ((x[j, :,:]*self.input_stds)+self.input_means) #+ torch.Tensor([0.5]).float()
-            input_x = F.dropout(input_x, p=self.dropout_in, training=self.training)
-            
+            # input_x = F.dropout(input_x, p=self.dropout_in, training=self.training)
 
             # ['Seg00_q', 'Seg00_speed','Seg04_q', 'Seg04_speed','Seg04_r', 'Seg02_s']
             # T x (B x C)
