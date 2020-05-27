@@ -62,7 +62,7 @@ class NTF_Module(nn.Module):
             # self.active_offramps = torch.ones(self.num_segments)
             self.active_offramps = torch.zeros(self.num_segments)
 
-        self.vmin = 10
+        self.vmin = 1
         self.vmax = 120
 
         self.inputs_per_segment = num_var_per_segment#4
@@ -253,7 +253,7 @@ class NTF_Module(nn.Module):
             print(e)
 
         # future_densities = future_densities * self.lambda_var
-        future_velocities = torch.clamp(future_velocities, min=10, max=120)
+        future_velocities = torch.clamp(future_velocities, min=0, max=120)
         future_densities = torch.clamp(future_densities, min=0, max=1000)
         # future_occupancies = torch.clamp(future_occupancies, min=0, max=100)
         future_flows = torch.clamp(future_flows, min=0, max=10000)

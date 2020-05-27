@@ -248,7 +248,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.active_onramps = active_onramps
         self.active_offramps = active_offramps
 
-        self.vmin = 10
+        self.vmin = 1
         self.vmax = 120
         self.shortest_segment_length = 0.278
         self.num_ntf_steps = 3
@@ -273,7 +273,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.common_param_activation = nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)
         self.segment_param_activation = nn.Sigmoid()#nn.ReLU()#nn.Hardtanh(min_val=0.0, max_val=1.0)
-        self.input_feed_activation = nn.Sigmoid()#nn.ReLU()#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
+        self.input_feed_activation = None#nn.Sigmoid()#nn.ReLU()#nn.Sigmoid()#nn.Hardtanh(min_val=0.0, max_val=1.0)#
 
         self.total_segment_specific_params = self.num_segment_specific_params*self.num_segments
 
