@@ -187,28 +187,70 @@ class TrafficPredictionTask(FairseqTask):
                     target = (sample['target']*self.all_stds) + self.all_means
                     preds = preds.detach().cpu().numpy()
                     target = target.detach().cpu().numpy()
-                    for i in range(4):
-                        #pd.DataFrame(preds[i,:,:]).to_csv('preds_'+str(i)+'_.csv')
-                        #pd.DataFrame(src[i,:,:]).to_csv('src_'+str(i)+'_.csv')
-                        #pd.DataFrame(target[i,:,:]).to_csv('target_'+str(i)+'_.csv')
-                        try:
-                            ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment]).plot()
-                            pd.DataFrame(1*preds[0,:,i*self.variables_per_segment]).plot(ax=ax)
-                            #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
-                            ax.legend(['target','pred'])
-                            wandb.log({"density_"+str(i+1): ax})
-                            plt.close('all')
-                        except Exception as e:
-                            print(e)
-                        try:
-                            ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment+1]).plot()
-                            pd.DataFrame(1*preds[0,:,i*self.variables_per_segment+1]).plot(ax=ax)
-                            #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
-                            ax.legend(['target','pred'])
-                            wandb.log({"speed_"+str(i+1): ax})
-                            plt.close('all')
-                        except Exception as e:
-                            print(e)
+
+                    
+                    try:
+                        ax = pd.DataFrame(target[0,:,0]).plot()
+                        pd.DataFrame(preds[0,:,0]).plot(ax=ax)
+                        ax.legend(['target','pred'])
+                        wandb.log({"q0_": ax})
+                        plt.close('all')
+
+                        ax = pd.DataFrame(target[0,:,1]).plot()
+                        pd.DataFrame(preds[0,:,1]).plot(ax=ax)
+                        ax.legend(['target','pred'])
+                        wandb.log({"v0_": ax})
+                        plt.close('all')
+
+                        ax = pd.DataFrame(target[0,:,2]).plot()
+                        pd.DataFrame(preds[0,:,2]).plot(ax=ax)
+                        ax.legend(['target','pred'])
+                        wandb.log({"q4_": ax})
+                        plt.close('all')
+
+                        ax = pd.DataFrame(target[0,:,3]).plot()
+                        pd.DataFrame(preds[0,:,3]).plot(ax=ax)
+                        ax.legend(['target','pred'])
+                        wandb.log({"v4_": ax})
+                        plt.close('all')
+
+                        ax = pd.DataFrame(target[0,:,4]).plot()
+                        pd.DataFrame(preds[0,:,4]).plot(ax=ax)
+                        ax.legend(['target','pred'])
+                        wandb.log({"r4_": ax})
+                        plt.close('all')
+
+                        ax = pd.DataFrame(target[0,:,5]).plot()
+                        pd.DataFrame(preds[0,:,5]).plot(ax=ax)
+                        ax.legend(['target','pred'])
+                        wandb.log({"s2_": ax})
+                        plt.close('all')
+
+                    except Exception as e:
+                        print(e)
+
+                    # for i in range(4):
+                    #     #pd.DataFrame(preds[i,:,:]).to_csv('preds_'+str(i)+'_.csv')
+                    #     #pd.DataFrame(src[i,:,:]).to_csv('src_'+str(i)+'_.csv')
+                    #     #pd.DataFrame(target[i,:,:]).to_csv('target_'+str(i)+'_.csv')
+                    #     try:
+                    #         ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment]).plot()
+                    #         pd.DataFrame(1*preds[0,:,i*self.variables_per_segment]).plot(ax=ax)
+                    #         #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
+                    #         ax.legend(['target','pred'])
+                    #         wandb.log({"density_"+str(i+1): ax})
+                    #         plt.close('all')
+                    #     except Exception as e:
+                    #         print(e)
+                    #     try:
+                    #         ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment+1]).plot()
+                    #         pd.DataFrame(1*preds[0,:,i*self.variables_per_segment+1]).plot(ax=ax)
+                    #         #pd.DataFrame(10000*src[0,:,i*self.variables_per_segment]).plot(ax=ax)
+                    #         ax.legend(['target','pred'])
+                    #         wandb.log({"speed_"+str(i+1): ax})
+                    #         plt.close('all')
+                    #     except Exception as e:
+                    #         print(e)
                         # try:
                         #     ax = pd.DataFrame(1*target[0,:,i*self.variables_per_segment+2]).plot()
                         #     pd.DataFrame(1*preds[0,:,i*self.variables_per_segment+2]).plot(ax=ax)
@@ -218,31 +260,31 @@ class TrafficPredictionTask(FairseqTask):
                         #     plt.close('all')
                         # except Exception as e:
                         #     print(e)
-                    try:
-                        # for i in range(4):
-                        #     ax = pd.DataFrame(5000*target[0,:,i*4+2]).fillna(0.0).plot()
-                        #     pd.DataFrame(5000*preds[0,:,i*4+2]).fillna(0.0).plot(ax=ax)
-                        #     pd.DataFrame(5000*src[0,:,i*4+2]).fillna(0.0).plot(ax=ax)
-                        #     plt.show()
-                        #     wandb.log({"onramp"+str(i+1): ax})
-                        #     ax2 = pd.DataFrame(5000*target[0,:,i*4+3]).fillna(0.0).plot()
-                        #     pd.DataFrame(5000*preds[0,:,i*4+3]).fillna(0.0).plot(ax=ax2)
-                        #     pd.DataFrame(5000*src[0,:,i*4+3]).fillna(0.0).plot(ax=ax2)
-                        #     plt.show()
-                        #     wandb.log({"offramp"+str(i+1): ax2})
+                    # try:
+                    #     # for i in range(4):
+                    #     #     ax = pd.DataFrame(5000*target[0,:,i*4+2]).fillna(0.0).plot()
+                    #     #     pd.DataFrame(5000*preds[0,:,i*4+2]).fillna(0.0).plot(ax=ax)
+                    #     #     pd.DataFrame(5000*src[0,:,i*4+2]).fillna(0.0).plot(ax=ax)
+                    #     #     plt.show()
+                    #     #     wandb.log({"onramp"+str(i+1): ax})
+                    #     #     ax2 = pd.DataFrame(5000*target[0,:,i*4+3]).fillna(0.0).plot()
+                    #     #     pd.DataFrame(5000*preds[0,:,i*4+3]).fillna(0.0).plot(ax=ax2)
+                    #     #     pd.DataFrame(5000*src[0,:,i*4+3]).fillna(0.0).plot(ax=ax2)
+                    #     #     plt.show()
+                    #     #     wandb.log({"offramp"+str(i+1): ax2})
 
-                        ax = pd.DataFrame(1*target[0,:,self.variables_per_segment+4]).fillna(0.0).plot()
-                        pd.DataFrame(1*preds[0,:,self.variables_per_segment+4]).fillna(0.0).plot(ax=ax)
-                        #pd.DataFrame(5000*src[0,:,self.variables_per_segment+4]).fillna(0.0).plot(ax=ax)
-                        ax.legend(['target','pred'])
-                        wandb.log({"offramp": ax})
-                        ax2 = pd.DataFrame(1*target[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot()
-                        pd.DataFrame(1*preds[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot(ax=ax2)
-                        #pd.DataFrame(5000*src[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot(ax=ax2)
-                        ax.legend(['target','pred'])
-                        wandb.log({"onramp": ax2})
-                    except Exception as e:
-                        print(e)
+                    #     ax = pd.DataFrame(1*target[0,:,self.variables_per_segment+4]).fillna(0.0).plot()
+                    #     pd.DataFrame(1*preds[0,:,self.variables_per_segment+4]).fillna(0.0).plot(ax=ax)
+                    #     #pd.DataFrame(5000*src[0,:,self.variables_per_segment+4]).fillna(0.0).plot(ax=ax)
+                    #     ax.legend(['target','pred'])
+                    #     wandb.log({"offramp": ax})
+                    #     ax2 = pd.DataFrame(1*target[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot()
+                    #     pd.DataFrame(1*preds[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot(ax=ax2)
+                    #     #pd.DataFrame(5000*src[0,:,self.variables_per_segment*3+3]).fillna(0.0).plot(ax=ax2)
+                    #     ax.legend(['target','pred'])
+                    #     wandb.log({"onramp": ax2})
+                    # except Exception as e:
+                    #     print(e)
                         
                 #         for seg in range(0,10):
                 #             ax = pd.DataFrame(preds[i,:,seg*1]).plot()
