@@ -165,11 +165,11 @@ class MSECriterion(FairseqCriterion):
         y = y_b[target_mask]
         outs = (lprobs * self.all_stds) + self.all_means
         outputs = outs[target_mask]
-
+        
         # try:
         #   import pandas as pd
-        #   print(pd.DataFrame(y_b).median().T)
-        #   print(pd.DataFrame(outs).median().T)
+        #   print(pd.DataFrame(y_b.mean(axis=0)).median().T)
+        #   print(pd.DataFrame(outs.mean(axis=0)).median().T)
         #   print(target_mask.float().sum())
         # except Exception as e:
         #   print(e)
