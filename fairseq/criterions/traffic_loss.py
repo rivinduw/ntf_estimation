@@ -24,8 +24,8 @@ class RMSLELoss(torch.nn.Module):
         self.mse = torch.nn.MSELoss()
         
     def forward(self, pred, actual):
-        return torch.sqrt(self.mse(torch.log(pred + 1), torch.log(actual + 1)))
-        # return self.mse(torch.log(pred + 1), torch.log(actual + 1))
+        # return torch.sqrt(self.mse(torch.log(pred + 1), torch.log(actual + 1)))
+        return self.mse(torch.log(pred + 1), torch.log(actual + 1))
 
 @register_criterion('traffic_loss')
 class MSECriterion(FairseqCriterion):
@@ -35,8 +35,8 @@ class MSECriterion(FairseqCriterion):
         # wandb.init(job_type='mse_loss', config=args)
         # self.mse_loss = torch.nn.MSELoss()#F.mse_loss(reduction='mean')
         # self.loss_fn = torch.nn.L1Loss()
-        self.loss_fn = torch.nn.MSELoss()
-        # self.loss_fn = RMSLELoss()
+        # self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = RMSLELoss()
         # self.loss_fn = torch.nn.SmoothL1Loss()
         #self.loss_fn = nn.KLDivLoss(reduction='batchmean')
 
