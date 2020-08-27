@@ -396,7 +396,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.all_common_params = torch.stack(common_params_list, dim=1)
         self.all_segment_params = torch.stack(segment_params_list, dim=1)
 
-        q0_a, v0_a rhoNp1_a, beta2_a, r4_a, vf_a, a_var_a, rhocr_a = torch.unbind(self.all_common_params, dim=2)
+        q0_a, v0_a, rhoNp1_a, beta2_a, r4_a, vf_a, a_var_a, rhocr_a = torch.unbind(self.all_common_params, dim=2)
         q0_a = (q0_a-3000.)/2000.
         v0_a = (v0_a-90.)/10.
         rho5_a = (rhoNp1_a-7.)/6.
