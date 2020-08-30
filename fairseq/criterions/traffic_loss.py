@@ -84,9 +84,9 @@ class MSECriterion(FairseqCriterion):
         # flow_res = extra_params['mean_flow_res']
         # first_input_feed = extra_params['first_input_feed']
 
-        # internal_params = {}
-        # internal_params['common_params'] = common_params
-        # internal_params['segment_params'] = segment
+        internal_params = {}
+        internal_params['common_params'] = common_params
+        internal_params['segment_params'] = segment
 
         target =  model.get_targets(sample, net_output).float()
 
@@ -119,9 +119,6 @@ class MSECriterion(FairseqCriterion):
                     'accuracy': accuracy,
                     'wmape': wmape,
                     'w-accuracy': 100. - wmape,
-                    'flow_res.mean': flow_res.mean(),
-                    'input_feed_consistancy_loss' : input_feed_consistancy_loss,
-                    'first_input_feed': wandb.Histogram(first_input_feed.detach()),
                     'target_v0' : wandb.Histogram(y_b[:,:,1].detach()),
                     'target_q4' : wandb.Histogram(y_b[:,:,2].detach()),
                     'output_v0' : wandb.Histogram(outs[:,:,1].detach()),

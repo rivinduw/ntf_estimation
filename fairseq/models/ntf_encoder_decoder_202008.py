@@ -23,7 +23,7 @@ except Exception as e:
 
 
 from .ntf_module import NTF_Module
-@register_model('NTF_traffic')
+@register_model('NTF_traffic_old')
 class NTFModel(FairseqEncoderDecoderModel):
     def __init__(self, encoder, decoder):
         super().__init__(encoder, decoder)
@@ -539,7 +539,7 @@ def Linear(in_features, out_features, bias=True, dropout=0):
 
 
 # @register_model_architecture('NTF', 'NTF')
-@register_model_architecture('NTF_traffic', 'NTF_traffic')
+@register_model_architecture('NTF_traffic_old', 'NTF_traffic_old')
 def base_architecture(args):
     args.dropout = getattr(args, 'dropout', 0.1)
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)

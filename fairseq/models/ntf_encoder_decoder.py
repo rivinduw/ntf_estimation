@@ -165,7 +165,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.num_var_per_segment = num_var_per_segment
 
         self.input_size = input_size
-        self.ntf_state_size = 16
+        self.ntf_state_size = 13
         self.output_size = input_size
         self.seq_len = seq_len
         self.hidden_size = hidden_size
@@ -214,7 +214,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.t_var = torch.Tensor([[10./3600.]])
     
-        self.num_common_params = 6
+        self.num_common_params = 8
         self.num_segment_specific_params = 0
 
         #self.active_onramps = active_onramps
@@ -223,12 +223,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.vmin = 1.
         self.vmax = 120.
         self.shortest_segment_length = 0.278
-        self.num_ntf_steps = 3.
+        self.num_ntf_steps = 3
 
         self.amin = 1.0
         self.amax = 2.0
-        self.gmin = 0.1
-        self.gmax = 2.0
+        self.beta_min = 0.0
+        self.beta_max = 1.0
         self.rhocr_min = 1.0
         self.rhocr_max = 100.0
         self.rhoNp1_min = 0.0
@@ -237,8 +237,26 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         self.flow_min = 0.0
         self.ramp_max = 3000.0
 
-        self.common_param_multipliers = torch.Tensor([self.vmax-(self.vmin), self.flow_max-self.flow_min, self.rhoNp1_max-self.rhoNp1_min, self.vmax-self.vmin, self.amax-self.amin, self.rhocr_max-self.rhocr_min]).to(self.device)
-        self.common_param_additions = torch.Tensor([self.vmin, self.flow_min, self.rhoNp1_min, self.vmin, self.amin, self.rhocr_min]).to(self.device)
+        # q0_a, v0_a, rhoNp1_a, beta2_a, r4_a, vf_a, a_var_a, rhocr_a 
+        self.common_param_multipliers = torch.Tensor(\
+                [self.flow_max-self.flow_min, \
+                self.vmax-self.vmin, \
+                self.rhoNp1_max-self.rhoNp1_min, \
+                self.beta_max-self.beta_min, \
+                self.ramp_max-self.flow_min, \
+                self.vmax-(self.vmin), \
+                self.amax-self.amin, \
+                self.rhocr_max-self.rhocr_min\
+                ]).to(self.device)
+        self.common_param_additions = torch.Tensor([\
+                self.flow_min, \
+                self.vmin, \
+                self.rhoNp1_min,\
+                self.beta_min, \
+                self.flow_min, \
+                self.vmin,\
+                self.amin,\
+                self.rhocr_min]).to(self.device)
 
         #self.segment_param_multipliers = torch.Tensor([[self.ramp_max],[self.ramp_max]]).to(self.device)
         #self.segment_param_additions = torch.Tensor([[self.flow_min],[self.flow_min]]).to(self.device)
@@ -260,7 +278,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #         epsq=self.epsq,epsv=self.epsv, tau=self.tau, nu=self.nu, delta=self.delta, kappa=self.kappa,\
         #         device=self.device)
 
-        self.ntf_module = NTF_Module(t_var=self.t_var,tau=self.tau, nu=self.nu, delta=self.delta, \
+        self.traffic_model = NTF_Module(t_var=self.t_var,tau=self.tau, nu=self.nu, delta=self.delta, \
                                         kappa=self.kappa,cap_delta=self.segment_lengths, lambda_var=self.num_lanes)
         
 
@@ -336,8 +354,9 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
             current_velocities = torch.stack([v1, v2, v3, v4],dim=1)
             current_flows = torch.stack([q1, q2, q3, q4],dim=1)           
-            current_onramps = torch.Tensor([[0.,0.,0.,r4]])
-            current_offramp_props = torch.Tensor([[0.,beta2,0.,0.]])
+            zero_tensor = torch.Tensor(256*[0.])
+            current_onramps = torch.stack([zero_tensor, zero_tensor, zero_tensor, r4],dim=1)   
+            current_offramp_props = torch.stack([zero_tensor, beta2, zero_tensor, zero_tensor],dim=1)   #torch.Tensor([[0.,beta2,0.,0.]])
             
 
             hidden, cell = self.rnn(x[j, :,:], (prev_hiddens, prev_cells))

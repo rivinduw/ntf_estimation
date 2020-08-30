@@ -54,7 +54,7 @@ class TrafficDataset(FairseqDataset):
 
         # input_cols = ['Seg00_q', 'Seg00_speed','Seg04_q', 'Seg04_speed','Seg04_r', 'Seg02_s']
         input_cols = ['q0', 'v0', 'q2', 'v2', 'rho5', 'beta2', 'r4']
-        self.all_data = self.all_data.loc[:,input_cols]
+        self.all_data = self.all_data.loc[:,input_cols].fillna(0.0)
         
         self.split = split
         if split == 'train':
