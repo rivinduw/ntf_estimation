@@ -55,7 +55,7 @@ class NTF_Module(nn.Module):
         if rhocr is not None: self.rhocr = rhocr.view(-1,1)        
         
         #clamp params
-        self.vmin = 1.
+        self.vmin = 10.
         self.vmax = 120.
         self.min_flow = 0.
         self.max_flow = 10000.

@@ -220,7 +220,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #self.active_onramps = active_onramps
         #self.active_offramps = active_offramps
 
-        self.vmin = 1.
+        self.vmin = 10.
         self.vmax = 120.
         self.shortest_segment_length = 0.278
         self.num_ntf_steps = 3
@@ -341,18 +341,21 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             # v4   = v4_i * ((v4_i>0).float()) + v4*((v4_i<=0).float())#if v4_i>0 else v4
             # r4   = r4_i * ((r4_i>0).float()) + r4*((r4_i<=0).float())#if r4_i>0 else r4
             # s2   = s2_i * ((s2_i>0).float()) + s2*((s2_i<=0).float())#if s2_i>0 else s2
-            q2 = q2_i
-            v2 = v2_i
-            beta2 = beta2_i
-            r4 = r4_i
-            rho5 = rho5_i
+            q2 = q2_i * ((q2_i>0).float()) + q2*((q2_i<=0).float())#q2_i
+            v2 = v2_i * ((v2_i>0).float()) + v2*((v2_i<=0).float())#v2_i
+            beta2 = beta2_i * ((beta2_i>0).float()) + beta2*((beta2_i<=0).float())#beta2_i
+            r4 = r4_i * ((r4_i>0).float()) + r4*((r4_i<=0).float())#r4_i
+            rho5 = rho5_i * ((rho5_i>0).float()) + rho5*((rho5_i<=0).float())#rho5_i
 
-            v0 = v0_i #* ((v0_i>0).float()) + v0*((v0_i<=0).float())
-            q0 = q0_i #* ((q0_i>0).float()) + q0*((q0_i<=0).float())
+            v0 = v0_i * ((v0_i>0).float()) + v0*((v0_i<=0).float())
+            q0 = q0_i * ((q0_i>0).float()) + q0*((q0_i<=0).float())
+            v0 = torch.clamp(v0, min=self.vmin, max=self.vmax)
 
             #real_size_input = torch.stack([q1, v1, q2, v2, q3, v3, q4, v4, rho5, beta2, r4],dim=1)
 
             current_velocities = torch.stack([v1, v2, v3, v4],dim=1)
+            current_velocities = torch.clamp(current_velocities, min=self.vmin, max=self.vmax)
+
             current_flows = torch.stack([q1, q2, q3, q4],dim=1)           
             zero_tensor = torch.Tensor(256*[0.])
             current_onramps = torch.stack([zero_tensor, zero_tensor, zero_tensor, r4],dim=1)   
@@ -372,7 +375,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
                 common_params = self.common_param_activation(common_params)
             common_params = (self.common_param_multipliers*common_params)+self.common_param_additions
             q0_f, v0_f, rhoNp1_f, beta2_f, r4_f, vf, a_var, rhocr = torch.unbind(common_params, dim=1)
-
+            v0_f = torch.clamp(v0_f, min=self.vmin, max=self.vmax)
+            vf = torch.clamp(vf, min=self.vmin, max=self.vmax)
             
             model_steps = []
 
