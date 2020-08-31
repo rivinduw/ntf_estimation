@@ -56,25 +56,25 @@ class TrafficDataset(FairseqDataset):
         input_cols = ['q0', 'v0', 'q2', 'v2', 'rho5', 'beta2', 'r4']
         self.all_data = self.all_data.loc[:,input_cols].fillna(0.0)
         
-        self.split = split
-        if split == 'train':
-            train_from_idx = self.all_data.index.get_loc(pd.to_datetime(train_from), method='nearest')
-            train_to_idx = self.all_data.index.get_loc(pd.to_datetime(train_to), method='nearest')
-            self.all_data = self.all_data.iloc[train_from_idx:train_to_idx, :]
-            print("t##Length of Train Dataset: ", len(self.all_data))
-            self.shuffle = shuffle
-        elif split == 'valid':
-            valid_from_idx = self.all_data.index.get_loc(pd.to_datetime(valid_from), method='nearest')
-            valid_to_idx = self.all_data.index.get_loc(pd.to_datetime(valid_to), method='nearest')
-            self.all_data =self.all_data.iloc[valid_from_idx:valid_to_idx, :]
-            print("v##Length of Valid Dataset: ", len(self.all_data))
-            self.shuffle = False
-        else:
-            test_from_idx = self.all_data.index.get_loc(pd.to_datetime(test_from), method='nearest')
-            test_to_idx = self.all_data.index.get_loc(pd.to_datetime(test_to), method='nearest')
-            self.all_data = self.all_data.iloc[test_from_idx:test_to_idx, :]
-            print("t??##Length of Test Dataset: ",len(self.all_data))
-            self.shuffle = False
+        # self.split = split
+        # if split == 'train':
+        #     train_from_idx = self.all_data.index.get_loc(pd.to_datetime(train_from), method='nearest')
+        #     train_to_idx = self.all_data.index.get_loc(pd.to_datetime(train_to), method='nearest')
+        #     self.all_data = self.all_data.iloc[train_from_idx:train_to_idx, :]
+        #     print("t##Length of Train Dataset: ", len(self.all_data))
+        #     self.shuffle = shuffle
+        # elif split == 'valid':
+        #     valid_from_idx = self.all_data.index.get_loc(pd.to_datetime(valid_from), method='nearest')
+        #     valid_to_idx = self.all_data.index.get_loc(pd.to_datetime(valid_to), method='nearest')
+        #     self.all_data =self.all_data.iloc[valid_from_idx:valid_to_idx, :]
+        #     print("v##Length of Valid Dataset: ", len(self.all_data))
+        #     self.shuffle = False
+        # else:
+        #     test_from_idx = self.all_data.index.get_loc(pd.to_datetime(test_from), method='nearest')
+        #     test_to_idx = self.all_data.index.get_loc(pd.to_datetime(test_to), method='nearest')
+        #     self.all_data = self.all_data.iloc[test_from_idx:test_to_idx, :]
+        #     print("t??##Length of Test Dataset: ",len(self.all_data))
+        #     self.shuffle = False
 
         self.max_sample_size = max_sample_size if max_sample_size is not None else sys.maxsize
         self.min_sample_size = min_sample_size if min_sample_size is not None else self.max_sample_size
@@ -108,12 +108,12 @@ class TrafficDataset(FairseqDataset):
         return torch.Tensor(self.max_vals)
     
     def __getitem__(self, index):
-        
-        if not self.split=='test':
-            rand = np.random.randint(self.output_seq_len, size=1)[0]
-            idx = (index * (self.output_seq_len-1)) + rand
-        else:
-            idx = index
+        idx = index
+        # if not self.split=='test':
+        #     rand = np.random.randint(self.output_seq_len, size=1)[0]
+        #     idx = (index * (self.output_seq_len-1)) + rand
+        # else:
+        #     idx = index
 
         input_len = self.input_seq_len
         label_len = self.output_seq_len
@@ -133,7 +133,7 @@ class TrafficDataset(FairseqDataset):
 
     def __len__(self):
         if not self.split=='test':
-            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)//self.output_seq_len
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)#//self.output_seq_len
         else:
             data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)
         return data_len
