@@ -56,7 +56,7 @@ class TrafficDataset(FairseqDataset):
         input_cols = ['q0', 'v0', 'q2', 'v2', 'rho5', 'beta2', 'r4']
         self.all_data = self.all_data.loc[:,input_cols].fillna(0.0)
         
-        # self.split = split
+        self.split = split
         # if split == 'train':
         #     train_from_idx = self.all_data.index.get_loc(pd.to_datetime(train_from), method='nearest')
         #     train_to_idx = self.all_data.index.get_loc(pd.to_datetime(train_to), method='nearest')
