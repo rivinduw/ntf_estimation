@@ -54,7 +54,10 @@ class TrafficDataset(FairseqDataset):
 
         # input_cols = ['Seg00_q', 'Seg00_speed','Seg04_q', 'Seg04_speed','Seg04_r', 'Seg02_s']
         input_cols = ['q0', 'v0', 'q2', 'v2', 'rho5', 'beta2', 'r4']
-        self.all_data = self.all_data.loc[:,input_cols].fillna(0.0)
+        self.all_data = self.all_data.loc[:,input_cols]
+        self.all_data = self.all_data.replace(np.inf, np.nan)
+        self.all_data.loc[:,['v0','v2']] = self.all_data.loc[:,['v0','v2']].fillna(100.0)
+        self.all_data.loc[:,['q0', 'q2', 'rho5', 'beta2', 'r4']] = self.all_data.loc[:,['q0', 'q2', 'rho5', 'beta2', 'r4']].fillna(0.0)
         
         self.split = split
         # if split == 'train':
@@ -133,9 +136,9 @@ class TrafficDataset(FairseqDataset):
 
     def __len__(self):
         if not self.split=='test':
-            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)#//self.output_seq_len
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 512)#//self.output_seq_len
         else:
-            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 1)
+            data_len = (len(self.all_data) - (1*self.output_seq_len+self.input_seq_len*1) - 512)
         return data_len
 
 
