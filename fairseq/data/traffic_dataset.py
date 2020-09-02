@@ -175,9 +175,17 @@ class TrafficDataset(FairseqDataset):
         }
 
         try:
+            if pd.DataFrame(src_tokens).mean().mean()==np.nan:
+                print("src_tokens",src_tokens,src_tokens.mean())
+        except Exception as e:
+            print(e)
+            from fairseq import pdb; pdb.set_trace();
+
+        try:
             print(pd.DataFrame(target).median().T)
         except Exception as e:
             print(e)
+            from fairseq import pdb; pdb.set_trace();
 
         if prev_output_tokens is not None:
             batch['net_input']['prev_output_tokens'] = prev_output_tokens

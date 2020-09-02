@@ -357,7 +357,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             current_velocities = torch.clamp(current_velocities, min=self.vmin, max=self.vmax)
 
             current_flows = torch.stack([q1, q2, q3, q4],dim=1)           
-            zero_tensor = torch.Tensor(256*[0.])
+            zero_tensor = torch.Tensor(bsz*[0.])
             current_onramps = torch.stack([zero_tensor, zero_tensor, zero_tensor, r4],dim=1)   
             current_offramp_props = torch.stack([zero_tensor, beta2, zero_tensor, zero_tensor],dim=1)   #torch.Tensor([[0.,beta2,0.,0.]])
             
