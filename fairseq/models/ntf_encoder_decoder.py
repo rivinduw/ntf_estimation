@@ -263,7 +263,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.common_param_activation = nn.Sigmoid()
         #self.segment_param_activation = None
-        self.input_feed_activation = None
+        self.input_feed_activation = nn.Sigmoid()#None
 
         self.total_segment_specific_params = self.num_segment_specific_params*self.num_segments
 
@@ -304,20 +304,22 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             prev_hiddens = encoder_hiddens[0,:,:]
             prev_cells = encoder_cells[0,:,:]
         
-        if self.encoder_hidden_to_input_feed_proj != None:
-            if self.input_feed_activation != None:
-                input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:]))
-            else:
-                if self.extra_hidden_layer:
-                    extra_hidden = torch.relu(self.encoder_hidden_to_decoder_input_feed_hidden_layer(encoder_hiddens[0,:,:]))
-                else:
-                    extra_hidden = encoder_hiddens[0,:,:]
-                input_feed = self.encoder_hidden_to_input_feed_proj(extra_hidden)
-        else:
-            if self.input_feed_activation != None:
-                input_feed = self.input_feed_activation(encoder_hiddens[0,:,:])
-            else:
-                input_feed = encoder_hiddens[0,:,:]
+        # if self.encoder_hidden_to_input_feed_proj != None:
+        #     if self.input_feed_activation != None:
+        #         input_feed = self.input_feed_activation(self.encoder_hidden_to_input_feed_proj(encoder_hiddens[0,:,:]))
+        #     else:
+        #         if self.extra_hidden_layer:
+        #             extra_hidden = torch.relu(self.encoder_hidden_to_decoder_input_feed_hidden_layer(encoder_hiddens[0,:,:]))
+        #         else:
+        #             extra_hidden = encoder_hiddens[0,:,:]
+        #         input_feed = self.encoder_hidden_to_input_feed_proj(extra_hidden)
+        # else:
+        #     if self.input_feed_activation != None:
+        #         input_feed = self.input_feed_activation(encoder_hiddens[0,:,:])
+        #     else:
+        #         input_feed = encoder_hiddens[0,:,:]
+
+        input_feed = torch.Tensor(np.array([0., 100., 0., 100., 0., 100., 0., 100., 0., 100., 0., 0., 0.]))
 
         self.first_input_feed = input_feed
         
