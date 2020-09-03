@@ -162,7 +162,26 @@ class TrafficDataset(FairseqDataset):
             prev_output_tokens = torch.FloatTensor(previous_output)
         else:
             prev_output_tokens = None
+        
+        try:
+            #print("src_tokens",src_tokens.mean())
+            if src_tokens.mean().item()==np.nan:
+                print(src_tokens)
+                from fairseq import pdb; pdb.set_trace();
+        except Exception as e:
+            print(e)
+            from fairseq import pdb; pdb.set_trace();
 
+        try:
+            #print("target",target.mean())
+            if target.mean().item()==np.nan:
+                print(target)
+                from fairseq import pdb; pdb.set_trace();
+        except Exception as e:
+            print(e)
+            from fairseq import pdb; pdb.set_trace();
+        
+        
         batch = {
             'id': id,
             'nsentences': len(samples),

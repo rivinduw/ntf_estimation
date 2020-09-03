@@ -174,12 +174,12 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
 
         self.extra_hidden_layer = False
 
-        if self.encoder_output_units != self.ntf_state_size:
-            if self.extra_hidden_layer:
-                self.encoder_hidden_to_decoder_input_feed_hidden_layer = nn.Linear(self.encoder_output_units, self.encoder_output_units)
-            self.encoder_hidden_to_input_feed_proj = nn.Linear(self.encoder_output_units, self.ntf_state_size)
-        else:
-            self.encoder_hidden_to_input_feed_proj = None
+        # if self.encoder_output_units != self.ntf_state_size:
+        #     if self.extra_hidden_layer:
+        #         self.encoder_hidden_to_decoder_input_feed_hidden_layer = nn.Linear(self.encoder_output_units, self.encoder_output_units)
+        #     self.encoder_hidden_to_input_feed_proj = nn.Linear(self.encoder_output_units, self.ntf_state_size)
+        # else:
+        #     self.encoder_hidden_to_input_feed_proj = None
 
         if self.encoder_output_units != self.hidden_size:
             self.encoder_hidden_proj = nn.Linear(self.encoder_output_units, self.hidden_size)
@@ -319,7 +319,8 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #     else:
         #         input_feed = encoder_hiddens[0,:,:]
 
-        input_feed = torch.Tensor(np.array([0., 100., 0., 100., 0., 100., 0., 100., 0., 100., 0., 0., 0.]))
+        input_feed = torch.Tensor(np.array([0., 100., 0., 100., 0., 100., 0., 100., 0., 100., 0., 0., 0.]).reshape(bsz,-1))
+        input_feed = (input_feed - self.all_means) / self.all_stds
 
         self.first_input_feed = input_feed
         
@@ -402,7 +403,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
             
             # mean_ntf_output = real_size_input
             q1, q2, q3, q4 = torch.unbind(current_flows, dim=1)
-            v1, v2, v3, v4 = torch.unbind(current_flows, dim=1)
+            v1, v2, v3, v4 = torch.unbind(current_velocities, dim=1)
             
             mean_ntf_output = torch.stack([q1, v1, q2, v2, q3, v3, q4, v4, q0_f, v0_f, rhoNp1_f, beta2_f, r4_f],dim=1)
 

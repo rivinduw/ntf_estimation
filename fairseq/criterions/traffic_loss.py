@@ -111,6 +111,10 @@ class MSECriterion(FairseqCriterion):
 
         total_loss = target_loss #+ 100*input_feed_consistancy_loss  #+ self.common_lambda*common_loss + self.segment_time_lambda*segment_time_loss + self.segment_lambda*segment_loss #+ volume_loss
         
+        if str(total_loss.detach().item())=='nan':
+            #from fairseq import pdb; pdb.set_trace();
+            target_loss = 0.0 * self.loss_fn(outputs, y)
+
         try:
             wandb.log(
                     {'normal_loss':total_loss,
