@@ -319,7 +319,7 @@ class TrafficNTFDecoder(FairseqIncrementalDecoder):
         #     else:
         #         input_feed = encoder_hiddens[0,:,:]
 
-        input_feed = torch.Tensor(np.array([0., 100., 0., 100., 0., 100., 0., 100., 0., 100., 0., 0., 0.]).reshape(bsz,-1))
+        input_feed = torch.Tensor(np.array(bsz*[0., 100., 0., 100., 0., 100., 0., 100., 0., 100., 0., 0., 0.]).reshape(bsz,-1))
         input_feed = (input_feed - self.all_means) / self.all_stds
 
         self.first_input_feed = input_feed

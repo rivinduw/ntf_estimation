@@ -190,25 +190,25 @@ class TrafficPredictionTask(FairseqTask):
 
                     
                     try:
-                        for i, var in enumerate(['q0', 'v0', 'q2', 'v2', 'rho5', 'beta2', 'r4']):
-                            ax = pd.DataFrame(target[0,:,i]).plot()
-                            pd.DataFrame(preds[0,:,i]).plot(ax=ax)
+                        for pn, var in enumerate(['q0', 'v0', 'q2', 'v2', 'rho5', 'beta2', 'r4']):
+                            ax = pd.DataFrame(target[0,:,pn]).plot()
+                            pd.DataFrame(preds[0,:,pn]).plot(ax=ax)
                             ax.legend(['target','pred'])
                             wandb.log({var: ax})
                             plt.close('all')
 
 
-                        # ax = pd.DataFrame(target[0,:,0]).plot()
-                        # pd.DataFrame(preds[0,:,0]).plot(ax=ax)
-                        # ax.legend(['target','pred'])
-                        # wandb.log({"q0_": ax})
-                        # plt.close('all')
+                        ax = pd.DataFrame(target[0,:,0]).plot()
+                        pd.DataFrame(preds[0,:,0]).plot(ax=ax)
+                        ax.legend(['target','pred'])
+                        wandb.log({"q0_": ax})
+                        plt.close('all')
 
-                        # ax = pd.DataFrame(target[0,:,1]).plot()
-                        # pd.DataFrame(preds[0,:,1]).plot(ax=ax)
-                        # ax.legend(['target','pred'])
-                        # wandb.log({"v0_": ax})
-                        # plt.close('all')
+                        ax = pd.DataFrame(target[0,:,1]).plot()
+                        pd.DataFrame(preds[0,:,1]).plot(ax=ax)
+                        ax.legend(['target','pred'])
+                        wandb.log({"v0_": ax})
+                        plt.close('all')
 
                         # ax = pd.DataFrame(target[0,:,2]).plot()
                         # pd.DataFrame(preds[0,:,2]).plot(ax=ax)
