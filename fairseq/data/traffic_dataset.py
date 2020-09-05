@@ -23,12 +23,12 @@ class TrafficDataset(FairseqDataset):
                 scale_input=True, scale_output=True, input_seq_len=1440,
                 num_segments=12, variables_per_segment=0,
                 max_vals=None,
-                train_from="2018-08-01 00:00:00",
-                train_to="2018-09-01 00:00:00",
-                valid_from="2018-07-01 00:00:00",
-                valid_to="2018-08-01 00:00:00",
-                test_from="2018-09-01 00:00:00",
-                test_to="2018-10-01 00:00:00",
+                train_from="2019-08-01 00:00:00",
+                train_to="2019-09-01 00:00:00",
+                valid_from="2019-07-01 00:00:00",
+                valid_to="2019-08-01 00:00:00",
+                test_from="2019-09-01 00:00:00",
+                test_to="2019-10-01 00:00:00",
                 mainlines_to_include_in_input=None,
                 mainlines_to_include_in_output=None,
                 active_onramps=None,
@@ -56,28 +56,29 @@ class TrafficDataset(FairseqDataset):
         input_cols = ['q0', 'v0', 'q2', 'v2', 'rho5', 'beta2', 'r4']
         self.all_data = self.all_data.loc[:,input_cols]
         self.all_data = self.all_data.replace(np.inf, np.nan)
+        self.all_data = self.all_data.replace(-np.inf, np.nan)
         self.all_data.loc[:,['v0','v2']] = self.all_data.loc[:,['v0','v2']].fillna(100.0)
         self.all_data.loc[:,['q0', 'q2', 'rho5', 'beta2', 'r4']] = self.all_data.loc[:,['q0', 'q2', 'rho5', 'beta2', 'r4']].fillna(0.0)
         
         self.split = split
-        # if split == 'train':
-        #     train_from_idx = self.all_data.index.get_loc(pd.to_datetime(train_from), method='nearest')
-        #     train_to_idx = self.all_data.index.get_loc(pd.to_datetime(train_to), method='nearest')
-        #     self.all_data = self.all_data.iloc[train_from_idx:train_to_idx, :]
-        #     print("t##Length of Train Dataset: ", len(self.all_data))
-        #     self.shuffle = shuffle
-        # elif split == 'valid':
-        #     valid_from_idx = self.all_data.index.get_loc(pd.to_datetime(valid_from), method='nearest')
-        #     valid_to_idx = self.all_data.index.get_loc(pd.to_datetime(valid_to), method='nearest')
-        #     self.all_data =self.all_data.iloc[valid_from_idx:valid_to_idx, :]
-        #     print("v##Length of Valid Dataset: ", len(self.all_data))
-        #     self.shuffle = False
-        # else:
-        #     test_from_idx = self.all_data.index.get_loc(pd.to_datetime(test_from), method='nearest')
-        #     test_to_idx = self.all_data.index.get_loc(pd.to_datetime(test_to), method='nearest')
-        #     self.all_data = self.all_data.iloc[test_from_idx:test_to_idx, :]
-        #     print("t??##Length of Test Dataset: ",len(self.all_data))
-        #     self.shuffle = False
+        if split == 'train':
+            train_from_idx = self.all_data.index.get_loc(pd.to_datetime(train_from), method='nearest')
+            train_to_idx = self.all_data.index.get_loc(pd.to_datetime(train_to), method='nearest')
+            self.all_data = self.all_data.iloc[train_from_idx:train_to_idx, :]
+            print("t##Length of Train Dataset: ", len(self.all_data))
+            self.shuffle = shuffle
+        elif split == 'valid':
+            valid_from_idx = self.all_data.index.get_loc(pd.to_datetime(valid_from), method='nearest')
+            valid_to_idx = self.all_data.index.get_loc(pd.to_datetime(valid_to), method='nearest')
+            self.all_data =self.all_data.iloc[valid_from_idx:valid_to_idx, :]
+            print("v##Length of Valid Dataset: ", len(self.all_data))
+            self.shuffle = False
+        else:
+            test_from_idx = self.all_data.index.get_loc(pd.to_datetime(test_from), method='nearest')
+            test_to_idx = self.all_data.index.get_loc(pd.to_datetime(test_to), method='nearest')
+            self.all_data = self.all_data.iloc[test_from_idx:test_to_idx, :]
+            print("t??##Length of Test Dataset: ",len(self.all_data))
+            self.shuffle = False
 
         self.max_sample_size = max_sample_size if max_sample_size is not None else sys.maxsize
         self.min_sample_size = min_sample_size if min_sample_size is not None else self.max_sample_size
